@@ -1,0 +1,119 @@
+collisions.py tests
+==================
+
+This file contains the doctest-based tests for collisions.py
+
+We first start by defining some objects that have a position, width and height.
+
+    >>> class rectangle(object):
+    ...     def __init__(self, x, y):
+    ...         self.x = x
+    ...         self.y = y
+    ...         self.width = 10
+    ...         self.height = 10
+
+Collisions between objects that do not overlap
+    >>> import collisions
+    >>> obj = rectangle(0, 0)
+    >>> other1 = rectangle(20, 0) # to the right of obj, non-overlapping
+    >>> print collisions.single(obj, other1)
+    False
+    >>> print collisions.single(other1, obj)
+    False
+    >>> other2 = rectangle(0, 20) # higher than obj, non-overlapping
+    >>> print collisions.single(obj, other2)
+    False
+    >>> print collisions.single(other2, obj)
+    False
+
+Collision with overlapping objects
+    >>> other3 = rectangle(5, 5) # overlapping
+    >>> print collisions.single(obj, other3)
+    True
+    >>> print collisions.single(other3, obj)
+    True
+
+Collisions between an object with multiple non-overlapping ones
+    >>> print collisions.many(obj, [other1, other2])
+    False
+    >>> non_overlap = [other1, other2]
+    >>> print collisions.many(obj, non_overlap)
+    False
+
+Collisions between an object and many, one of which overlap
+    >>> overlap = [other1, other2, other3]
+    >>> print collisions.many(obj, overlap) #doctest:+ELLIPSIS
+    (True, <rectangle object at ...>)
+    >>> flag, other = collisions.many(obj, overlap)
+    >>> print other == other3
+    True
+
+Checking to see if an object has gone beyond the world boundary
+
+    >>> world = rectangle(0, 0)
+    >>> world.width = 100
+    >>> world.height = 100
+    >>> print collisions.outside_world(obj, world)
+    False
+    >>> obj2 = rectangle(5, 5)
+    >>> print collisions.outside_world(obj2, world)
+    False
+    >>> obj3 = rectangle(105, 0)
+    >>> print collisions.outside_world(obj3, world)
+    True
+    >>> obj4 = rectangle(5, 105)
+    >>> print collisions.outside_world(obj4, world)
+    True
+    >>> obj5 = rectangle(5, -105)
+    >>> print collisions.outside_world(obj5, world)
+    True
+    >>> obj6 = rectangle(-15, 30)
+    >>> print collisions.outside_world(obj6, world)
+    True
+
+Checking to see object overlapping or gone beyond a world boundary
+
+    >>> print collisions.leaving_world(obj, world)
+    (False, (False, 0), (False, 0))
+    >>> print collisions.leaving_world(obj3, world)
+    (True, (True, 15), (False, 0))
+    >>> print collisions.leaving_world(obj4, world)
+    (True, (False, 0), (True, 15))
+    >>> print collisions.leaving_world(obj5, world)
+    (True, (False, 0), (True, -105))
+    >>> print collisions.leaving_world(obj6, world)
+    (True, (True, -15), (False, 0))
+    >>> world.x = 10
+    >>> world.y = -10
+    >>> print collisions.leaving_world(obj5, world)
+    (True, (True, -5), (True, -95))
+    >>> print collisions.leaving_world(obj6, world)
+    (True, (True, -25), (False, 0))
+
+Defining some circles.
+
+    >>> class circle(object):
+    ...     def __init__(self, x, y, r):
+    ...         self.x = x
+    ...         self.y = y
+    ...         self.r = r
+
+Next, seeing if they intersect
+    >>> circle_1 = circle(0, 0, 10)
+    >>> circle_2 = circle(25, 0, 10)
+    >>> circle_3 = circle(0, 25, 10)
+    >>> circle_4 = circle(15, 0, 20)
+    >>> circle_5 = circle(0, 15, 20)
+    >>> circle_6 = circle(12, 12, 10)
+    >>> print collisions.circle_collide(circle_1, circle_2)
+    False
+    >>> print collisions.circle_collide(circle_1, circle_2)
+    False
+    >>> print collisions.circle_collide(circle_1, circle_3)
+    False
+    >>> print collisions.circle_collide(circle_1, circle_4)
+    True
+    >>> print collisions.circle_collide(circle_1, circle_5)
+    True
+    >>> print collisions.circle_collide(circle_1, circle_6)
+    True
