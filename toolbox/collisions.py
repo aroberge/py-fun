@@ -2,7 +2,8 @@
 
 module containing a number of functions to determine if a collision
 (with various possible cases) has occurred.  Most of these functions
-currently rely on objects being represented (or bounded) by rectangles.
+currently rely on objects being represented (or bounded) by rectangles
+except for one which assumes objects bounded by circles.
 
 One advantage of using these utility functions is that they are tested,
 and do not need to be re-implemented every time a new class of objects
@@ -11,10 +12,11 @@ by other functions (e.g. if a pixel-perfect detection is needed),
 with all of the code residing in a single module.
 '''
 
-def single(obj, other):
+def one_to_one_rectangle(obj, other):
     '''determines if a collision between a object "obj" and
-       a single other "other" has occurred.  Both objects are expected
-       to possess a height and a width attribute.'''
+       a single other "other" has occurred.  Both objects are expected to
+       be rectangle-like, i.e. to possess a height and a width attribute.
+    '''
     if obj.x > other.x + other.width:
         return False
     elif obj.y > other.y + other.height:
@@ -26,7 +28,7 @@ def single(obj, other):
     else:
         return True
 
-def many(obj, others):
+def one_to_many_rectangle(obj, others):
     '''determines if a collision between a object "obj" and any given one
        in the list "others" has occurred.  All objects are expected
        to possess a height and a width attribute.
@@ -52,7 +54,7 @@ def many(obj, others):
     return False
 
 
-def circle_collide(obj, other):
+def one_to_one_circle(obj, other):
     '''determines if a collision between two objects ("obj" and "other")
        bounded by a circle has occurred.
        The location of both objects is expected to be that of the
@@ -137,6 +139,42 @@ def leaving_world(obj, world):
         return False, (False, 0), (False, 0)
 
 if __name__ == "__main__":
+    # first, testing code validity
     import doctest
-    failure, nb_tests = doctest.testfile("test_collisions.txt")
-    print "%d failures in %d tests in test_collisions.txt"%(failure, nb_tests)
+    failures, nb_tests = doctest.testfile("test_collisions.txt")
+    print "%d failures in %d tests in test_collisions.txt"%(failures, nb_tests)
+    global obj_test, others_test
+
+    if failures == 0:
+        # next, testing code speed
+        import random
+        from timeit import Timer
+        target_framerate = 1./20
+
+        class Rect(object):
+            def __init__(self, x, y):
+                self.x = x
+                self.y = y
+                self.width = 16
+                self.height = 16
+
+        class Circ(object):
+            def __init__(self, x, y):
+                self.x = x
+                self.y = y
+                self.radius = 16
+
+        print "Testing one_to_many_rectangle()\n======================"
+        nb_objects = 100
+        max_time = 0.
+        while max_time < target_framerate and nb_objects < 100000:
+            nb_objects *= 2
+            obj_test = Rect(500, 500)
+            #Note: most of the time appears to be taken by this list creation
+            others_test = [Rect(random.randint(0, 1000), random.randint(0, 1000))
+                      for i in range(nb_objects)]
+            t = Timer("one_to_many_rectangle(obj_test, others_test)",
+                "from __main__ import one_to_many_rectangle, obj_test, others_test")
+            max_time = t.timeit(number=1)
+            print "time taken by many() for %d objects is %0.2e seconds"%(
+                                                            nb_objects, max_time)

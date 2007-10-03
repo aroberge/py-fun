@@ -16,35 +16,35 @@ Collisions between objects that do not overlap
     >>> import collisions
     >>> obj = rectangle(0, 0)
     >>> other1 = rectangle(20, 0) # to the right of obj, non-overlapping
-    >>> print collisions.single(obj, other1)
+    >>> print collisions.one_to_one_rectangle(obj, other1)
     False
-    >>> print collisions.single(other1, obj)
+    >>> print collisions.one_to_one_rectangle(other1, obj)
     False
     >>> other2 = rectangle(0, 20) # higher than obj, non-overlapping
-    >>> print collisions.single(obj, other2)
+    >>> print collisions.one_to_one_rectangle(obj, other2)
     False
-    >>> print collisions.single(other2, obj)
+    >>> print collisions.one_to_one_rectangle(other2, obj)
     False
 
 Collision with overlapping objects
     >>> other3 = rectangle(5, 5) # overlapping
-    >>> print collisions.single(obj, other3)
+    >>> print collisions.one_to_one_rectangle(obj, other3)
     True
-    >>> print collisions.single(other3, obj)
+    >>> print collisions.one_to_one_rectangle(other3, obj)
     True
 
 Collisions between an object with multiple non-overlapping ones
-    >>> print collisions.many(obj, [other1, other2])
+    >>> print collisions.one_to_many_rectangle(obj, [other1, other2])
     False
     >>> non_overlap = [other1, other2]
-    >>> print collisions.many(obj, non_overlap)
+    >>> print collisions.one_to_many_rectangle(obj, non_overlap)
     False
 
 Collisions between an object and many, one of which overlap
     >>> overlap = [other1, other2, other3]
-    >>> print collisions.many(obj, overlap) #doctest:+ELLIPSIS
+    >>> print collisions.one_to_many_rectangle(obj, overlap) #doctest:+ELLIPSIS
     (True, <rectangle object at ...>)
-    >>> flag, other = collisions.many(obj, overlap)
+    >>> flag, other = collisions.one_to_many_rectangle(obj, overlap)
     >>> print other == other3
     True
 
@@ -105,15 +105,15 @@ Next, seeing if they intersect
     >>> circle_4 = circle(15, 0, 20)
     >>> circle_5 = circle(0, 15, 20)
     >>> circle_6 = circle(12, 12, 10)
-    >>> print collisions.circle_collide(circle_1, circle_2)
+    >>> print collisions.one_to_one_circle(circle_1, circle_2)
     False
-    >>> print collisions.circle_collide(circle_1, circle_2)
+    >>> print collisions.one_to_one_circle(circle_1, circle_2)
     False
-    >>> print collisions.circle_collide(circle_1, circle_3)
+    >>> print collisions.one_to_one_circle(circle_1, circle_3)
     False
-    >>> print collisions.circle_collide(circle_1, circle_4)
+    >>> print collisions.one_to_one_circle(circle_1, circle_4)
     True
-    >>> print collisions.circle_collide(circle_1, circle_5)
+    >>> print collisions.one_to_one_circle(circle_1, circle_5)
     True
-    >>> print collisions.circle_collide(circle_1, circle_6)
+    >>> print collisions.one_to_one_circle(circle_1, circle_6)
     True
