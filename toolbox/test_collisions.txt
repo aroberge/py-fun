@@ -43,9 +43,9 @@ Collisions between an object with multiple non-overlapping ones
 Collisions between an object and many, one of which overlap
     >>> overlap = [other1, other2, other3]
     >>> print collisions.one_to_many_rectangle(obj, overlap) #doctest:+ELLIPSIS
-    (True, <rectangle object at ...>)
+    (True, set([<rectangle object at ...>]))
     >>> flag, other = collisions.one_to_many_rectangle(obj, overlap)
-    >>> print other == other3
+    >>> print (other3 in other) and len(other)==1
     True
 
 Checking to see if an object has gone beyond the world boundary
@@ -117,3 +117,60 @@ Next, seeing if they intersect
     True
     >>> print collisions.one_to_one_circle(circle_1, circle_6)
     True
+
+Collisions between an object and many, two of which overlap; note that the function
+returns as soon as a collision is found.
+    >>> overlap = [circle_2, circle_3, circle_4, circle_5]
+    >>> print collisions.one_to_many_circle(circle_1, overlap) #doctest:+ELLIPSIS
+    (True, set([<circle object at ...>]))
+    >>> flag, other = collisions.one_to_many_circle(circle_1, overlap)
+    >>> print (circle_4 in other) and len(other)==2
+    True
+
+Moving on to grids.  We will use a different methods to detect collisions by
+1. building a grid of a given resolution
+2. determining which grid cells are occupied in parts or entirely by objects
+3. looping over each non-empty cells and determining if indeed a collision has
+occurred.
+This is a rather rough explanation which, hopefully, will get clearer as we
+write the (testing) code.
+
+Assume we have a grid of size 12 (slightly bigger than our rectangles), with the grid origin
+at (0, 0).  An object located at (0,0) will occupy cell (0,0) only.
+
+    >>> obj = rectangle(0, 0)
+    >>> grid = collisions.build_grid([obj], resolution=12)
+    >>> print grid #doctest:+ELLIPSIS
+    {(0, 0): [<rectangle object at ...>]}
+
+However, if we reduce the grid size to 8, the object will occupy four grid cells
+
+    >>> grid = collisions.build_grid([obj], resolution=8)
+    >>> print ((0, 0) in grid) and ((0, 1) in grid) and ((1, 0) in grid) and ((1, 1) in grid)
+    True
+    >>> print len(grid)
+    4
+
+If we use again a resolution of 12, but with an object located at (5, 5), we should again
+have the same four cells occupied.
+
+    >>> obj2 = rectangle(5, 5)
+    >>> grid = collisions.build_grid([obj2], resolution=12)
+    >>> print ((0, 0) in grid) and ((0, 1) in grid) and ((1, 0) in grid) and ((1, 1) in grid)
+    True
+    >>> print len(grid)
+    4
+
+Lets combine both object in a single list.
+
+    >>> grid = collisions.build_grid([obj, obj2], resolution=12)
+    >>> print ((0, 0) in grid) and ((0, 1) in grid) and ((1, 0) in grid) and ((1, 1) in grid)
+    True
+    >>> print len(grid)
+    4
+    >>> print len(grid[(0, 0)])
+    2
+    >>> print len(grid[(1, 1)])
+    1
+
+
