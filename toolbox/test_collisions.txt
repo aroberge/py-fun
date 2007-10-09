@@ -47,6 +47,15 @@ Collisions between an object and many, one of which overlap
     >>> flag, other = collisions.one_to_many_rectangle(obj, overlap)
     >>> print (other3 in other) and len(other)==1
     True
+    
+Simply checking to see if a collision has occured between an object
+and a collection of others - not caring about which object with
+which the collision has taken place.
+    >>> print collisions.one_to_many_rectangle_detect(obj, non_overlap)
+    False
+    >>> print collisions.one_to_many_rectangle_detect(obj, overlap)
+    True
+
 
 Checking to see if an object has gone beyond the world boundary
 
