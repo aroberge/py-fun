@@ -7,7 +7,8 @@ one must be familiar with the opengl documentation.
 '''
 from pyglet.gl import *
 
-__all__ = ["draw_arc", "draw_circle", "draw_line", "draw_rect", "draw_ring"]
+__all__ = ["draw_arc", "draw_circle", "draw_line", "draw_rect", "draw_ring",
+           "Arc", "Circle", "Line", "Rect", "Ring"]
 
 def draw_line(x1, y1, x2, y2, color=(1.0, 1.0, 1.0, 1.0), line_width=1,
     line_stipple=False):
@@ -23,8 +24,8 @@ def draw_line(x1, y1, x2, y2, color=(1.0, 1.0, 1.0, 1.0), line_width=1,
         glEnable(GL_LINE_STIPPLE)
     glBegin(GL_LINES)
     glColor4f(*color)
-    glVertex2i(x1, y1)
-    glVertex2i(x2, y2)
+    glVertex2i(int(x1), int(y1))
+    glVertex2i(int(x2), int(y2))
     glEnd()
     if line_width != 1:  # reset to default
         glLineWidth(1)
@@ -45,10 +46,10 @@ def draw_rect(x, y, width, height, color=(1.0, 1.0, 1.0, 1.0),
         glLineWidth(line_width)
         glBegin(GL_LINE_LOOP)
     glColor4f(*color)
-    glVertex2i(x, y)
-    glVertex2i(x + width, y)
-    glVertex2i(x + width, y + height)
-    glVertex2i(x, y + height)
+    glVertex2i(int(x), int(y))
+    glVertex2i(int(x + width), int(y))
+    glVertex2i(int(x + width), int(y + height))
+    glVertex2i(int(x), int(y + height))
     glEnd()
     if not filled and line_width != 1:  # reset to default
         glLineWidth(1)
@@ -102,18 +103,108 @@ def draw_arc(x, y, inner, outer, start=0, sweep=180, color=(1.0, 1.0, 1.0, 1.0))
 ##draw_polygon
 ##create classes corresponding to each graphical object
 
+class GraphicalObject(object):
+    def move(self, dx, dy):
+        self.x += dx
+        self.y += dy
+
+class Rect(GraphicalObject):
+    def __init__(self, x, y, width, height, color=(1.0, 1.0, 1.0, 1.0),
+                 filled=True, line_width=1):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.color = color
+        self.filled = filled
+        self.line_width = line_width
+
+    def draw(self):
+        draw_rect(self.x, self.y, self.width, self.height,
+                  self.color, self.filled, self.line_width)
+
+class Circle(GraphicalObject):
+    def __init__(self, x, y, r, color=(1.0, 1.0, 1.0, 1.0)):
+        self.x = x
+        self.y = y
+        self.r = r
+        self.color = color
+
+    def draw(self):
+        draw_circle(self.x, self.y, self.r, self.color)
+
+class Ring(GraphicalObject):
+    def __init__(self, x, y, inner, outer, color=(1.0, 1.0, 1.0, 1.0)):
+        self.x = x
+        self.y = y
+        self.inner = inner
+        self.outer = outer
+        self.color = color
+
+    def draw(self):
+        draw_ring(self.x, self.y, self.inner, self.outer, self.color)
+
+class Arc(GraphicalObject):
+    def __init__(self, x, y, inner, outer, start=0, sweep=180,
+                color=(1.0, 1.0, 1.0, 1.0)):
+        self.x = x
+        self.y = y
+        self.inner = inner
+        self.outer = outer
+        self.start = start
+        self.sweep = sweep
+        self.color = color
+
+    def draw(self):
+        draw_arc(self.x, self.y, self.inner, self.outer, self.start,
+                 self.sweep, self.color)
+
+    def rotate(self, a):
+        self.start += a
+
+# the following does not really need to derive from GraphicalObject
+# since it overrides the only common method included so far.
+class Line(GraphicalObject):
+
+    def __init__(self, x1, y1, x2, y2, color=(1.0, 1.0, 1.0, 1.0),
+                 line_width=1, line_stipple=False):
+        '''Creates a line a line object from (x1, y1) to (x2, y2).
+
+            Note: line_stipple, which has a default value of False, needs to be
+            specified as a 2-tuple (factor and stipple pattern e.g. 0x00FF)
+
+        '''
+        self.x1 = x1
+        self.y1 = y1
+        self.x2 = x2
+        self.y2 = y2
+        self.color = color
+        self.line_width = line_width
+        self.line_stipple = line_stipple
+
+    def move(self, dx, dy):
+        self.x1 += dx
+        self.x2 += dx
+        self.y1 += dy
+        self.y2 += dy
+
+    def draw(self):
+        draw_line(self.x1, self.y1, self.x2, self.y2, self.color,
+                  self.line_width, self.line_stipple)
+
 if __name__ == '__main__':
     from pyglet import window
     from pyglet import clock
-    from pyglet.window import key
 
-    win = window.Window(800, 600, vsync=False)
+    win = window.Window(800, 600)
     glEnable(GL_BLEND)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     fps_display = clock.ClockDisplay()
+    clock.set_fps_limit(60)
+    rectangle = Rect(0, 0, 100, 100)
+    arc = Arc(500, 100, 30, 80)
 
     while not win.has_exit:
-
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         win.dispatch_events()
         clock.tick()
         win.clear()
@@ -134,6 +225,12 @@ if __name__ == '__main__':
         color = (1.0, 0, 1.0, 1.0)
         draw_circle(200, 260, 10, color)
         draw_arc(400, 100, 30, 80, 45, 135)
+        arc.rotate(1)
+        arc.draw()
+
         draw_ring(400, 300, 50, 70)
+        rectangle.move(0.5, 0.5)
+        rectangle.draw()
         fps_display.draw()
+
         win.flip()
