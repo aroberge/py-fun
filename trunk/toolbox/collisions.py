@@ -10,6 +10,9 @@ and do not need to be re-implemented every time a new class of objects
 is created.  An other potential advantage is that they can be replaced
 easily by other functions (e.g. if a pixel-perfect detection is needed),
 with all of the code residing in a single module.
+
+Note that the functions included assume 'slow moving' objects, so that
+the object would not go through a target in a single frame.
 '''
 
 def one_to_one_rectangle(obj, other):
