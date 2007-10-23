@@ -47,30 +47,30 @@ class LaneObject(object):
 
 class Car(LaneObject):
     '''could be a car, a limo or a truck'''
-    def __init__(self, lane, x_values, y_values, vx_values):
+    def __init__(self, lane, x_values, y_values, vx):
         super(Car, self).__init__(lane, y_values)
         self.image = car_images[random.randint(0, len(car_images)-1)]
         if x_values[lane] == 0:
             self.x = 0 - self.image.width
-            self.vx = vx_values[lane]
+            self.vx = vx
         else:
             self.x = x_values[lane]
-            self.vx = -vx_values[lane]
+            self.vx = -vx
 
         self.width = self.image.width
         self.height = self.image.height
 
 class Log(LaneObject):
     '''floating log'''
-    def __init__(self, lane, x_values, y_values, vx_values):
+    def __init__(self, lane, x_values, y_values, vx):
         super(Log, self).__init__(lane, y_values)
         self.image = log_image
         if x_values[lane] == 0:
             self.x = 0 - self.image.width
-            self.vx = vx_values[lane]
+            self.vx = vx
         else:
             self.x = x_values[lane]
-            self.vx = -vx_values[lane]
+            self.vx = -vx
 
         self.width = self.image.width
         self.height = self.image.height

@@ -1,9 +1,13 @@
-''' froggie.py
+''' froggie.py; a Frogger-like game.
 
-Frogger-like game with graphics adapted from Lee Harr's (creator of pygsear).
+By Andre Roberge
 
+This module is meant to define only the basic windowing functions and
+contain the main loop.  The idea is that the possible states of the game
+could be quickly and easily grasped by looking at this module.
+The actual game details are contained in other modules.
 '''
-import os
+##import os
 
 from pyglet import window
 from pyglet import clock
@@ -11,17 +15,16 @@ from pyglet import media
 from pyglet.window import key
 from pyglet.gl import *
 
-from src.frog import Frog
 from src.game import World, Game
 
-clock.set_fps_limit(60)
-
 world = World()
-win = window.Window(World.width, World.height+60)
+win = window.Window(world.window_width, world.window_height)
 glEnable(GL_BLEND)  # required for transparency handling
 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-win.clear()
-win.flip()
+win.clear() # start with a blank (black) window to display something quickly
+win.flip()  # even if loading times are slow
+
+# the game state (pause, restart, etc) can be assigned via the keyboard
 
 @win.event
 def on_key_press(symbol, modifiers):
@@ -30,35 +33,22 @@ def on_key_press(symbol, modifiers):
     elif symbol == key.R:
         restart()
     elif symbol == key.P or symbol == key.SPACE:
-        if game.paused:
-            game.paused = False
-            if game.level_completed:
-                game.new_level()
-        else:
-            game.paused = True
-
+        game.switch_pause_state()
 
 def restart():
-    global game, frog
+    global game
     game = Game(win)
-    game.over = False
-    game.paused = True
-    frog = Frog(game, world)
-    win.push_handlers(frog)
-    game.frog = frog
+    # Ensure that the playing character ("game.frog") receives event information
+    win.push_handlers(game.frog)
 
+clock.set_fps_limit(60)
 restart()
 
+# the simplest possible loop!
 while not win.has_exit:
     win.dispatch_events()
-    media.dispatch_events()
+    media.dispatch_events() # required for sound
     dt = clock.tick()
     win.clear()
-
-    if game.over or game.level_completed:
-        dt = 0
-    if game.paused:
-        dt = 0
-    game.update(dt)
-
+    game.update(dt)  # all the complexity is hidden here!
     win.flip()

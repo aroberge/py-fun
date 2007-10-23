@@ -11,8 +11,15 @@ import util
 
 DIR = os.path.dirname(__file__)
 
+img_filename = os.path.join(DIR, "images", 'frogng1.png')
+frog_facing_right = image.load(img_filename)
+
+img_filename = os.path.join(DIR, "images", 'frogng2.png')
+frog_moving_right = image.load(img_filename)
+
 img_filename = os.path.join(DIR, "images", 'frog.png')
-frog_at_rest = image.load(img_filename)
+big_frog = image.load(img_filename)
+
 
 img_filename = os.path.join(DIR, "images", 'croak1.png')
 frog_dying1 = image.load(img_filename)
@@ -65,26 +72,33 @@ class Frog(key.KeyStateHandler):
         super(Frog, self).__init__()
         self.world = world
         self.game = game
-        self.at_rest = frog_at_rest
-        self.width = self.at_rest.width
-        self.height = self.at_rest.height
-        self.min_y = 5
+        self.at_rest_image = frog_facing_right#self.images[self.orientation]
+        self.moving_image = frog_moving_right
+        self.rotation = 90  # starting pointing up
+        self.animation_time = -1
+        # since we are starting 90 degree rotated, width and height are inverted
+        self.width = self.at_rest_image.height
+        self.height = self.at_rest_image.width
+
+        self.min_y = 10
         self.lives = 4
         self.dying = False
         self.sinking = False
         self.new_frog(new_life=False)
 
-    def new_frog(self, new_life = True):
+    def new_frog(self, new_life=True, out_of_time=False):
         self.lane = 0
         if new_life:
             self.lives -= 1
             self.dying = 1.01  # time for animation
             if self.lives < 0:
                 self.game.over = True
+            elif out_of_time:
+                self.game.out_of_time = True
             else:
                 self.game.time_remaining.restart()
         else:
-            self.x = (self.world.width - self.at_rest.width)/2
+            self.x = (self.world.width - self.width)/2
             self.y = self.min_y
 
     def start_new_level(self, lives):
@@ -105,13 +119,11 @@ class Frog(key.KeyStateHandler):
     def step(self, dx):
         '''move horizontally'''
         self.x += dx*self.world.lane_width/2
-        if self.x < 0:
-            self.x = 0
-        elif self.x > self.world.width - self.at_rest.width:
-            self.x -= dx
 
     def check_position(self, dt, pads, cars, logs):
-        '''check to see if we reached a "winning" position'''
+        '''check to see if we reached a "winning" position or if the
+           frog has died'''
+
         if self.lane == self.world.pad_lane:
             pad = util.detect_safe_landing(self, pads)
             if pad:
@@ -142,15 +154,18 @@ class Frog(key.KeyStateHandler):
                 splash_sound.play()
                 self.new_frog()
         elif self.lane in self.world.lane_with_logs:
-            log = util.detect_collision(self, logs)
+            log = util.detect_collision(self, logs, 5)
             if not log:
                 self.sinking = True
                 splash_sound.play()
                 self.new_frog()
             else:
                 self.x += log.vx*dt
+        elif util.outside_world(self, self.world):
+            crush_sound.play()
+            self.new_frog()
         else:
-            car = util.detect_collision(self, cars)
+            car = util.detect_collision(self, cars, 2)
             if car:
                 crush_sound.play()
                 self.new_frog()
@@ -162,25 +177,71 @@ class Frog(key.KeyStateHandler):
             return
         if not self.dying:
             if self[key.LEFT]:
+                self.rotation = 180
+                self.start_moving()
                 self.step(-1)
                 self[key.LEFT] = False
             elif self[key.RIGHT]:
+                self.rotation = 0
+                self.start_moving()
                 self.step(1)
                 self[key.RIGHT] = False
             elif self[key.UP]:
+                self.rotation = 90
+                self.start_moving()
                 self.jump(1)
                 self[key.UP] = False
             elif self[key.DOWN]:
+                self.rotation = -90
+                self.start_moving()
                 self.jump(-1)
                 self[key.DOWN] = False
             self.check_position(dt, pads, cars, logs)
             if self.game.time_remaining.time_left < 0:
                 out_of_time_sound.play()
-                self.new_frog()
+                self.new_frog(out_of_time=True)
             if self.lives > -1:
-                self.at_rest.blit(self.x, self.y)
+                previous = self.animation_time
+                self.animation_time -= dt
+                if self.animation_time < 0:
+                    # check to see if we are ending an animation sequence
+                    if previous*self.animation_time < 0:
+                        # adjust the image so that the horizontal position
+                        # of the center stays the same
+                        self.x += (-self.at_rest_image.width +
+                                    self.moving_image.width)/2
+                    if self.rotation in [0, 180]:
+                        self.width = self.at_rest_image.width
+                        self.height = self.at_rest_image.height
+                    else:
+                        self.width = self.at_rest_image.height
+                        self.height = self.at_rest_image.width
+                    util.draw_rotated(self, self.at_rest_image)
+                else:
+                    self.width = self.moving_image.width
+                    self.height = self.moving_image.height
+                    util.draw_rotated(self, self.moving_image)
         else:
             self.die(dt)
+
+    def start_moving(self):
+        previous = self.animation_time
+        # animation lasts barely long enough to see it; since we determine
+        # the end of animation by crossing 0, add a tiny offset
+        # to avoid accidental equality to zero.
+        self.animation_time = 1.0/20 + 0.000001
+        if previous <= 0: # animation not in progress
+            # adjust the image so that the horizontal position of the center
+            # stays the same
+            self.x += (self.at_rest_image.width - self.moving_image.width)/2
+        if self.rotation in [0, 180]:
+            self.width = self.moving_image.width
+            self.height = self.moving_image.height
+        else:
+            self.width = self.moving_image.height
+            self.height = self.moving_image.width
+        self.old_x = self.x
+        self.old_y = self.y
 
     def die(self, dt):
         self.dying -= dt
@@ -208,7 +269,7 @@ class Frog(key.KeyStateHandler):
             self.dying = False
             self.sinking = False
             self.game.paused = True
-            self.x = (self.world.width - self.at_rest.width)/2
+            self.x = (self.world.width - self.at_rest_image.width)/2
             self.y = self.min_y
 
     def display_lives(self):
@@ -216,6 +277,6 @@ class Frog(key.KeyStateHandler):
         x = self.world.width
         y = self.world.height + self.min_y
         while n > 0:
-            x -= (self.width + 10)
-            self.at_rest.blit(x, y)
+            x -= (big_frog.width + 10)
+            big_frog.blit(x, y)
             n -= 1
