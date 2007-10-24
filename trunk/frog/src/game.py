@@ -23,6 +23,8 @@ time_string = 'Time: %3.1f'
 score_string = 'Score: %d'
 
 class World(object):
+    '''World contains dimensions and other information about the area
+    in which the game is played.'''
     def __init__(self):
         self.x = 0
         self.y = 0
@@ -48,9 +50,14 @@ class World(object):
         # 0: from left; self.width: from the right; -1: either side
         self.x_values = [0, 0, 0, self.width, self.width, -1, self.width, 0, self.width]
         # initial velocities of moving NPC
-        self.vx_values = [0, 35, 60, 60, 35, 0, 50, 80, 60]
+        self.vx_values = [0, 45, 70, 70, 45, 0, 50, 90, 60]
 
 class Game(object):
+    '''Game is the main class.
+
+    It controls the various aspect of the games, so as to simplify the
+    main loop contained in the main script.
+    '''
     def __init__(self, window):
         self.world = World()
         self.score = Score(10, self.world.height+10)
@@ -58,13 +65,24 @@ class Game(object):
         self.time_remaining = Time(250, self.world.height+10,
                                     self.time_for_game)
         self.message = Message(50, self.world.height/2)
+        # game specifics
         self.max_nb_levels = 10
         self.level = 1
+        self.speed_increment = 15  # speed increment from level to level
+        # flags controlling the flow
         self.over = False
         self.begin = True
         self.paused = True
         self.level_completed = False
         self.out_of_time = False
+
+        # Main character
+        self.frog = Frog(self, self.world)
+        self.nb_extra_lives = 4 # total # lives is one more.
+        # the following may seem redundant; we use this so that we have a
+        # hard value (4) specified only once (just above) to prevent inconsistencies
+        self.frog.spare_lives = self.nb_extra_lives
+        # Other non-playing characters
         self.spawn_delay = {}
         self.approx_nb_object_per_lane = []
         for lane in range(self.world.nb_lanes):
@@ -77,19 +95,48 @@ class Game(object):
             self.cars.append(Car(lane, self.world.x_values, self.world.y_values,
                                  self.world.vx_values[lane]))
             self.spawn_delay[lane] = self.calculate_delay(lane, self.cars[-1].width,
-                                               self.world.vx_values[lane])
+                                self.world.vx_values[lane])
         self.logs = []
         for lane in self.world.lane_with_logs:
             self.logs.append(Log(lane, self.world.x_values, self.world.y_values,
                                  self.world.vx_values[lane]))
             self.spawn_delay[lane] = self.calculate_delay(lane, self.logs[-1].width,
-                                               self.world.vx_values[lane])
-        self.frog = Frog(self, self.world)
-
+                                        self.world.vx_values[lane])
+    def new_level(self):
+        '''create a new level, more difficult to complete'''
+        # less time
+        self.time_remaining.time_for_game -= 2
+        self.time_remaining.restart()
+        # more cars
+        for lane in self.world.lane_with_cars:
+            self.approx_nb_object_per_lane[lane] += 0.2
+        # restart
+        self.level_completed = False
+        self.frog.spare_lives = self.nb_extra_lives
+        for pad in self.pads:
+            pad.set_empty()
+        self.update(0)
 
     def calculate_delay(self, lane, width, vx):
+        '''calculate time delay before creation of a new object'''
+        # New objects (cars, logs, etc) are created randomly after a
+        # certain time has elapsed.  The time delay has two components:
+        # * a time delay ensuring that objects are not created too
+        #   close to each other; in its simplest form (self.level==1)
+        #   it is equal to the time taken to move one object length; at
+        #   higher levels, except for logs, objects will be created closer
+        #   together
+        # * a time delay based on a gaussian distribution ensuring that
+        #   not too many objects are present at once;
         factor = random.gauss(self.approx_nb_object_per_lane[lane], 1.0)
-        delay = 1.0 * width/vx + self.world.width/(factor*vx)
+        if lane in self.world.lane_with_logs:
+            delay = 1.0 * width/vx + self.world.width/(factor*vx)
+        else:
+            delay = 1.0 * width/(vx*self.level) + self.world.width/(factor*vx)
+        # Prevent extreme situation:
+        # an object can not move more than 2/3 of a screen before a new
+        # one appear
+        delay = min(delay, 2.0*self.world.width/(3*vx))
         return delay
 
     def set_level_completed(self, lives):
@@ -110,19 +157,6 @@ class Game(object):
         self.paused = True
         self.update(0)
 
-    def new_level(self):
-        # less time
-        self.time_remaining.time_for_game -= 2
-        self.time_remaining.restart()
-        # more cars
-        for lane in self.world.lane_with_cars:
-            self.approx_nb_object_per_lane[lane] += 0.5
-        self.level_completed = False
-        self.frog.start_new_level(lives=4)
-        for pad in self.pads:
-            pad.set_empty()
-        self.update(0)
-
     def update(self, dt):
         if self.over or self.level_completed or self.paused:
             dt = 0
@@ -130,6 +164,13 @@ class Game(object):
         for pad in self.pads:
             pad.update()
 
+        # continuously faster moving objects
+        vx = []
+        more = self.speed_increment
+        for vx_value in self.world.vx_values:
+            vx.append(vx_value + more*(self.level-1) + more*(
+            self.time_remaining.time_for_game - self.time_remaining.time_left
+                      )/self.time_remaining.time_for_game)
         if self.frog.dying: # we pause the animation
             saved_dt = dt
             dt = 0
@@ -137,25 +178,29 @@ class Game(object):
             for lane in self.spawn_delay:
                 self.spawn_delay[lane] -= dt
                 if self.spawn_delay[lane] < 0:
-                    # continuously faster moving objects
-                    more = 20
-                    vx = self.world.vx_values[lane] + more*(self.level-1) + more*(
-                        self.time_remaining.time_for_game
-                        - self.time_remaining.time_left)/self.time_remaining.time_for_game
+
                     if lane in self.world.lane_with_cars:
                         self.cars.append(Car(lane, self.world.x_values, self.world.y_values,
-                                             vx))
+                                             vx[lane]))
+                        # use the width of the previous object so as to leave room to the new one
                         self.spawn_delay[lane] = self.calculate_delay(lane, self.cars[-1].width,
-                                                   vx)
+                                                   vx[lane])
                     elif lane in self.world.lane_with_logs:
                         self.logs.append(Log(lane, self.world.x_values, self.world.y_values,
-                                             vx))
+                                             vx[lane]))
                         self.spawn_delay[lane] = self.calculate_delay(lane, self.logs[-1].width,
-                                                   vx)
-
+                                                   vx[lane])
         for car in self.cars:
+            if car.vx < 0:
+                car.vx = - vx[car.lane]
+            else:
+                car.vx = vx[car.lane]
             car.update(dt)
         for log in self.logs:
+            if log.vx < 0:
+                log.vx = - vx[log.lane]
+            else:
+                log.vx = vx[log.lane]
             log.update(dt)
 
         # Remove objects that have left the world

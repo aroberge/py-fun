@@ -28,6 +28,7 @@ log_image = image.load(img_filename)
 class LaneObject(object):
     def __init__(self, lane, y_values):
         self.y = y_values[lane]
+        self.lane = lane
 
     def update(self, dt):
         self.x += self.vx*dt

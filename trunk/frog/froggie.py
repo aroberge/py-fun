@@ -34,6 +34,11 @@ def on_key_press(symbol, modifiers):
         restart()
     elif symbol == key.P or symbol == key.SPACE:
         game.switch_pause_state()
+    elif symbol == key.I and  modifiers == (key.MOD_SHIFT | key.MOD_CTRL):
+        if game.frog.invincible:
+            game.frog.invincible = False
+        else:
+            game.frog.invincible = True
 
 def restart():
     global game

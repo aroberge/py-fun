@@ -67,29 +67,3 @@ def detect_collision(obj, others, overlap):
         else:
             return other
     return False
-
-def detect_safe_landing(obj, others):
-    '''determines if a frog object "obj" has safely landed on another one
-       from the list "others".  All objects are expected
-       to possess a height and a width attribute.
-
-       Quits as soon as a collision is found,  returning True,
-       or False if no collision is detected.
-    '''
-    obj_x = obj.x
-    obj_y = obj.y
-    obj_max_x = obj_x + obj.width
-    obj_max_y = obj_y + obj.height
-    result = set()
-    for other in others:
-        if obj_x > other.x + other.width:
-            continue
-        elif obj_y > other.y + other.height:
-            continue
-        elif obj_max_x < other.x:
-            continue
-        elif obj_max_y < other.y:
-            continue
-        else:
-            return other
-    return False
