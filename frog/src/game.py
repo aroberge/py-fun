@@ -12,8 +12,8 @@ from pyglet.gl import *
 
 
 import util
-from lane import Car, Log
-from pad import LillyPad
+from lane import Car, Log, LillyPad
+#from pad import LillyPad
 from frog import Frog
 
 DIR = os.path.dirname(__file__)
