@@ -11,12 +11,21 @@ import util
 
 DIR = os.path.dirname(__file__)
 
+# we load some nice looking images for the frog as a playing character.
+# the first one is that of a frog at rest
 img_filename = os.path.join(DIR, "images", 'frogng1.png')
 frog_facing_right = image.load(img_filename)
-
+# the second is that of a moving frog; see next comment
 img_filename = os.path.join(DIR, "images", 'frogng2.png')
 frog_moving_right = image.load(img_filename)
+# Using these two images creates a problem (later on) as they do not have
+# the same width: the image of the moving frog, with its leg extended,
+# is wider than that of the frog at rest. When blitting an image, we
+# normally specify the position by the bottom left corner; however, to
+# keep the image from "wobbling", we need to blit it so that the center (axis)
+# of the two images (at rest, and moving) coincide.
 
+# image used to display remaining lives
 img_filename = os.path.join(DIR, "images", 'frog.png')
 big_frog = image.load(img_filename)
 
@@ -67,31 +76,37 @@ def level_completed_play():
     media.load(level_completed_sound_fname).play()
 
 class Frog(key.KeyStateHandler):
-    '''Our hero'''
+    '''Our hero
+    '''
     def __init__(self, game, world):
         super(Frog, self).__init__()
         self.world = world
         self.game = game
-        self.at_rest_image = frog_facing_right#self.images[self.orientation]
+        self.at_rest_image = frog_facing_right
         self.moving_image = frog_moving_right
         self.rotation = 90  # starting pointing up
-        self.animation_time = -1
         # since we are starting 90 degree rotated, width and height are inverted
         self.width = self.at_rest_image.height
         self.height = self.at_rest_image.width
-
+        # when a frog is moving, an animation is started with a given
+        # positive time duration.  Initially, we set to negative value
+        # as no animation is taking place
+        self.animation_time = -1
         self.min_y = 10
-        self.lives = 4
+        #self.spare_lives is set from Game()
         self.dying = False
         self.sinking = False
+        # invincible state can be toggled within game by pressing
+        # ctrl-shift-I
+        self.invincible = False
         self.new_frog(new_life=False)
 
     def new_frog(self, new_life=True, out_of_time=False):
         self.lane = 0
         if new_life:
-            self.lives -= 1
+            self.spare_lives -= 1
             self.dying = 1.01  # time for animation
-            if self.lives < 0:
+            if self.spare_lives < 0:
                 self.game.over = True
             elif out_of_time:
                 self.game.out_of_time = True
@@ -102,10 +117,15 @@ class Frog(key.KeyStateHandler):
             self.y = self.min_y
 
     def start_new_level(self, lives):
-        self.lives = lives
+        self.spare_lives = lives
 
-    def jump(self, dy):
-        '''move vertically'''
+    def jump(self, dx=0, dy=0):
+        '''frog changes position either horizontally or vertically'''
+        # horizontal motion: half a lane distance, for finer control
+        if dx != 0:
+            self.x += dx*self.world.lane_width/2
+            return
+        # For vertical motion, we need to keep track of the lane changes
         self.y += dy*self.world.lane_width
         if dy < 0:
             self.lane -= 1
@@ -116,19 +136,15 @@ class Frog(key.KeyStateHandler):
             self.y = self.min_y
             self.lane = 0
 
-    def step(self, dx):
-        '''move horizontally'''
-        self.x += dx*self.world.lane_width/2
-
     def check_position(self, dt, pads, cars, logs):
         '''check to see if we reached a "winning" position or if the
            frog has died'''
 
         if self.lane == self.world.pad_lane:
-            pad = util.detect_safe_landing(self, pads)
+            pad = util.detect_collision(self, pads, self.width)
             if pad:
                 if pad.occupied:
-                    if not self.game.level_completed:
+                    if not self.game.level_completed and not self.invincible:
                         metal_bang_sound.play()
                         self.new_frog()
                     else:
@@ -144,16 +160,16 @@ class Frog(key.KeyStateHandler):
                             break
                     if completed_level:
                         level_completed_play()
-                        self.game.set_level_completed(self.lives)
+                        self.game.set_level_completed(self.spare_lives)
                         self.new_frog(new_life=False)
                     else:
                         safe_landing_sound.play()
                         self.new_frog(new_life=False)
-            else:
+            elif not self.invincible:
                 self.sinking = True
                 splash_sound.play()
                 self.new_frog()
-        elif self.lane in self.world.lane_with_logs:
+        elif self.lane in self.world.lane_with_logs and not self.invincible:
             log = util.detect_collision(self, logs, 5)
             if not log:
                 self.sinking = True
@@ -161,12 +177,12 @@ class Frog(key.KeyStateHandler):
                 self.new_frog()
             else:
                 self.x += log.vx*dt
-        elif util.outside_world(self, self.world):
+        elif util.outside_world(self, self.world) and not self.invincible:
             crush_sound.play()
             self.new_frog()
         else:
             car = util.detect_collision(self, cars, 2)
-            if car:
+            if car and not self.invincible:
                 crush_sound.play()
                 self.new_frog()
 
@@ -179,48 +195,47 @@ class Frog(key.KeyStateHandler):
             if self[key.LEFT]:
                 self.rotation = 180
                 self.start_moving()
-                self.step(-1)
+                self.jump(dx=-1)
                 self[key.LEFT] = False
             elif self[key.RIGHT]:
                 self.rotation = 0
                 self.start_moving()
-                self.step(1)
+                self.jump(dx=1)
                 self[key.RIGHT] = False
             elif self[key.UP]:
                 self.rotation = 90
                 self.start_moving()
-                self.jump(1)
+                self.jump(dy=1)
                 self[key.UP] = False
             elif self[key.DOWN]:
                 self.rotation = -90
                 self.start_moving()
-                self.jump(-1)
+                self.jump(dy=-1)
                 self[key.DOWN] = False
+
             self.check_position(dt, pads, cars, logs)
             if self.game.time_remaining.time_left < 0:
                 out_of_time_sound.play()
                 self.new_frog(out_of_time=True)
-            if self.lives > -1:
+            if self.spare_lives > -1:
                 previous = self.animation_time
                 self.animation_time -= dt
-                if self.animation_time < 0:
-                    # check to see if we are ending an animation sequence
-                    if previous*self.animation_time < 0:
-                        # adjust the image so that the horizontal position
-                        # of the center stays the same
-                        self.x += (-self.at_rest_image.width +
-                                    self.moving_image.width)/2
-                    if self.rotation in [0, 180]:
-                        self.width = self.at_rest_image.width
-                        self.height = self.at_rest_image.height
-                    else:
-                        self.width = self.at_rest_image.height
-                        self.height = self.at_rest_image.width
+                # adjust parameters so as to deal only with
+                # at rest image (not the moving one)
+                if self.rotation in [0, 180]:
+                    self.width = self.at_rest_image.width
+                    self.height = self.at_rest_image.height
+                else:
+                    self.width = self.at_rest_image.height
+                    self.height = self.at_rest_image.width
+                if self.animation_time < 0: # no longer moving
                     util.draw_rotated(self, self.at_rest_image)
                 else:
-                    self.width = self.moving_image.width
-                    self.height = self.moving_image.height
+                    # draw from previous position, with moving image
+                    saved_x, saved_y = self.x, self.y
+                    self.x, self.y = self.old_x, self.old_y
                     util.draw_rotated(self, self.moving_image)
+                    self.x, self.y = saved_x, saved_y
         else:
             self.die(dt)
 
@@ -228,18 +243,8 @@ class Frog(key.KeyStateHandler):
         previous = self.animation_time
         # animation lasts barely long enough to see it; since we determine
         # the end of animation by crossing 0, add a tiny offset
-        # to avoid accidental equality to zero.
+        # to avoid accidental strict equality to zero.
         self.animation_time = 1.0/20 + 0.000001
-        if previous <= 0: # animation not in progress
-            # adjust the image so that the horizontal position of the center
-            # stays the same
-            self.x += (self.at_rest_image.width - self.moving_image.width)/2
-        if self.rotation in [0, 180]:
-            self.width = self.moving_image.width
-            self.height = self.moving_image.height
-        else:
-            self.width = self.moving_image.height
-            self.height = self.moving_image.width
         self.old_x = self.x
         self.old_y = self.y
 
@@ -273,7 +278,7 @@ class Frog(key.KeyStateHandler):
             self.y = self.min_y
 
     def display_lives(self):
-        n = self.lives
+        n = self.spare_lives
         x = self.world.width
         y = self.world.height + self.min_y
         while n > 0:
