@@ -171,7 +171,7 @@ class Frog(key.KeyStateHandler):
                 self.new_frog()
         elif self.lane in self.world.lane_with_logs and not self.invincible:
             log = util.detect_collision(self, logs, 5)
-            if not log:
+            if not log or log.sunk:
                 self.sinking = True
                 splash_sound.play()
                 self.new_frog()

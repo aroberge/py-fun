@@ -10,10 +10,8 @@ from pyglet.font import Text
 
 from pyglet.gl import *
 
-
 import util
-from lane import Car, Log, LillyPad
-#from pad import LillyPad
+from lane import Car, Log, LillyPad, Turtle
 from frog import Frog
 
 DIR = os.path.dirname(__file__)
@@ -98,10 +96,17 @@ class Game(object):
                                 self.world.vx_values[lane])
         self.logs = []
         for lane in self.world.lane_with_logs:
-            self.logs.append(Log(lane, self.world.x_values, self.world.y_values,
-                                 self.world.vx_values[lane]))
-            self.spawn_delay[lane] = self.calculate_delay(lane, self.logs[-1].width,
-                                        self.world.vx_values[lane])
+            r = random.randint(0, 2)
+            if r == 2:
+                self.logs.append(Turtle(lane, self.world.x_values, self.world.y_values,
+                                     self.world.vx_values[lane], [], 0))
+                self.spawn_delay[lane] = self.calculate_delay(lane, self.logs[-1].width,
+                                            self.world.vx_values[lane])
+            else:
+                self.logs.append(Log(lane, self.world.x_values, self.world.y_values,
+                                     self.world.vx_values[lane]))
+                self.spawn_delay[lane] = self.calculate_delay(lane, self.logs[-1].width,
+                                            self.world.vx_values[lane])
     def new_level(self):
         '''create a new level, more difficult to complete'''
         # less time
@@ -110,6 +115,10 @@ class Game(object):
         # more cars
         for lane in self.world.lane_with_cars:
             self.approx_nb_object_per_lane[lane] += 0.2
+        # a tiny increase in the number of logs
+        for lane in self.world.lane_with_logs:
+            self.approx_nb_object_per_lane[lane] += 0.1
+
         # restart
         self.level_completed = False
         self.frog.spare_lives = self.nb_extra_lives
@@ -186,10 +195,17 @@ class Game(object):
                         self.spawn_delay[lane] = self.calculate_delay(lane, self.cars[-1].width,
                                                    vx[lane])
                     elif lane in self.world.lane_with_logs:
-                        self.logs.append(Log(lane, self.world.x_values, self.world.y_values,
-                                             vx[lane]))
-                        self.spawn_delay[lane] = self.calculate_delay(lane, self.logs[-1].width,
-                                                   vx[lane])
+                        r = random.randint(0, 2)
+                        if r == 2:
+                            self.logs.append(Turtle(lane, self.world.x_values, self.world.y_values,
+                                                 self.world.vx_values[lane], [], 0))
+                            self.spawn_delay[lane] = self.calculate_delay(lane, self.logs[-1].width,
+                                                        self.world.vx_values[lane])
+                        else:
+                            self.logs.append(Log(lane, self.world.x_values, self.world.y_values,
+                                                 self.world.vx_values[lane]))
+                            self.spawn_delay[lane] = self.calculate_delay(lane, self.logs[-1].width,
+                                                        self.world.vx_values[lane])
         for car in self.cars:
             if car.vx < 0:
                 car.vx = - vx[car.lane]
