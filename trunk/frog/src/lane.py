@@ -42,7 +42,7 @@ class LaneObject(object):
     def update(self, dt):
         self.x += self.vx*dt
         if self.vx < 0:
-            # flip the image
+            # flip the image about the y axis...
             glLoadIdentity()
             # make the origin coincide with image, then rotate
             glTranslatef(self.x, self.y, 0)
@@ -88,7 +88,7 @@ class Log(LaneObject):
 
 class Turtle(LaneObject):
     '''swimming_turtle'''
-    def __init__(self, lane, x_values, y_values, vx, swimming_cycle, cycle_time):
+    def __init__(self, lane, x_values, y_values, vx):
         super(Turtle, self).__init__(lane, y_values)
         # the following is a series of floating/diving turtle images
         self.images = turtle_images
@@ -105,14 +105,11 @@ class Turtle(LaneObject):
         self.width = self.image.width
         self.height = self.image.height
 
-        #self.swimming_cycle = swimming_cycle
-        self.swimming_cycle = [1.5, 0.3, 0.3, 0.3, 0.4]
+        self.swimming_cycle = [1.5, 0.4, 0.4, 0.4, 0.4]
         self.half_cycle_length = len(self.swimming_cycle)
         r = self.swimming_cycle[:]
         r.reverse()
 
-        #self.cycle_time = cycle_time
-        self.cycle_time = 0
         self.half_total_cycle_time = 0
         s = []
         for t in self.swimming_cycle:
@@ -123,6 +120,8 @@ class Turtle(LaneObject):
         for t in r:
             total += t
             self.swimming_cycle.append(self.half_total_cycle_time+total)
+        # start at arbitrary time in the cycle
+        self.cycle_time = random.random()*self.half_total_cycle_time*2
 
 
     def update(self, dt):
