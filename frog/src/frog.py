@@ -48,6 +48,9 @@ frog_sinking2 = image.load(img_filename)
 img_filename = os.path.join(DIR, "images", 'sploosh4.png')
 frog_sinking1 = image.load(img_filename)
 
+#http://www.freesoundfiles.tintagel.net/Audio/free-wave-files-clicks/BOUNCE.WAV
+snd_filename = os.path.join(DIR, "sounds", 'bounce.wav')
+frog_jumping = media.load(snd_filename, streaming=False)
 #http://www.sound-effect.com/pirsounds/WEB_DESIGN_SOUNDS_WAV1/SOUNDFX/SPLASH.WAV
 snd_filename = os.path.join(DIR, "sounds", 'splash.wav')
 splash_sound = media.load(snd_filename, streaming=False)
@@ -121,6 +124,7 @@ class Frog(key.KeyStateHandler):
 
     def jump(self, dx=0, dy=0):
         '''frog changes position either horizontally or vertically'''
+        frog_jumping.play()
         # horizontal motion: half a lane distance, for finer control
         if dx != 0:
             self.x += dx*self.world.lane_width/2
