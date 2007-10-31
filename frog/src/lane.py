@@ -29,6 +29,9 @@ log_images.append(image.load(img_filename))
 img_filename = os.path.join(DIR, "images", 'log_small.png')
 log_images.append(image.load(img_filename))
 
+img_filename = os.path.join(DIR, "images", 'snake.png')
+snake_image = image.load(img_filename)
+
 turtle_images = []
 for i in range(5):
     img_filename = os.path.join(DIR, "images", 'turtle%d.png'%i)
@@ -65,6 +68,20 @@ class Car(LaneObject):
             self.vx = vx
         else:
             self.x = x_values[lane]
+            self.vx = -vx
+
+        self.width = self.image.width
+        self.height = self.image.height
+
+class Snake(LaneObject):
+    def __init__(self, lane, x_values, y_values, vx):
+        super(Snake, self).__init__(lane, y_values)
+        self.image = snake_image
+        if random.randint(0, 1) == 0:
+            self.x = 0 - self.image.width
+            self.vx = vx
+        else:
+            self.x = max(x_values)
             self.vx = -vx
 
         self.width = self.image.width

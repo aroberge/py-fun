@@ -11,7 +11,7 @@ from pyglet.font import Text
 from pyglet.gl import *
 
 import util
-from lane import Car, Log, LillyPad, Turtle
+from lane import Car, Log, LillyPad, Turtle, Snake
 from frog import Frog
 
 DIR = os.path.dirname(__file__)
@@ -41,6 +41,7 @@ class World(object):
         self.lane_width = self.height/self.nb_lanes
         self.lane_with_cars = [1, 2, 3, 4]
         self.lane_with_logs = [6, 7, 8]
+        self.lane_with_snakes = 5
         self.pad_lane = 9
         # position of each lane
         self.y_values = [self.lane_width*i for i in range(10)]
@@ -48,7 +49,10 @@ class World(object):
         # 0: from left; self.width: from the right; -1: either side
         self.x_values = [0, 0, 0, self.width, self.width, -1, self.width, 0, self.width]
         # initial velocities of moving NPC
-        self.vx_values = [0, 45, 70, 70, 45, 0, 50, 90, 60]
+        self.vx_values = [0, 45, 70, 70, 45, 20, 50, 90, 60]
+        #
+        self.level_with_snakes = 4
+        self.level_with_turtles = 2
 
 class Game(object):
     '''Game is the main class.
@@ -97,12 +101,20 @@ class Game(object):
         self.logs = []
         for lane in self.world.lane_with_logs:
             self.append_logs(lane, self.world.vx_values)
+        self.snakes = []
+        self.append_snake(self.world.lane_with_snakes, self.world.vx_values)
 
 
     def append_cars(self, lane, vx_value):
         self.cars.append(Car(lane, self.world.x_values, self.world.y_values,
                              vx_value[lane]))
         self.spawn_delay[lane] = self.calculate_delay(lane, self.cars[-1].width,
+                            vx_value[lane])
+
+    def append_snake(self, lane, vx_value):
+        self.snakes.append(Snake(lane, self.world.x_values, self.world.y_values,
+                             vx_value[lane]))
+        self.spawn_delay[lane] = self.calculate_delay(lane, self.snakes[-1].width,
                             vx_value[lane])
 
     def append_logs(self, lane, vx_value):
@@ -205,6 +217,8 @@ class Game(object):
                         self.append_cars(lane, vx)
                     elif lane in self.world.lane_with_logs:
                         self.append_logs(lane, vx)
+                    elif lane == self.world.lane_with_snakes:
+                        self.append_snake(lane, vx)
             # adjust the speed of all moving objects
             for car in self.cars:
                 if car.vx < 0:
@@ -224,6 +238,8 @@ class Game(object):
             car.update(dt)
         for log in self.logs:
             log.update(dt)
+        for snake in self.snakes:
+            snake.update(dt)
 
         if self.frog.dying:
             dt = saved_dt
