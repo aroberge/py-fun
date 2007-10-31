@@ -71,6 +71,9 @@ snd_filename = os.path.join(DIR, "sounds", 'crowd.wav')
 safe_landing_sound = media.load(snd_filename, streaming=False)
 #http://www.vionline.com/snd/chimeup.wav
 level_completed_sound_fname = os.path.join(DIR, "sounds", 'chimeup.wav')
+#http://static1.grsites.com/archive/sounds/cartoon/cartoon085.wav
+snd_filename = os.path.join(DIR, "sounds", 'crunch.wav')
+crunch_sound = media.load(snd_filename, streaming=False)
 
 def level_completed_play():
     '''for some reason, using streaming leads to a "broken up" sound for the
@@ -187,7 +190,7 @@ class Frog(key.KeyStateHandler):
         elif self.lane == self.world.lane_with_snakes and not self.invincible:
             snake = util.detect_collision(self, snakes, 5)
             if snake:
-                crush_sound.play()
+                crunch_sound.play()
                 self.new_frog()
         else:
             car = util.detect_collision(self, cars, 2)
