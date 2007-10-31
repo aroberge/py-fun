@@ -140,7 +140,7 @@ class Frog(key.KeyStateHandler):
             self.y = self.min_y
             self.lane = 0
 
-    def check_position(self, dt, pads, cars, logs):
+    def check_position(self, dt, pads, cars, logs, snakes):
         '''check to see if we reached a "winning" position or if the
            frog has died'''
 
@@ -184,13 +184,18 @@ class Frog(key.KeyStateHandler):
         elif util.outside_world(self, self.world) and not self.invincible:
             crush_sound.play()
             self.new_frog()
+        elif self.lane == self.world.lane_with_snakes and not self.invincible:
+            snake = util.detect_collision(self, snakes, 5)
+            if snake:
+                crush_sound.play()
+                self.new_frog()
         else:
             car = util.detect_collision(self, cars, 2)
             if car and not self.invincible:
                 crush_sound.play()
                 self.new_frog()
 
-    def update(self, dt, pads, cars, logs):
+    def update(self, dt, pads, cars, logs, snakes):
         '''simplest case is just drawing == blitting; animation will follow'''
         self.display_lives()
         if self.game.paused:
@@ -217,7 +222,7 @@ class Frog(key.KeyStateHandler):
                 self.jump(dy=-1)
                 self[key.DOWN] = False
 
-            self.check_position(dt, pads, cars, logs)
+            self.check_position(dt, pads, cars, logs, snakes)
             if self.game.time_remaining.time_left < 0:
                 out_of_time_sound.play()
                 self.new_frog(out_of_time=True)

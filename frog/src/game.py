@@ -92,6 +92,8 @@ class Game(object):
         self.approx_nb_object_per_lane = []
         for lane in range(self.world.nb_lanes):
             self.approx_nb_object_per_lane.append(4.0)
+        # initially, start with no snake
+        self.approx_nb_object_per_lane[self.world.lane_with_snakes] = 0
         self.pads = []
         for i in range(5):
             self.pads.append(LillyPad(45 + 160*i, 540))
@@ -102,7 +104,7 @@ class Game(object):
         for lane in self.world.lane_with_logs:
             self.append_logs(lane, self.world.vx_values)
         self.snakes = []
-        self.append_snake(self.world.lane_with_snakes, self.world.vx_values)
+        #self.append_snake(self.world.lane_with_snakes, self.world.vx_values)
 
 
     def append_cars(self, lane, vx_value):
@@ -177,6 +179,10 @@ class Game(object):
             self.game_won()
         else:
             self.level += 1
+            if self.level == self.world.level_with_snakes:
+                self.append_snake(self.world.lane_with_snakes, self.world.vx_values)
+            elif self.level > self.world.level_with_snakes:
+                self.approx_nb_object_per_lane[self.world.lane_with_snakes] += 0.3
             self.paused = True
             self.level_completed = True
             self.update(0)
@@ -205,10 +211,15 @@ class Game(object):
             # determine the new speed of the moving objects
             vx = []
             more = self.speed_increment
-            for vx_value in self.world.vx_values:
-                vx.append(vx_value + more*(self.level-1) + more*(
-                self.time_remaining.time_for_game - self.time_remaining.time_left
+            for lane, vx_value in enumerate(self.world.vx_values):
+                # keep snakes moving slowly
+                if lane == self.world.lane_with_snakes:
+                    vx.append(vx_value)
+                else:
+                    vx.append(vx_value + more*(self.level-1) + more*(
+                    self.time_remaining.time_for_game - self.time_remaining.time_left
                           )/self.time_remaining.time_for_game)
+
             # determine if we need to generate new moving objects
             for lane in self.spawn_delay:
                 self.spawn_delay[lane] -= dt
@@ -234,6 +245,7 @@ class Game(object):
         # Remove objects that have left the world
         self.cars = [car for car in self.cars if not util.outside_world(car, self.world)]
         self.logs = [log for log in self.logs if not util.outside_world(log, self.world)]
+        self.snakes = [snake for snake in self.snakes if not util.outside_world(snake, self.world)]
         for car in self.cars:
             car.update(dt)
         for log in self.logs:
@@ -243,7 +255,7 @@ class Game(object):
 
         if self.frog.dying:
             dt = saved_dt
-        self.frog.update(dt, self.pads, self.cars, self.logs)
+        self.frog.update(dt, self.pads, self.cars, self.logs, self.snakes)
         self.score.update()
         self.display_level.update()
         if self.begin:
