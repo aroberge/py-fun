@@ -1,15 +1,13 @@
 
 
-
-import threading
 import BaseHTTPServer
 import httplib
+import re
+import socket
+import threading
 import webbrowser
 
-port = 8000
-
-
-DOCTYPE = """<?xml version="1.0" encoding="UTF-8"?>
+BEGIN_DOCUMENT = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -17,6 +15,125 @@ DOCTYPE = """<?xml version="1.0" encoding="UTF-8"?>
       xmlns:svg="http://www.w3.org/2000/svg">"""
 
 END_DOCUMENT = "</html>"
+
+parsers = {}
+
+def view(obj):
+    """
+    Allows viewing docstring with embedded images.
+
+    To see a normal docstring, use help(object).
+    To see a docstring with embedded images, use docpicture.view(object).
+    It is assumed that the images are included (encoded in base 64) in
+    your Python module.
+
+    The result will be an html file displayed in your default browser,
+    with the images inserted.
+
+    For example: docpicture = python_powered_w.png
+
+    Limitation: the filename must be a valid Python identifier.
+    Note that this works with gif images  docpicture=python_g.gif
+
+    as well as jpeg images docpicture = python_j.jpg
+
+    All that is required is for the filename (without the extension) be a
+    unique value.  Note that the same image can appear twice.
+
+    docpicture = python_powered_w.png
+    """
+    source_module = sys.modules[obj.__module__]
+
+    docpicture_pattern = re.compile("\s*(docpicture\s*=\s*.+?)\s")
+    image_name_pattern = re.compile("\s*docpicture\s*=\s*(.+?)\s")
+
+    docstring = obj.__doc__
+    image_filename = image_name_pattern.search(obj.__doc__)
+    while image_filename is not None:
+        filename = image_filename.groups()[0]
+        base_name, ext = filename.split('.')
+        image = getattr(source_module, base_name).decode("base64")
+
+        image_file = open(filename, "wb")
+        image_file.write(image)
+        image_file.close()
+        docstring = docpicture_pattern.sub("</pre><img src=%s><pre>" % filename,
+                                    docstring, count=1)
+        image_filename = image_name_pattern.search(docstring)
+
+    html_file = open("test.html", 'w')
+    html_file.write(html_template % docstring)
+    html_file.close()
+    url = os.path.join(os.getcwd(), "test.html")
+    webbrowser.open(url)
+
+docpicture_directive_pattern = re.compile("\s*\.\.docpicture::\s*(.+?)$")
+def identify_docpicture_directive(line):
+    """ Identifies if a line corresponds to a docpicture directives.
+
+        If it is a docpicture directive, it returns the indentation (number of
+        spaces at the beginning of the line) and the name of the processor;
+        otherwise it returns None.
+    """
+    result = docpicture_directive_pattern.search(line.rstrip())
+    if result is None:
+        return None
+    else:
+        return line.index("..docpicture"), result.groups()[0]
+
+def is_code(line, indentation):
+    '''return True if the indentation (number of spaces at the beginning
+       of a line) is greater than the given indentation, False otherwise,
+       with the exception that blank lines are considered to be part of the code.
+    '''
+    if len(line.strip()) == 0:
+        return True
+    if line.startswith(" "*(indentation+1)):
+        return True
+    else:
+        return False
+
+def parse_code(parser, code):
+    '''Calls the appropriate parser, based on its name, to produce the
+    svg diagram corresponding to the code.'''
+    try:
+        return parsers[parser].parse(code)
+    except KeyError:
+        return "<p>Unknown parser %s.</p>" % parser
+
+def parse_document(text):
+    '''parses an entire document, received as a string, and outputs
+    an html document with svg code inserted by the appropriate parser.
+    The original text is inserted into some pre-formatted sections,
+    so as to retain the original look - including any existing ascii diagrams.
+    '''
+    lines = text.split("\n")
+    new_lines = [BEGIN_DOCUMENT, "<pre>\n"]
+    indentation = None
+    current_parser = None
+    lines_of_code = None
+    for line in lines:
+        if lines_of_code is not None:
+            if is_code(line, indentation):
+                new_lines.append(line)
+                lines_of_code.append(line)
+            else:
+                new_lines.append("</pre>")
+                new_lines.append(parse_code(current_parser,
+                        "\n".join(lines_of_code)))
+                new_lines.append("<pre>\n"+line)
+                lines_of_code = None
+                current_parser = indentation = None
+        else:
+            parsing_call = identify_docpicture_directive(line)
+            if parsing_call is not None:
+                indentation, current_parser = parsing_call
+                lines_of_code = []
+            new_lines.append(line)
+    new_lines.append("</pre>\n"+END_DOCUMENT)
+    return "\n".join(new_lines)
+
+
 
 class Element(object):
     '''Prototype from which all the svg elements are derived.
@@ -36,6 +153,9 @@ class Element(object):
             self.attributes = {}
 
     def __repr__(self):
+        '''This normal python method used to give a string representation
+        for an object is used to automatically create the appropriate
+        syntax representing an svg object.'''
         attrib = [self.open_tag]
         for att in self.attributes:
             if att != 'text':
@@ -55,17 +175,15 @@ class Element(object):
         self.sub_elements.append(other)
 
 
-svg_test = """<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:svg="http://www.w3.org/2000/svg">
+svg_test = BEGIN_DOCUMENT + """
   <head>
     <title>SVG embedded inline in XHTML</title>
   </head>
   <body>
 
-    <h1>SVG embedded inline in XHTML</h1>
+    <h1>SVG embedded inline in XHTML: test</h1>
+    <p>Reload this page to see a modified figure displayed.
+    Note that the server will stop after 10 seconds.</p>
 
     <svg:svg width="300px" height="200px">
       <svg:circle cx="150px" cy="100px" r="50px" fill="%s"
@@ -73,12 +191,15 @@ svg_test = """<?xml version="1.0" encoding="UTF-8"?>
     </svg:svg>
 
   </body>
-</html>
-"""
+""" + END_DOCUMENT
+
 position = ["#330000", "#660000", "#990000",  "#cc0000", "#ff0000"]
 index = 0
 class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+    '''Request Handler customized to respond to a "QUIT" command and
+    which does not log any output'''
     def do_GET(self):
+        '''send 200 OK response, and sends a new page'''
         global index
         self.send_response(200)
         self.send_header('Content-type', 'application/xhtml+xml')
@@ -96,6 +217,21 @@ class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         ''' will suppress the usual output'''
         return
 
+def find_port(start=8001):
+    """finds the first free port on 127.0.0.1 starting at start"""
+    finalport = None
+    testsock = socket.socket()
+    testn = start
+    while not finalport and (testn < 65536):
+        try:
+            testsock.bind(('127.0.0.1', testn))
+            finalport = testn
+        except socket.error:
+            testn += 1
+    testsock.close()
+    return finalport
+
+
 class StoppableHttpServer(BaseHTTPServer.HTTPServer):
     """http server that reacts to self.stop flag"""
 
@@ -105,10 +241,18 @@ class StoppableHttpServer(BaseHTTPServer.HTTPServer):
         while not self.stop:
             self.handle_request()
 
-class TestThread(threading.Thread):
+class ServerInThread(threading.Thread):
+    '''A class designed to start a stoppable HttpServer in a separate thread.'''
+
+    def __init__(self, port):
+        '''initializes the port to use for the server and starts the thread'''
+        self.port = port
+        threading.Thread.__init__(self)
+
     def run(self):
+        '''Method that is called when the start() method of an instance is called'''
         server = StoppableHttpServer(('',port), WebRequestHandler)
-        webbrowser.open("http://127.0.0.1:%s"%port)
+        webbrowser.open("http://127.0.0.1:%s"%self.port)
         server.serve_forever()
 
 def stop_server(port):
@@ -118,11 +262,11 @@ def stop_server(port):
     conn.getresponse()
 
 
-
 if __name__ == '__main__':
     import time
     print "Try reloading the page from the Web Browser until the server stops."
-    test_thread = TestThread()
+    port = find_port()
+    test_thread = ServerInThread(port)
     test_thread.start()
 
     for i in range(10):

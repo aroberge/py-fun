@@ -1,0 +1,161 @@
+docpicture.py tests
+====================
+
+
+    >>> import docpicture
+
+First, we make sure that there has not been any accidental changes made
+to the Doctype and other information.
+    >>> print docpicture.BEGIN_DOCUMENT
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE html
+        PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+    <html xmlns="http://www.w3.org/1999/xhtml"
+          xmlns:svg="http://www.w3.org/2000/svg">
+    >>> print docpicture.END_DOCUMENT
+    </html>
+
+Next, we reassign these values so that we will be able to test
+whole documents processing while reducing the output.
+
+    >>> docpicture.BEGIN_DOCUMENT = "==Begin=="
+    >>> docpicture.END_DOCUMENT = "==End=="
+
+
+Testing identify_docpicture_directive(). First a simple case.
+
+    >>> doc_line = "..docpicture:: some_name"
+    >>> print docpicture.identify_docpicture_directive(doc_line)
+    (0, 'some_name')
+
+Same example but with extra space at the beginning and no space between the two
+colons and the name.
+    >>> doc_line = "    ..docpicture::some_name"
+    >>> print docpicture.identify_docpicture_directive(doc_line)
+    (4, 'some_name')
+
+Some spaces in the processor name
+    >>> doc_line = " ..docpicture:: some name"
+    >>> print docpicture.identify_docpicture_directive(doc_line)
+    (1, 'some name')
+
+A failing example (only one dot at the beginning.
+    >>> doc_line = ".docpicture:: some_name"
+    >>> print docpicture.identify_docpicture_directive(doc_line)
+    None
+
+Next, we need to identify docpicture code.  docpicture code is,
+by definition, indented at least one more space than the docpicture directive
+declaration.  To make the code more readable, empty lines (with only blank
+spaces) are considered to be part of the docpicture code.  They are also
+preserved as a docpicture code parser may be designed to use this information.
+
+    >>> test_code = "    Line with 4 spaces at the beginning."
+    >>> print docpicture.is_code(test_code, 4)
+    False
+    >>> print docpicture.is_code(test_code, 3)
+    True
+    >>> print docpicture.is_code(test_code, 5)
+    False
+    >>> print docpicture.is_code(test_code, 2)
+    True
+    >>> print docpicture.is_code("   ", 18)
+    True
+
+Next, we need to be able to call the appropriate parser, and give a useful
+error message.  As we don't have any parsers in this module, we will
+simply test the error message.
+
+    >>> print docpicture.parse_code('parser_name', 'test_code')
+    <p>Unknown parser parser_name.</p>
+
+
+We are now ready to parse an entire document, extracting
+the directive names, code and processing it accordingly.
+
+    >>> test_document = """\
+    ... This is a test.
+    ... It has many lines.
+    ... ..docpicture:: first
+    ...    Some code
+    ...   More code
+    ... 
+    ...     Even more code
+    ...
+    ... Back to normal text.
+    ... Some more text.
+    ...     ..docpicture:: second (indented line)
+    ...        part of the code
+    ...     Not part of the code (same indentation as ..docpicture declaration)
+    ... End of text."""
+    >>> print docpicture.parse_document(test_document)
+    ==Begin==
+    <pre>
+    <BLANKLINE>
+    This is a test.
+    It has many lines.
+    ..docpicture:: first
+       Some code
+      More code
+    <BLANKLINE>
+        Even more code
+    <BLANKLINE>
+    </pre>
+    <p>Unknown parser first.</p>
+    <pre>
+    Back to normal text.
+    Some more text.
+        ..docpicture:: second (indented line)
+           part of the code
+    </pre>
+    <p>Unknown parser second (indented line).</p>
+    <pre>
+        Not part of the code (same indentation as ..docpicture declaration)
+    End of text.
+    </pre>
+    ==End==
+
+Here we test the creation of various elements.
+
+
+    >>> elem = docpicture.Element("line")
+    >>> print elem
+    <svg:line/>
+    <BLANKLINE>
+    >>> elem = docpicture.Element("circle", cx=10, cy=30, r="10", color="red")
+    >>> print elem
+    <svg:circle color="red" cy="30" cx="10" r="10"/>
+    <BLANKLINE>
+    >>> elem = docpicture.Element("text", text="This is a test.")
+    >>> print elem
+    <svg:text>
+      This is a test.
+    </svg:text>
+    <BLANKLINE>
+    >>> elem = docpicture.Element("g")
+    >>> elem2 = docpicture.Element("circle", cx=10, cy=30, r="10", color="red")
+    >>> elem.append(elem2)
+    >>> print elem
+    <svg:g>
+      <svg:circle color="red" cy="30" cx="10" r="10"/>
+    </svg:g>
+    <BLANKLINE>
+    >>> elem3 = docpicture.Element("circle", cx=10, cy=40, r="10", color="yellow")
+    >>> elem.append(elem3)
+    >>> print elem
+    <svg:g>
+      <svg:circle color="red" cy="30" cx="10" r="10"/>
+      <svg:circle color="yellow" cy="40" cx="10" r="10"/>
+    </svg:g>
+    <BLANKLINE>
+    >>> elem1 = docpicture.Element("g")
+    >>> elem1.append(elem)
+    >>> print elem1
+    <svg:g>
+      <svg:g>
+        <svg:circle color="red" cy="30" cx="10" r="10"/>
+        <svg:circle color="yellow" cy="40" cx="10" r="10"/>
+      </svg:g>
+    </svg:g>
+    <BLANKLINE>
