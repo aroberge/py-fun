@@ -97,7 +97,7 @@ def parse_code(parser, code):
     '''Calls the appropriate parser, based on its name, to produce the
     svg diagram corresponding to the code.'''
     try:
-        return parsers[parser].parse(code)
+        return parsers[parser](code)
     except KeyError:
         return "<p>Unknown parser %s.</p>" % parser
 
@@ -132,8 +132,6 @@ def parse_document(text):
             new_lines.append(line)
     new_lines.append("</pre>\n"+END_DOCUMENT)
     return "\n".join(new_lines)
-
-
 
 class Element(object):
     '''Prototype from which all the svg elements are derived.
@@ -174,38 +172,24 @@ class Element(object):
     def append(self, other):
         self.sub_elements.append(other)
 
-
-svg_test = BEGIN_DOCUMENT + """
-  <head>
-    <title>SVG embedded inline in XHTML</title>
-  </head>
-  <body>
-
-    <h1>SVG embedded inline in XHTML: test</h1>
-    <p>Reload this page to see a modified figure displayed.
-    Note that the server will stop after 10 seconds.</p>
-
+def test_circle(dummy_code):
+    '''fake parser that returns the svg code to insert a circle
+       inside a document'''
+    return """
     <svg:svg width="300px" height="200px">
-      <svg:circle cx="150px" cy="100px" r="50px" fill="%s"
+      <svg:circle cx="150px" cy="100px" r="50px" fill="#ff0000"
                              stroke="#000000" stroke-width="5px"/>
-    </svg:svg>
+    </svg:svg>"""
 
-  </body>
-""" + END_DOCUMENT
-
-position = ["#330000", "#660000", "#990000",  "#cc0000", "#ff0000"]
-index = 0
 class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     '''Request Handler customized to respond to a "QUIT" command and
     which does not log any output'''
     def do_GET(self):
         '''send 200 OK response, and sends a new page'''
-        global index
         self.send_response(200)
         self.send_header('Content-type', 'application/xhtml+xml')
         self.end_headers()
-        self.wfile.write(svg_test% position[index % 5])
-        index += 1
+        self.wfile.write(DOCUMENT)
 
     def do_QUIT (self):
         """send 200 OK response, and set server.stop to True"""
@@ -261,16 +245,35 @@ def stop_server(port):
     conn.request("QUIT", "/")
     conn.getresponse()
 
+test_document = """
+    This is a test of docpicture, first done on October 19, 2008.
+    It has many lines.
+    ..docpicture:: dummy_name
+        Some code
+         More code
+
+    Even more code
+
+    Back to normal text.
+    Some more text.
+        ..docpicture:: test_circle
+          irrelevant code
+        Not part of the code (same indentation as ..docpicture declaration)
+    End of text.
+"""
+
 
 if __name__ == '__main__':
     import time
-    print "Try reloading the page from the Web Browser until the server stops."
+    print "Server will be active for 10 seconds."
     port = find_port()
+    parsers['test_circle'] = test_circle
+    DOCUMENT = parse_document(test_document)
     test_thread = ServerInThread(port)
     test_thread.start()
 
-    for i in range(10):
-        print i
+    for i in range(10, 0, -1):
+        print i,
         time.sleep(1)
 
     stop_server(port)
