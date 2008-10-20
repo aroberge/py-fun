@@ -12,9 +12,17 @@ BEGIN_DOCUMENT = """<?xml version="1.0" encoding="UTF-8"?>
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:svg="http://www.w3.org/2000/svg">"""
+      xmlns:svg="http://www.w3.org/2000/svg">
+  <head>
+    <style>
+        pre{font-size: 12pt;}
+        .docpicture{color: blue;}
+        .warning{color: red;}
+    </style>
+  </head>
+<body>"""
 
-END_DOCUMENT = "</html>"
+END_DOCUMENT = "</body></html>"
 
 parsers = {}
 
@@ -99,7 +107,7 @@ def parse_code(parser, code):
     try:
         return parsers[parser](code)
     except KeyError:
-        return "<p>Unknown parser %s.</p>" % parser
+        return "<p class='warning'>Unknown parser %s.</p>" % parser
 
 def parse_document(text):
     '''parses an entire document, received as a string, and outputs
@@ -129,6 +137,7 @@ def parse_document(text):
             if parsing_call is not None:
                 indentation, current_parser = parsing_call
                 lines_of_code = []
+                new_lines.append("</pre>\n<pre class='docpicture'>")
             new_lines.append(line)
     new_lines.append("</pre>\n"+END_DOCUMENT)
     return "\n".join(new_lines)
@@ -252,7 +261,7 @@ test_document = """
         Some code
          More code
 
-    Even more code
+      Even more code
 
     Back to normal text.
     Some more text.
