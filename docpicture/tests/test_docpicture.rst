@@ -13,8 +13,14 @@ to the Doctype and other information.
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
     <html xmlns="http://www.w3.org/1999/xhtml"
           xmlns:svg="http://www.w3.org/2000/svg">
-    >>> print docpicture.END_DOCUMENT
-    </html>
+      <head>
+        <style>
+            pre{font-size: 12pt;}
+            .docpicture{color: blue;}
+            .warning{color: red;}
+        </style>
+      </head>
+    <body>
 
 Next, we reassign these values so that we will be able to test
 whole documents processing while reducing the output.
@@ -68,7 +74,7 @@ error message.  As we don't have any parsers in this module, we will
 simply test the error message.
 
     >>> print docpicture.parse_code('parser_name', 'test_code')
-    <p>Unknown parser parser_name.</p>
+    <p class='warning'>Unknown parser parser_name.</p>
 
 
 We are now ready to parse an entire document, extracting
@@ -95,6 +101,8 @@ the directive names, code and processing it accordingly.
     <BLANKLINE>
     This is a test.
     It has many lines.
+    </pre>
+    <pre class='docpicture'>
     ..docpicture:: first
        Some code
       More code
@@ -102,14 +110,16 @@ the directive names, code and processing it accordingly.
         Even more code
     <BLANKLINE>
     </pre>
-    <p>Unknown parser first.</p>
+    <p class='warning'>Unknown parser first.</p>
     <pre>
     Back to normal text.
     Some more text.
+    </pre>
+    <pre class='docpicture'>
         ..docpicture:: second (indented line)
            part of the code
     </pre>
-    <p>Unknown parser second (indented line).</p>
+    <p class='warning'>Unknown parser second (indented line).</p>
     <pre>
         Not part of the code (same indentation as ..docpicture declaration)
     End of text.
