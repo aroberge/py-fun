@@ -12,9 +12,11 @@ to the Doctype and other information.
         PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
     <html xmlns="http://www.w3.org/1999/xhtml"
-          xmlns:svg="http://www.w3.org/2000/svg">
+          xmlns:svg="http://www.w3.org/2000/svg"
+          xmlns:xlink="http://www.w3.org/1999/xlink">
       <head>
         <style>
+            p{width:800px;}
             pre{font-size: 12pt;}
             .docpicture{color: blue;}
             .warning{color: red;}
@@ -27,7 +29,6 @@ whole documents processing while reducing the output.
 
     >>> docpicture.BEGIN_DOCUMENT = "==Begin=="
     >>> docpicture.END_DOCUMENT = "==End=="
-
 
 Testing identify_docpicture_directive(). First a simple case.
 
@@ -74,8 +75,7 @@ error message.  As we don't have any parsers in this module, we will
 simply test the error message.
 
     >>> print docpicture.parse_code('parser_name', 'test_code')
-    <p class='warning'>Unknown parser parser_name.</p>
-
+    ("<p class='warning'>Unknown parser parser_name.</p>", None)
 
 We are now ready to parse an entire document, extracting
 the directive names, code and processing it accordingly.
@@ -97,11 +97,11 @@ the directive names, code and processing it accordingly.
     ... End of text."""
     >>> print docpicture.parse_document(test_document)
     ==Begin==
-    <pre>
+    <p>
     <BLANKLINE>
     This is a test.
     It has many lines.
-    </pre>
+    </p>
     <pre class='docpicture'>
     ..docpicture:: first
        Some code
@@ -111,20 +111,25 @@ the directive names, code and processing it accordingly.
     <BLANKLINE>
     </pre>
     <p class='warning'>Unknown parser first.</p>
-    <pre>
+    <p>
     Back to normal text.
     Some more text.
-    </pre>
+    </p>
     <pre class='docpicture'>
         ..docpicture:: second (indented line)
            part of the code
     </pre>
     <p class='warning'>Unknown parser second (indented line).</p>
-    <pre>
+    <p>
         Not part of the code (same indentation as ..docpicture declaration)
     End of text.
-    </pre>
+    </p>
     ==End==
+
+
+
+Svg stuff
+==========
 
 Here we test the creation of various elements.
 
