@@ -12,9 +12,11 @@ BEGIN_DOCUMENT = """<?xml version="1.0" encoding="UTF-8"?>
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:svg="http://www.w3.org/2000/svg">
+      xmlns:svg="http://www.w3.org/2000/svg"
+      xmlns:xlink="http://www.w3.org/1999/xlink">
   <head>
     <style>
+        p{width:800px;}
         pre{font-size: 12pt;}
         .docpicture{color: blue;}
         .warning{color: red;}
@@ -107,7 +109,7 @@ def parse_code(parser, code):
     try:
         return parsers[parser](code)
     except KeyError:
-        return "<p class='warning'>Unknown parser %s.</p>" % parser
+        return "<p class='warning'>Unknown parser %s.</p>" % parser, None
 
 def parse_document(text):
     '''parses an entire document, received as a string, and outputs
@@ -116,7 +118,7 @@ def parse_document(text):
     so as to retain the original look - including any existing ascii diagrams.
     '''
     lines = text.split("\n")
-    new_lines = [BEGIN_DOCUMENT, "<pre>\n"]
+    new_lines = [BEGIN_DOCUMENT, "<p>\n"]
     indentation = None
     current_parser = None
     lines_of_code = None
@@ -127,9 +129,8 @@ def parse_document(text):
                 lines_of_code.append(line)
             else:
                 new_lines.append("</pre>")
-                new_lines.append(parse_code(current_parser,
-                        "\n".join(lines_of_code)))
-                new_lines.append("<pre>\n"+line)
+                append_parser_result(new_lines, current_parser, lines_of_code)
+                new_lines.append("<p>\n"+line)
                 lines_of_code = None
                 current_parser = indentation = None
         else:
@@ -137,10 +138,30 @@ def parse_document(text):
             if parsing_call is not None:
                 indentation, current_parser = parsing_call
                 lines_of_code = []
-                new_lines.append("</pre>\n<pre class='docpicture'>")
+                new_lines.append("</p>\n<pre class='docpicture'>")
             new_lines.append(line)
-    new_lines.append("</pre>\n"+END_DOCUMENT)
+    # We have to guard against the situation where we ended with a docpicture
+    if lines_of_code is not None:
+        new_lines.append("</pre>")
+        append_parser_result(new_lines, current_parser, lines_of_code)
+        new_lines.append(END_DOCUMENT)
+    else:
+        new_lines.append("</p>\n"+END_DOCUMENT)
     return "\n".join(new_lines)
+
+def append_parser_result(new_lines, current_parser, lines_of_code):
+    '''calls the appropriate parser to process the code and appends
+    the result to the document being processed.'''
+    result, errors = parse_code(current_parser,
+            "\n".join(lines_of_code))
+    if errors is not None:
+        # We expect the parser to return a list of problem lines
+        new_lines.append("<pre class='warning'>SYNTAX ERROR(S)")
+        for err in errors:
+            new_lines.append(err)
+        new_lines.append("</pre>")
+    new_lines.append(result)
+    return
 
 class Element(object):
     '''Prototype from which all the svg elements are derived.
@@ -188,7 +209,7 @@ def test_circle(dummy_code):
     <svg:svg width="300px" height="200px">
       <svg:circle cx="150px" cy="100px" r="50px" fill="#ff0000"
                              stroke="#000000" stroke-width="5px"/>
-    </svg:svg>"""
+    </svg:svg>""", None
 
 class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     '''Request Handler customized to respond to a "QUIT" command and
@@ -267,8 +288,7 @@ test_document = """
     Some more text.
         ..docpicture:: test_circle
           irrelevant code
-        Not part of the code (same indentation as ..docpicture declaration)
-    End of text.
+    Ending with a normal line of text.
 """
 
 
