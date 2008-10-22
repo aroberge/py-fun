@@ -127,13 +127,13 @@ def parse_document(text):
     current_defs = None
     lines_of_code = None
     for line in lines:
-        if lines_of_code is not None:
-            if is_code(line, indentation):
+        if lines_of_code is not None: # we're inside docpicture code
+            if is_code(line, indentation):  # still inside
                 new_lines.append(line)
                 lines_of_code.append(line)
-            else:
+            else:                           # back to regular help
                 new_lines.append("</pre>")
-                if current_defs is not None:
+                if current_defs is not None:  # need to rewrite this
                     new_lines.append(current_defs)
                     current_defs = None
                 append_parser_result(new_lines, current_parser, lines_of_code)
@@ -281,7 +281,7 @@ class ServerInThread(threading.Thread):
 
     def run(self):
         '''Method that is called when the start() method of an instance is called'''
-        server = StoppableHttpServer(('',port), WebRequestHandler)
+        server = StoppableHttpServer(('', port), WebRequestHandler)
         webbrowser.open("http://127.0.0.1:%s"%self.port)
         server.serve_forever()
 

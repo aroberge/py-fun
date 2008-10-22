@@ -83,21 +83,21 @@ _svg_defs = """
 <svg:svg width="0" height="0">
     <svg:defs>
     <!-- filter idea adapted from "SVG for Web Developers" by Pearlman and House-->
-        <svg:filter id="turtle_filter" x="-30%" y="-30%" width="170%" height="170%">
+        <svg:filter id="turtle_filter" x="-35%" y="-35%" width="170%" height="170%">
           <svg:feGaussianBlur in="SourceAlpha" stdDeviation="8" result="turtle_filter"/>
-          <svg:feOffset in="turtle_filter" dx="3" dy="3" result="turtle_filter_offset"/>
+          <svg:feOffset in="turtle_filter" dx="-3" dy="-3" result="offset_turtle_filter"/>
           <svg:feSpecularLighting in="turtle_filter" surfaceScale="4"
                 specularConstant=".95" specularExponent="17"
-                lighting-color="#cccc66" result="turtle_light">
+                lighting-color="#cccc66" result="light_turtle">
                 <svg:feDistantLight elevation="40" azimuth="60"/>
           </svg:feSpecularLighting>
-          <svg:feComposite in="turtle_light" in2="SourceAlpha" operator="in"
-               result="turtle_light2"/>
-          <svg:feComposite in="SourceGraphic" in2="turtle_light2"
+          <svg:feComposite in="light_turtle" in2="SourceAlpha" operator="in"
+               result="light_turtle2"/>
+          <svg:feComposite in="SourceGraphic" in2="light_turtle2"
                 operator="arithmetic" k1="0" k2=".9" k3="1" k4="0"
                 result="turtle_lit"/>
           <svg:feMerge>
-            <svg:feMergeNode in="turtle_filter_offset"/>
+            <svg:feMergeNode in="offset_turtle_filter"/>
             <svg:feMergeNode in="turtle_lit"/>
           </svg:feMerge>
         </svg:filter>
@@ -116,13 +116,13 @@ _svg_defs = """
       <svg:ellipse cx="0px" cy="0px" rx="30px" ry="25px" fill="darkgreen"/>
     </svg:g>
 
-    <svg:g id="turtle_black_plus">
+    <svg:g id="black_plus">
         <svg:line x1="-6" x2="6" y1="0" y2="0" style="stroke:black; stroke-width:2"/>
         <svg:line x1="0" x2="0" y1="-6" y2="6" style="stroke:black; stroke-width:2"/>
     </svg:g>
-    <svg:g id="turtle_start_to_start">
-     <svg:use xlink:href="#turtle_black_plus" transform="translate(40, 0)"/>
-     <svg:use xlink:href="#turtle_black_plus" transform="translate(300, 0)"/>
+    <svg:g id="start_to_start">
+     <svg:use xlink:href="#black_plus" transform="translate(60, 0)"/>
+     <svg:use xlink:href="#black_plus" transform="translate(300, 0)"/>
      </svg:g>
     </svg:defs>
 </svg:svg>"""
@@ -141,4 +141,3 @@ class turtle(_parser):
     def __init__(self):
         self.svg_defs = _svg_defs  # reference to global definition
         self.patterns = _patterns  # definitely needs to be overriden!
-
