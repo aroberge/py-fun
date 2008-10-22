@@ -85,19 +85,19 @@ _svg_defs = """
     <!-- filter idea adapted from "SVG for Web Developers" by Pearlman and House-->
         <svg:filter id="turtle_filter" x="-30%" y="-30%" width="170%" height="170%">
           <svg:feGaussianBlur in="SourceAlpha" stdDeviation="8" result="turtle_filter"/>
-          <svg:feOffset in="turtle_filter" dx="3" dy="3" result="offset_turtle_filter"/>
+          <svg:feOffset in="turtle_filter" dx="3" dy="3" result="turtle_filter_offset"/>
           <svg:feSpecularLighting in="turtle_filter" surfaceScale="4"
                 specularConstant=".95" specularExponent="17"
-                lighting-color="#cccc66" result="light_turtle">
+                lighting-color="#cccc66" result="turtle_light">
                 <svg:feDistantLight elevation="40" azimuth="60"/>
           </svg:feSpecularLighting>
-          <svg:feComposite in="light_turtle" in2="SourceAlpha" operator="in"
-               result="light_turtle2"/>
-          <svg:feComposite in="SourceGraphic" in2="light_turtle2"
+          <svg:feComposite in="turtle_light" in2="SourceAlpha" operator="in"
+               result="turtle_light2"/>
+          <svg:feComposite in="SourceGraphic" in2="turtle_light2"
                 operator="arithmetic" k1="0" k2=".9" k3="1" k4="0"
                 result="turtle_lit"/>
           <svg:feMerge>
-            <svg:feMergeNode in="offset_turtle_filter"/>
+            <svg:feMergeNode in="turtle_filter_offset"/>
             <svg:feMergeNode in="turtle_lit"/>
           </svg:feMerge>
         </svg:filter>
@@ -116,13 +116,13 @@ _svg_defs = """
       <svg:ellipse cx="0px" cy="0px" rx="30px" ry="25px" fill="darkgreen"/>
     </svg:g>
 
-    <svg:g id="black_plus">
+    <svg:g id="turtle_black_plus">
         <svg:line x1="-6" x2="6" y1="0" y2="0" style="stroke:black; stroke-width:2"/>
         <svg:line x1="0" x2="0" y1="-6" y2="6" style="stroke:black; stroke-width:2"/>
     </svg:g>
-    <svg:g id="start_to_start">
-     <svg:use xlink:href="#black_plus" transform="translate(40, 0)"/>
-     <svg:use xlink:href="#black_plus" transform="translate(300, 0)"/>
+    <svg:g id="turtle_start_to_start">
+     <svg:use xlink:href="#turtle_black_plus" transform="translate(40, 0)"/>
+     <svg:use xlink:href="#turtle_black_plus" transform="translate(300, 0)"/>
      </svg:g>
     </svg:defs>
 </svg:svg>"""

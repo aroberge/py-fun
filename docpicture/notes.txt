@@ -1,0 +1,14 @@
+Developer Notes
+=====================
+
+Parsers (class) should derive from the base class _parser.  
+They should only use lowercase letter and use the same name
+for the file name (module), the class and the docpicture name, as in
+..docpicture:: some_name
+
+To avoid any ambiguity, all svg "defs" should have their id starting
+with the parser class.  For example, if the docpicture name is "some_name"
+then the svg defs will start with "some_name_"...
+
+This way, if a page contains diagrams built from different parsers,
+there will not be any accidental redefinition.
