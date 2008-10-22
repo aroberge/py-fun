@@ -25,23 +25,9 @@ class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.end_headers()
         self.server.stop = True
 
-    def log_message(self, *dummy):
+    def log_message(self, dummy_format, *dummy_args):
         ''' will suppress the usual output'''
         return
-
-def find_port(start=8001):
-    """finds the first free port on 127.0.0.1 starting at start"""
-    finalport = None
-    testsock = socket.socket()
-    testn = start
-    while not finalport and (testn < 65536):
-        try:
-            testsock.bind(('127.0.0.1', testn))
-            finalport = testn
-        except socket.error:
-            testn += 1
-    testsock.close()
-    return finalport
 
 class StoppableHttpServer(BaseHTTPServer.HTTPServer):
     """http server that reacts to self.stop flag"""
@@ -55,22 +41,36 @@ class StoppableHttpServer(BaseHTTPServer.HTTPServer):
 class ServerInThread(threading.Thread):
     '''A class designed to start a stoppable HttpServer in a separate thread.'''
 
-    def __init__(self, port):
+    def __init__(self, port=8001):
         '''initializes the port to use for the server and starts the thread'''
-        self.port = port
+        self.port = self.find_port(start=port)
         threading.Thread.__init__(self)
 
     def run(self):
         '''Method that is called when the start() method of an instance is called'''
-        server = StoppableHttpServer(('', port), WebRequestHandler)
+        server = StoppableHttpServer(('', self.port), WebRequestHandler)
         webbrowser.open("http://127.0.0.1:%s"%self.port)
         server.serve_forever()
 
-def stop_server(port):
-    """send QUIT request to http server running on localhost:<port>"""
-    conn = httplib.HTTPConnection("localhost:%d" % port)
-    conn.request("QUIT", "/")
-    conn.getresponse()
+    def find_port(self, start=8001):
+        """finds the first free port on 127.0.0.1 starting at start"""
+        finalport = None
+        testsock = socket.socket()
+        testn = start
+        while not finalport and (testn < 65536):
+            try:
+                testsock.bind(('127.0.0.1', testn))
+                finalport = testn
+            except socket.error:
+                testn += 1
+        testsock.close()
+        return finalport
+
+    def stop_server(self):
+        """send QUIT request to http server"""
+        conn = httplib.HTTPConnection("localhost:%d" % self.port)
+        conn.request("QUIT", "/")
+        conn.getresponse()
 
 DOCUMENT = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html
@@ -94,13 +94,13 @@ DOCUMENT = """<?xml version="1.0" encoding="UTF-8"?>
 if __name__ == '__main__':
     import time
     print "Server will be active for 10 seconds."
-    port = find_port()
-    test_thread = ServerInThread(port)
-    test_thread.start()
+    threaded_server = ServerInThread()
+    threaded_server.start()
 
-    for i in range(10, 0, -1):
-        print i,
-        time.sleep(1)
+    for i in range(1000, 0, -1):
+        if not i%100:
+            print i,
+        time.sleep(0.01)
 
-    stop_server(port)
+    threaded_server.stop_server()
     print "Done!"
