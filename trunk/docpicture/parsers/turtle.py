@@ -110,8 +110,8 @@ _svg_defs = """
       <svg:circle cx="-23px" cy="-15px" r="8px" fill="tan"/>
       <!-- head and eyes-->
       <svg:circle cx="32px" cy="0px" r="8px" fill="tan"/>
-      <svg:circle cx="36px" cy="4px" r="2px" fill="darkgreen"/>
-      <svg:circle cx="36px" cy="-4px" r="2px" fill="darkgreen"/>
+      <svg:circle cx="36px" cy="4px" r="2px" fill="black"/>
+      <svg:circle cx="36px" cy="-4px" r="2px" fill="black"/>
       <!-- body -->
       <svg:ellipse cx="0px" cy="0px" rx="30px" ry="25px" fill="darkgreen"/>
     </svg:g>
