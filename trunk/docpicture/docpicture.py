@@ -27,6 +27,7 @@ BEGIN_DOCUMENT = """<?xml version="1.0" encoding="UTF-8"?>
 END_DOCUMENT = "</body></html>"
 
 parsers = {}
+parsers_defs = {}
 
 def view(obj):
     """
@@ -119,8 +120,11 @@ def parse_document(text):
     '''
     lines = text.split("\n")
     new_lines = [BEGIN_DOCUMENT, "<p>\n"]
+    included_defs = []
+    parsers_used = []
     indentation = None
     current_parser = None
+    current_defs = None
     lines_of_code = None
     for line in lines:
         if lines_of_code is not None:
@@ -129,6 +133,9 @@ def parse_document(text):
                 lines_of_code.append(line)
             else:
                 new_lines.append("</pre>")
+                if current_defs is not None:
+                    new_lines.append(current_defs)
+                    current_defs = None
                 append_parser_result(new_lines, current_parser, lines_of_code)
                 new_lines.append("<p>\n"+line)
                 lines_of_code = None
@@ -137,6 +144,12 @@ def parse_document(text):
             parsing_call = identify_docpicture_directive(line)
             if parsing_call is not None:
                 indentation, current_parser = parsing_call
+                if current_parser not in parsers_used:
+                    parsers_used.append(current_parser)
+                    try:
+                        current_defs = parsers_defs[current_parser]()
+                    except KeyError:
+                        pass
                 lines_of_code = []
                 new_lines.append("</p>\n<pre class='docpicture'>")
             new_lines.append(line)
@@ -211,6 +224,10 @@ def test_circle(dummy_code):
                              stroke="#000000" stroke-width="5px"/>
     </svg:svg>""", None
 
+def null_defs():
+    '''fake function to simulate returning defs'''
+    return "<pre>Fake defs inserted before first picture is drawn.</pre>"
+
 class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     '''Request Handler customized to respond to a "QUIT" command and
     which does not log any output'''
@@ -244,7 +261,6 @@ def find_port(start=8001):
             testn += 1
     testsock.close()
     return finalport
-
 
 class StoppableHttpServer(BaseHTTPServer.HTTPServer):
     """http server that reacts to self.stop flag"""
@@ -297,6 +313,7 @@ if __name__ == '__main__':
     print "Server will be active for 10 seconds."
     port = find_port()
     parsers['test_circle'] = test_circle
+    parsers_defs['test_circle'] = null_defs
     DOCUMENT = parse_document(test_document)
     test_thread = ServerInThread(port)
     test_thread.start()
