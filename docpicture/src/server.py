@@ -97,10 +97,9 @@ if __name__ == '__main__':
     threaded_server = ServerInThread()
     threaded_server.start()
 
-    for i in range(1000, 0, -1):
-        if not i%100:
-            print i,
-        time.sleep(0.01)
+    for i in range(10, 0, -1):
+        print i,
+        time.sleep(1)
 
     threaded_server.stop_server()
     print "Done!"
