@@ -72,6 +72,6 @@ We first start with some failing examples.
     (['turtle(10)'], '')
 
 
-    >>> test=['turtle.down()', 'turtle(0).forward(200) -> turtle(0)']
+    >>> test=['turtle(0).left(20) -> turtle(20)']
     >>> print t.parse_lines_of_code(test)[1]
 

@@ -201,32 +201,32 @@ class turtle(_parser):
         return
 
     def create_svg_code(self):
-        window = svg.Element("svg", width=self.width, height=self.height)
-        window.append(svg.Element("rect", width=self.width, height=self.height,
+        window = svg.SvgElement("svg", width=self.width, height=self.height)
+        window.append(svg.SvgElement("rect", width=self.width, height=self.height,
                                 style="stroke:blue; stroke-width:1; fill:white"))
         if self.pen_down:
-            window.append(svg.Element("line", x1=self.x1+self.gap_between_turtles,
+            window.append(svg.SvgElement("line", x1=self.x1+self.gap_between_turtles,
                                       y1=self.y1, x2=self.x2, y2=self.y2,
                                       style="stroke:%s; stroke-width:4;"%self.color))
         # first turtle
-        t1 = svg.Element("g", transform="translate(%d, %d)"%(self.x1, self.y1),
+        t1 = svg.SvgElement("g", transform="translate(%d, %d)"%(self.x1, self.y1),
                          filter="url(#turtle_filter)")
-        _t1 = svg.Element("use", x=0, y=0, transform="rotate(%s 0 0)"%(-float(self.angle1)))
+        _t1 = svg.SvgElement("use", x=0, y=0, transform="rotate(%s 0 0)"%(-float(self.angle1)))
         _t1.attributes["xlink:href"] = "#turtle"
         t1.append(_t1)
         window.append(t1)
         # second turtle
-        t2 = svg.Element("g", transform="translate(%d, %d)"%(self.x2, self.y2),
+        t2 = svg.SvgElement("g", transform="translate(%d, %d)"%(self.x2, self.y2),
                          filter="url(#turtle_filter)")
-        _t2 = svg.Element("use", x=0, y=0, transform="rotate(%s 0 0)"%(-float(self.angle2)))
+        _t2 = svg.SvgElement("use", x=0, y=0, transform="rotate(%s 0 0)"%(-float(self.angle2)))
         _t2.attributes["xlink:href"] = "#turtle"
         t2.append(_t2)
         window.append(t2)
         # plus signs indicating center of initial turtle position
-        plus = svg.Element("use", transform="translate(0, %d)"%self.y1)
+        plus = svg.SvgElement("use", transform="translate(0, %d)"%self.y1)
         plus.attributes["xlink:href"] = "#start_to_start"
         window.append(plus)
         # text for command
-        window.append(svg.Element("text", x=self.text_x, y=self.text_y,
+        window.append(svg.SvgElement("text", x=self.text_x, y=self.text_y,
                                   text="%s(%s)"%(self.command, self.arg)))
         return str(window)
