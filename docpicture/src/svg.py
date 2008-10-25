@@ -30,7 +30,7 @@ class XmlElement(object):
             if att != 'text':
                 attrib.append(' %s="%s"' % (att, self.attributes[att]))
         if 'text' in self.attributes:
-            attrib.append(">\n  %s\n</%s%s>\n" % (self.attributes['text'],
+            attrib.append(">\n%s\n</%s%s>\n" % (self.attributes['text'],
                                                     self.prefix, self.tag))
         elif self.sub_elements:
             attrib.append(">\n")

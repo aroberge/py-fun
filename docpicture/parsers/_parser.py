@@ -13,6 +13,7 @@ The name of the parser will also be used as the docpicture label as in:
 '''
 
 import re
+import src.svg as svg
 
 ''' So as to make the parser classes more readable, we suggest that
 statement patterns, if using the re module, or the grammar definition,
@@ -25,19 +26,18 @@ _patterns = {
     'good': re.compile(".*good.*")
 }
 
-_svg_defs = """\
-    <svg:svg width="0" height="0">
-        <svg:defs>
-        <!-- Just for testing purpose. -->
-        </svg:defs>
-    </svg:svg>"""
 
 
 class BaseParser(object):
     '''Base class for all the parsers'''
     def __init__(self):
-        self.svg_defs = _svg_defs  # reference to global definition
         self.patterns = _patterns  # definitely needs to be overriden!
+
+    def svg_defs(self):
+        '''default svg_defs; normally overriden by parsers'''
+        defs = svg.SvgDefs()
+        defs.append(svg.Comment("For testing purpose"))
+        return defs
 
     def parse_single_line(self, line):
         '''Parses a given line to see if it match a known pattern'''

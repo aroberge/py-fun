@@ -4,8 +4,8 @@
 
 import math
 import re
-from parsers._parser import BaseParser
-from src import svg
+from _parser import BaseParser
+from .src import svg
 
 _patterns = {
     # matching something like: turtle(42).left(-40) -> turtle(2)
@@ -75,68 +75,10 @@ _patterns = {
                 , re.VERBOSE),
 }
 
-_svg_defs = """
-<svg:svg width="0" height="0">
-    <svg:defs>
-    <!-- filter idea adapted from "SVG for Web Developers" by Pearlman and House-->
-        <svg:filter id="turtle_filter" x="-35%" y="-35%" width="170%" height="170%">
-          <svg:feGaussianBlur in="SourceAlpha" stdDeviation="8" result="turtle_filter"/>
-          <svg:feOffset in="turtle_filter" dx="-3" dy="-3" result="offset_turtle_filter"/>
-          <svg:feSpecularLighting in="turtle_filter" surfaceScale="4"
-                specularConstant=".95" specularExponent="17"
-                lighting-color="#cccc66" result="light_turtle">
-                <svg:feDistantLight elevation="40" azimuth="60"/>
-          </svg:feSpecularLighting>
-          <svg:feComposite in="light_turtle" in2="SourceAlpha" operator="in"
-               result="light_turtle2"/>
-          <svg:feComposite in="SourceGraphic" in2="light_turtle2"
-                operator="arithmetic" k1="0" k2=".9" k3="1" k4="0"
-                result="turtle_lit"/>
-          <svg:feMerge>
-            <svg:feMergeNode in="offset_turtle_filter"/>
-            <svg:feMergeNode in="turtle_lit"/>
-          </svg:feMerge>
-        </svg:filter>
-
-    <svg:g id="turtle">
-       <!-- legs -->
-      <svg:circle cx="23px" cy="16px" r="8px" fill="tan"/>
-      <svg:circle cx="23px" cy="-15px" r="8px" fill="tan"/>
-      <svg:circle cx="-23px" cy="16px" r="8px" fill="tan"/>
-      <svg:circle cx="-23px" cy="-15px" r="8px" fill="tan"/>
-      <!-- head and eyes-->
-      <svg:circle cx="32px" cy="0px" r="8px" fill="tan"/>
-      <svg:circle cx="36px" cy="4px" r="2px" fill="black"/>
-      <svg:circle cx="36px" cy="-4px" r="2px" fill="black"/>
-      <!-- body -->
-      <svg:ellipse cx="0px" cy="0px" rx="30px" ry="25px" fill="darkgreen"/>
-    </svg:g>
-
-    <svg:g id="black_plus">
-        <svg:line x1="-6" x2="6" y1="0" y2="0" style="stroke:black; stroke-width:2"/>
-        <svg:line x1="0" x2="0" y1="-6" y2="6" style="stroke:black; stroke-width:2"/>
-    </svg:g>
-    <svg:g id="start_to_start">
-     <svg:use xlink:href="#black_plus" transform="translate(60, 0)"/>
-     <svg:use xlink:href="#black_plus" transform="translate(300, 0)"/>
-     </svg:g>
-    </svg:defs>
-</svg:svg>"""
-
-
-#default_drawing = {
-#    'angle1': 0,
-#    'angle2': 0,
-#    'action': 'left',
-#    'color': 'black',
-#    'pen': 'down',
-#    'distance': 200,
-#}
 
 class Turtle(BaseParser):
     '''a parser creating "nice" turtle pictures'''
     def __init__(self):
-        self.svg_defs = _svg_defs  # reference to global definition
         self.patterns = _patterns  # definitely needs to be overriden!
         self.width = 600
         self.max_height = 600
@@ -148,6 +90,14 @@ class Turtle(BaseParser):
         self.x1 = 60
         self.text_x = 150  # position of text for command
         self.set_defaults()
+
+    def svg_defs(self):
+        '''returns an object representing all the svg defs'''
+        defs = svg.SvgDefs()
+        defs.append(self.turtle_defs())
+        defs.append(self.filter_defs())
+        defs.append(self.plus_signs_defs())
+        return defs
 
     def set_defaults(self):
         '''set default values for coordinates'''
@@ -161,7 +111,7 @@ class Turtle(BaseParser):
         '''fake function; normally would convert parsed lines of code
            into svg drawing statements'''
         self.compute_layout_parameters(lines)
-        return self.create_svg_code()
+        return self.create_svg_object()
 
     def compute_layout_parameters(self, lines):
         '''calculate numerical parameters (angle, position, etc.) to draw
@@ -205,8 +155,8 @@ class Turtle(BaseParser):
         self.text_y = self.y1 + 5
         return
 
-    def create_svg_code(self):
-        '''creates the svg code required to draw the turtles'''
+    def create_svg_object(self):
+        '''creates the svg object required to draw the turtles'''
         window = svg.SvgElement("svg", width=self.width, height=self.height)
         window.append(self.image_frame())
         if self.pen_down:
@@ -217,7 +167,7 @@ class Turtle(BaseParser):
         # text for command
         window.append(svg.SvgElement("text", x=self.text_x, y=self.text_y,
                                   text="%s(%s)"%(self.command, self.arg)))
-        return str(window)
+        return window
 
     def image_frame(self):
         '''creates a frame for the image'''
@@ -255,3 +205,103 @@ class Turtle(BaseParser):
         plus = svg.SvgElement("use", transform="translate(0, %d)"%self.y1)
         plus.attributes["xlink:href"] = "#start_to_start"
         return plus
+
+    def turtle_defs(self):
+        '''creates the svg:defs content for the turtle'''
+        t = svg.SvgElement("g", id="turtle")
+        # legs
+        t.append(svg.SvgElement("circle", cx=23, cy=16, r=8, fill="tan"))
+        t.append(svg.SvgElement("circle", cx=23, cy=-15, r=8, fill="tan"))
+        t.append(svg.SvgElement("circle", cx=-23, cy=16, r=8, fill="tan"))
+        t.append(svg.SvgElement("circle", cx=-23, cy=-15, r=8, fill="tan"))
+        # head and eyes
+        t.append(svg.SvgElement("circle", cx=32, cy=0, r=8, fill="tan"))
+        t.append(svg.SvgElement("circle", cx=36, cy=4, r=2, fill="black"))
+        t.append(svg.SvgElement("circle", cx=36, cy=-4, r=2, fill="black"))
+        # body
+        t.append(svg.SvgElement("ellipse", cx=0, cy=0, rx=30, ry=25,
+                                fill="darkgreen"))
+        return t
+
+    def filter_defs(self):
+        '''create the svg:defs content for the filter used to transform
+        a flat turtle image into something that looks more three-dimensional'''
+        # filter idea adapted from "SVG for Web Developers" by Pearlman and House
+
+        f = svg.SvgElement("filter", id="turtle_filter", x="-35%", y="-35%",
+                           width="170%", height="170%")
+        blur = svg.SvgElement("feGaussianBlur", stdDeviation=8,
+                              result="turtle_filter")
+        blur.attributes['in'] = "SourceAlpha"
+        f.append(blur)
+        offset = svg.SvgElement("feOffset", dx=-3, dy=-3,
+                              result="offset_turtle_filter")
+        offset.attributes['in'] = "turtle_filter"
+        f.append(offset)
+        specular = svg.SvgElement("feSpecularLighting", surfaceScale=4,
+                                  specularConstant=.95, specularExponent=17,
+                                  result="light_turtle")
+        specular.attributes['in'] = "turtle_filter"
+        specular.attributes['lighting-color'] = "#cccc66"
+        specular.append(svg.SvgElement("feDistantLight", elevation=40,
+                                       azimuth=60))
+        f.append(specular)
+        comp1 = svg.SvgElement("feComposite", in2="SourceAlpha", operator="in",
+                               result="light_turtle2")
+        comp1.attributes["in"] = "light_turtle"
+        f.append(comp1)
+        comp2 = svg.SvgElement("feComposite", in2="light_turtle2",
+                               operator="arithmetic", k1=0, k2=.9, k3=1, k4=0,
+                               result="turtle_lit")
+        comp2.attributes["in"] = "SourceGraphic"
+        f.append(comp2)
+        merge = svg.SvgElement("feMerge")
+        node1 = svg.SvgElement("feMergeNode")
+        node1.attributes["in"] = "offset_turtle_filter"
+        merge.append(node1)
+        node2 = svg.SvgElement("feMergeNode")
+        node2.attributes["in"] = "turtle_lit"
+        merge.append(node2)
+        f.append(merge)
+        return f
+
+    def plus_signs_defs(self):
+        '''create the svg:defs for the two plus signs used to indicate
+        the initial position of the turtle'''
+        p = svg.SvgElement("g", id="start_to_start")
+        _style = "stroke:black; stroke-width:2"
+        p.append(svg.SvgElement("line", x1=54, x2=66, y1=0, y2=0, style=_style))
+        p.append(svg.SvgElement("line", x1=60, x2=60, y1=-6, y2=6, style=_style))
+        p.append(svg.SvgElement("line", x1=294, x2=306, y1=0, y2=0, style=_style))
+        p.append(svg.SvgElement("line", x1=300, x2=300, y1=-6, y2=6, style=_style))
+        return p
+
+
+def test_me():
+    import src.server as server
+    import time
+    import sys
+    t = Turtle()
+
+    test_doc = svg.XmlDocument()
+    test_doc.head.append(svg.XmlElement("title", text="This is the title."))
+    test_doc.body.append(t.svg_defs())
+    lines = ['turtle.down()', 'turtle.color("red")',
+             'turtle(20).forward(200) -> turtle(20)']
+    test_doc.body.append(svg.XmlElement("pre", text='\n'.join(lines)))
+    error, drawing_object = t.parse_lines_of_code(lines)
+    if error is None:
+        test_doc.body.append(drawing_object)
+
+    server.Document(str(test_doc))
+    threaded_server = server.ServerInThread()
+    threaded_server.start()
+
+    print "Server will be active for 10 seconds."
+    for i in range(10, 0, -1):
+        print i,
+        sys.stdout.flush()
+        time.sleep(1)
+
+    server.stop_server(threaded_server.port)
+    print "Done!"
