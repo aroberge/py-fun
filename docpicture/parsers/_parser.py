@@ -33,7 +33,7 @@ _svg_defs = """\
     </svg:svg>"""
 
 
-class _parser(object):
+class BaseParser(object):
     '''Base class for all the parsers'''
     def __init__(self):
         self.svg_defs = _svg_defs  # reference to global definition

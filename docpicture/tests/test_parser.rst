@@ -3,7 +3,7 @@ _parser.py tests
 
 
     >>> from parsers import _parser
-    >>> p = _parser._parser()
+    >>> p = _parser.BaseParser()
 
 
 Testing individual statements
