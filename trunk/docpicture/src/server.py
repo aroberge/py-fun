@@ -9,6 +9,17 @@ import socket
 import threading
 import webbrowser
 
+class Document(object):
+    '''A Borg-like object; all documents share the same state; changing one,
+    changes all of them'''
+    _shared_states = {}
+    def __init__(self, text=None):
+        self.__dict__ = self._shared_states
+        if text is not None:
+            self.text = text
+    def __repr__(self):
+        return str(self.text)
+
 class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     '''Request Handler customized to respond to a "QUIT" command and
     which does not log any output'''
@@ -17,7 +28,7 @@ class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'application/xhtml+xml')
         self.end_headers()
-        self.wfile.write(DOCUMENT)
+        self.wfile.write(str(Document()))
 
     def do_QUIT (self):
         """send 200 OK response, and set server.stop to True"""
@@ -66,11 +77,11 @@ class ServerInThread(threading.Thread):
         testsock.close()
         return finalport
 
-    def stop_server(self):
-        """send QUIT request to http server"""
-        conn = httplib.HTTPConnection("localhost:%d" % self.port)
-        conn.request("QUIT", "/")
-        conn.getresponse()
+def stop_server(port):
+    """send QUIT request to http server"""
+    conn = httplib.HTTPConnection("localhost:%d" % port)
+    conn.request("QUIT", "/")
+    conn.getresponse()
 
 DOCUMENT = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html
@@ -82,9 +93,9 @@ DOCUMENT = """<?xml version="1.0" encoding="UTF-8"?>
   <head>
   </head>
 <body>
-    This is a test.
+    This is a test. Try reloading the page until the server stops.
     <svg:svg width="300px" height="200px">
-      <svg:circle cx="150px" cy="100px" r="50px" fill="#ff0000"
+      <svg:circle cx="150px" cy="100px" r="50px" fill="red"
                              stroke="#000000" stroke-width="5px"/>
     </svg:svg>
 </body></html>
@@ -92,14 +103,19 @@ DOCUMENT = """<?xml version="1.0" encoding="UTF-8"?>
 
 
 if __name__ == '__main__':
-    import time
-    print "Server will be active for 10 seconds."
+    import sys, time
+    print "Server will be active for 10 seconds; try reloading the page"
+    test_doc = Document(DOCUMENT)
     threaded_server = ServerInThread()
     threaded_server.start()
+    colors = ['red', 'green', 'yellow', 'brown', 'blue', 'magenta', 'cyan',
+              'tan', 'white', 'black', 'red']
 
     for i in range(10, 0, -1):
         print i,
+        new_doc = Document(DOCUMENT.replace('red', colors[i]))
+        sys.stdout.flush()
         time.sleep(1)
 
-    threaded_server.stop_server()
+    stop_server(threaded_server.port)
     print "Done!"
