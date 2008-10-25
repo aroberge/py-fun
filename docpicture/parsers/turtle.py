@@ -306,16 +306,78 @@ class ColorTurtle(Turtle):
         return t2
 
 
+class BlackAndWhiteTurtle(ColorTurtle):
+    '''Black and White Turtle'''
+    def __init__(self):
+        ColorTurtle.__init__(self)
+        p = dict(_patterns)
+        del p['color']
+        self.patterns = p
+
+
+    def turtle_defs(self):
+        '''creates the svg:defs content for the turtle'''
+        t = svg.SvgElement("g", id="bw_turtle")
+        # legsfill="white" stroke="black" stroke-width="2px"
+
+        t.append(svg.SvgElement("circle", cx=23, cy=16, r=8, fill="white",
+                                stroke="black"))
+        t.append(svg.SvgElement("circle", cx=23, cy=-15, r=8, fill="white",
+                                stroke="black"))
+        t.append(svg.SvgElement("circle", cx=-23, cy=16, r=8, fill="white",
+                                stroke="black"))
+        t.append(svg.SvgElement("circle", cx=-23, cy=-15, r=8, fill="white",
+                                stroke="black"))
+        # head and eyes
+        t.append(svg.SvgElement("circle", cx=32, cy=0, r=8, fill="white",
+                                stroke="black"))
+        t.append(svg.SvgElement("circle", cx=36, cy=4, r=2, fill="black",
+                                stroke="black"))
+        t.append(svg.SvgElement("circle", cx=36, cy=-4, r=2, fill="black"))
+        # body
+        t.append(svg.SvgElement("ellipse", cx=0, cy=0, rx=30, ry=25,
+                                fill="white", stroke="black"))
+        for elem in t.sub_elements:
+            if "r" in elem.attributes:
+                if elem.attributes["r"] > 2: # skip the eyes
+                    elem.attributes["stroke-width"] = 2
+            else:
+                elem.attributes["stroke-width"] = 2
+        return t
+
+    def first_turtle(self):
+        '''creation of first turtle '''
+        t1 = svg.SvgElement("g", transform="translate(%d, %d)"%(self.x1, self.y1))
+        _t1 = svg.SvgElement("use", x=0, y=0, transform="rotate(%s 0 0)"%(-float(self.angle1)))
+        _t1.attributes["xlink:href"] = "#bw_turtle"
+        t1.append(_t1)
+        return t1
+
+    def second_turtle(self):
+        '''creation of second turtle'''
+        t2 = svg.SvgElement("g", transform="translate(%d, %d)"%(self.x2, self.y2))
+        _t2 = svg.SvgElement("use", x=0, y=0, transform="rotate(%s 0 0)"%(-float(self.angle2)))
+        _t2.attributes["xlink:href"] = "#bw_turtle"
+        t2.append(_t2)
+        return t2
+
+    def image_frame(self):
+        '''creates a frame for the image'''
+        return svg.SvgElement("rect", width=self.width, height=self.height,
+                                style="stroke:black; stroke-width:1; fill:white")
+
 def test_me():
     import src.server as server
     import time
     import sys
     t = Turtle()
     t2 = ColorTurtle()
+    t3 = BlackAndWhiteTurtle()
 
     test_doc = svg.XmlDocument()
     test_doc.head.append(svg.XmlElement("title", text="This is the title."))
     test_doc.body.append(t.svg_defs())
+    test_doc.body.append(t3.svg_defs())
     lines = ['turtle.down()', 'turtle.color("red")',
              'turtle(20).forward(200) -> turtle(20)']
     test_doc.body.append(svg.XmlElement("pre", text='\n'.join(lines)))
@@ -324,6 +386,12 @@ def test_me():
         test_doc.body.append(drawing_object)
 
     error, drawing_object = t2.parse_lines_of_code(lines)
+    if error is None:
+        test_doc.body.append(drawing_object)
+
+    lines = ['turtle.down()',
+             'turtle(20).forward(200) -> turtle(20)']
+    error, drawing_object = t3.parse_lines_of_code(lines)
     if error is None:
         test_doc.body.append(drawing_object)
 
