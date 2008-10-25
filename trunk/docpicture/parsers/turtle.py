@@ -276,12 +276,42 @@ class Turtle(BaseParser):
         p.append(svg.SvgElement("line", x1=300, x2=300, y1=-6, y2=6, style=_style))
         return p
 
+class ColorTurtle(Turtle):
+
+    def svg_defs(self):
+        '''returns an object representing all the svg defs'''
+        defs = svg.SvgDefs()
+        defs.append(self.turtle_defs())
+        # same as Turtle but with no filter
+        #defs.append(self.filter_defs())
+        defs.append(self.plus_signs_defs())
+        return defs
+
+    def first_turtle(self):
+        '''creation of first turtle '''
+        # same as Turtle, except no filter
+        t1 = svg.SvgElement("g", transform="translate(%d, %d)"%(self.x1, self.y1))
+        _t1 = svg.SvgElement("use", x=0, y=0, transform="rotate(%s 0 0)"%(-float(self.angle1)))
+        _t1.attributes["xlink:href"] = "#turtle"
+        t1.append(_t1)
+        return t1
+
+    def second_turtle(self):
+        '''creation of second turtle'''
+        # same as Turtle, except no filter
+        t2 = svg.SvgElement("g", transform="translate(%d, %d)"%(self.x2, self.y2))
+        _t2 = svg.SvgElement("use", x=0, y=0, transform="rotate(%s 0 0)"%(-float(self.angle2)))
+        _t2.attributes["xlink:href"] = "#turtle"
+        t2.append(_t2)
+        return t2
+
 
 def test_me():
     import src.server as server
     import time
     import sys
     t = Turtle()
+    t2 = ColorTurtle()
 
     test_doc = svg.XmlDocument()
     test_doc.head.append(svg.XmlElement("title", text="This is the title."))
@@ -290,6 +320,10 @@ def test_me():
              'turtle(20).forward(200) -> turtle(20)']
     test_doc.body.append(svg.XmlElement("pre", text='\n'.join(lines)))
     error, drawing_object = t.parse_lines_of_code(lines)
+    if error is None:
+        test_doc.body.append(drawing_object)
+
+    error, drawing_object = t2.parse_lines_of_code(lines)
     if error is None:
         test_doc.body.append(drawing_object)
 
@@ -305,3 +339,6 @@ def test_me():
 
     server.stop_server(threaded_server.port)
     print "Done!"
+
+if __name__ == "__main__":
+    test_me()
