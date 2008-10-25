@@ -125,9 +125,9 @@ class Turtle(BaseParser):
             elif line[0] == 'pen':
                 self.pen_down = (line[1][0] == 'down')
             else:
-                assert False, "Unknown command %s in locate_turtles." % line[0]
+                assert False, "Unknown command %s in compute_layout_parameters." % line[0]
 
-        assert self.command != None, 'Invalid set of lines passed to locate_turtles'
+        assert self.command != None, 'Invalid set of lines passed to compute_layout_parameters'
         if self.command == 'forward':
             dx = float(self.arg)*math.cos(math.radians(float(self.angle1)))
             dy = float(self.arg)*math.sin(math.radians(float(self.angle1)))
@@ -311,7 +311,7 @@ class BlackAndWhiteTurtle(ColorTurtle):
     def __init__(self):
         ColorTurtle.__init__(self)
         p = dict(_patterns)
-        del p['color']
+        del p['color']  # color not allowed in Black and White!
         self.patterns = p
 
 
@@ -376,24 +376,38 @@ def test_me():
 
     test_doc = svg.XmlDocument()
     test_doc.head.append(svg.XmlElement("title", text="This is the title."))
+    test_doc.head.append(svg.XmlElement("style", text="""
+        p{width:800px;}
+        pre{font-size: 12pt;}
+        .docpicture{color: blue;}
+        .warning{color: red;}"""))
     test_doc.body.append(t.svg_defs())
     test_doc.body.append(t3.svg_defs())
+    test_doc.body.append(svg.XmlElement("p", text="""Test drawing.
+            An error has been intentionally introduced in the third drawing."""))
     lines = ['turtle.down()', 'turtle.color("red")',
              'turtle(20).forward(200) -> turtle(20)']
-    test_doc.body.append(svg.XmlElement("pre", text='\n'.join(lines)))
-    error, drawing_object = t.parse_lines_of_code(lines)
-    if error is None:
-        test_doc.body.append(drawing_object)
 
-    error, drawing_object = t2.parse_lines_of_code(lines)
-    if error is None:
-        test_doc.body.append(drawing_object)
+    def append_image(t_, lines):
+        pre = svg.XmlElement("pre", text="\n".join(lines))
+        pre.attributes["class"] = "docpicture"
+        test_doc.body.append(pre)
+        error, drawing_object = t_.parse_lines_of_code(lines)
+        if error is None:
+            test_doc.body.append(drawing_object)
+        else:
+            errors = []
+            for line in error:
+                errors.append("Unknown command: " + line)
+            pre = svg.XmlElement("pre", text="\n".join(errors))
+            pre.attributes["class"] = "warning"
+            test_doc.body.append(pre)
+            test_doc.body.append(drawing_object)
 
-    lines = ['turtle.down()',
-             'turtle(20).forward(200) -> turtle(20)']
-    error, drawing_object = t3.parse_lines_of_code(lines)
-    if error is None:
-        test_doc.body.append(drawing_object)
+    append_image(t, lines)
+    append_image(t2, lines)
+    append_image(t3, lines)
+
 
     server.Document(str(test_doc))
     threaded_server = server.ServerInThread()

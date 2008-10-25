@@ -64,7 +64,7 @@ class BaseParser(object):
             else:
                 ok_lines.append(result)
         if problem_lines:
-            return problem_lines, ''
+            return problem_lines, self.draw(ok_lines)
         else:
             return None, self.draw(ok_lines)
 
