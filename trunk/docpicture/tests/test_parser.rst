@@ -26,7 +26,7 @@ We first start with some failing examples.
 
     >>> test = ['good', 'really good', 'bad']
     >>> p.parse_lines_of_code(test)
-    (['bad'], '')
+    (['bad'], "<pre>Drawing: ('good', ())\nDrawing: ('good', ())</pre>")
     >>> error, drawing = p.parse_lines_of_code(test[:-1])
     >>> print error
     None
