@@ -1,8 +1,10 @@
-# parser for turtle docpicture directive
+'''  Parser for the turtle docpicture directive
+
+'''
 
 import math
 import re
-from parsers._parser import _parser
+from parsers._parser import BaseParser
 from src import svg
 
 _patterns = {
@@ -122,16 +124,17 @@ _svg_defs = """
 </svg:svg>"""
 
 
-default_drawing = {
-    'angle1': 0,
-    'angle2': 0,
-    'action': 'left',
-    'color': 'black',
-    'pen': 'down',
-    'distance': 200,
-}
+#default_drawing = {
+#    'angle1': 0,
+#    'angle2': 0,
+#    'action': 'left',
+#    'color': 'black',
+#    'pen': 'down',
+#    'distance': 200,
+#}
 
-class turtle(_parser):
+class Turtle(BaseParser):
+    '''a parser creating "nice" turtle pictures'''
     def __init__(self):
         self.svg_defs = _svg_defs  # reference to global definition
         self.patterns = _patterns  # definitely needs to be overriden!
@@ -157,11 +160,13 @@ class turtle(_parser):
     def draw(self, lines):
         '''fake function; normally would convert parsed lines of code
            into svg drawing statements'''
-        self.compute_drawing_parameters(lines)
+        self.compute_layout_parameters(lines)
         return self.create_svg_code()
 
-    def compute_drawing_parameters(self, lines):
-        self.set_defaults()  # reset values
+    def compute_layout_parameters(self, lines):
+        '''calculate numerical parameters (angle, position, etc.) to draw
+        the turtles'''
+        self.set_defaults()
         for line in lines:
             if line[0] in ['forward', 'left', 'right']:
                 self.command, (self.angle1, self.arg, self.angle2) = line
@@ -201,32 +206,52 @@ class turtle(_parser):
         return
 
     def create_svg_code(self):
+        '''creates the svg code required to draw the turtles'''
         window = svg.SvgElement("svg", width=self.width, height=self.height)
-        window.append(svg.SvgElement("rect", width=self.width, height=self.height,
-                                style="stroke:blue; stroke-width:1; fill:white"))
+        window.append(self.image_frame())
         if self.pen_down:
-            window.append(svg.SvgElement("line", x1=self.x1+self.gap_between_turtles,
+            window.append(self.line_trace())
+        window.append(self.first_turtle())
+        window.append(self.second_turtle())
+        window.append(self.plus_signs())
+        # text for command
+        window.append(svg.SvgElement("text", x=self.text_x, y=self.text_y,
+                                  text="%s(%s)"%(self.command, self.arg)))
+        return str(window)
+
+    def image_frame(self):
+        '''creates a frame for the image'''
+        return svg.SvgElement("rect", width=self.width, height=self.height,
+                                style="stroke:blue; stroke-width:1; fill:white")
+
+    def line_trace(self):
+        '''creates the code for the line traced by the turtle'''
+        return svg.SvgElement("line", x1=self.x1+self.gap_between_turtles,
                                       y1=self.y1, x2=self.x2, y2=self.y2,
-                                      style="stroke:%s; stroke-width:4;"%self.color))
-        # first turtle
+                                      style="stroke:%s; stroke-width:4;"%self.color)
+
+
+    def first_turtle(self):
+        '''creation of first turtle'''
         t1 = svg.SvgElement("g", transform="translate(%d, %d)"%(self.x1, self.y1),
                          filter="url(#turtle_filter)")
         _t1 = svg.SvgElement("use", x=0, y=0, transform="rotate(%s 0 0)"%(-float(self.angle1)))
         _t1.attributes["xlink:href"] = "#turtle"
         t1.append(_t1)
-        window.append(t1)
-        # second turtle
+        return t1
+
+    def second_turtle(self):
+        '''creation of second turtle'''
         t2 = svg.SvgElement("g", transform="translate(%d, %d)"%(self.x2, self.y2),
                          filter="url(#turtle_filter)")
         _t2 = svg.SvgElement("use", x=0, y=0, transform="rotate(%s 0 0)"%(-float(self.angle2)))
         _t2.attributes["xlink:href"] = "#turtle"
         t2.append(_t2)
-        window.append(t2)
-        # plus signs indicating center of initial turtle position
+        return t2
+
+    def plus_signs(self):
+        '''create the two plus signs indicating the initial center location of
+        the turtle'''
         plus = svg.SvgElement("use", transform="translate(0, %d)"%self.y1)
         plus.attributes["xlink:href"] = "#start_to_start"
-        window.append(plus)
-        # text for command
-        window.append(svg.SvgElement("text", x=self.text_x, y=self.text_y,
-                                  text="%s(%s)"%(self.command, self.arg)))
-        return str(window)
+        return plus

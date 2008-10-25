@@ -3,7 +3,7 @@ t.py parser tests
 
 
     >>> from parsers import turtle
-    >>> t = turtle.turtle()
+    >>> t = turtle.Turtle()
 
 
 Testing individual statements
