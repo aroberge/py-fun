@@ -74,4 +74,17 @@ We first start with some failing examples.
 
     >>> test=['turtle(0).left(20) -> turtle(20)']
     >>> print t.parse_lines_of_code(test)[1]
-
+      <svg:svg width="600" height="120">
+        <svg:rect width="600" style="stroke:blue; stroke-width:1; fill:white" height="120"/>
+        <svg:g filter="url(#turtle_filter)" transform="translate(60, 60)">
+        <svg:use y="0" x="0" xlink:href="#turtle" transform="rotate(-0.0 0 0)"/>
+    </svg:g>
+        <svg:g filter="url(#turtle_filter)" transform="translate(300, 60)">
+        <svg:use y="0" x="0" xlink:href="#turtle" transform="rotate(-20.0 0 0)"/>
+    </svg:g>
+        <svg:use xlink:href="#start_to_start" transform="translate(0, 60)"/>
+        <svg:text y="65" x="150">
+      left(20)
+    </svg:text>
+    </svg:svg>
+    <BLANKLINE>
