@@ -5,7 +5,7 @@
 import math
 import re
 from _parser import BaseParser
-from .src import svg
+import src.svg as svg
 
 _patterns = {
     # matching something like: turtle(42).left(-40) -> turtle(2)
@@ -75,11 +75,17 @@ _patterns = {
                 , re.VERBOSE),
 }
 
+def register(register_parser):
+    print "called register"
+    register_parser(Turtle)
+    register_parser(ColorTurtle)
+    register_parser(BlackAndWhiteTurtle)
 
 class Turtle(BaseParser):
     '''a parser creating "nice" turtle pictures'''
     def __init__(self):
-        self.patterns = _patterns  # definitely needs to be overriden!
+        self.patterns = _patterns
+        self.directive_name = 'turtle'
         self.width = 600
         self.max_height = 600
         self.min_height = 120
@@ -278,6 +284,10 @@ class Turtle(BaseParser):
 
 class ColorTurtle(Turtle):
 
+    def __init__(self):
+        Turtle.__init__(self)
+        self.directive_name = 'color_turtle'
+
     def svg_defs(self):
         '''returns an object representing all the svg defs'''
         defs = svg.SvgDefs()
@@ -310,10 +320,10 @@ class BlackAndWhiteTurtle(ColorTurtle):
     '''Black and White Turtle'''
     def __init__(self):
         ColorTurtle.__init__(self)
+        self.directive_name = 'bw_turtle'
         p = dict(_patterns)
         del p['color']  # color not allowed in Black and White!
         self.patterns = p
-
 
     def turtle_defs(self):
         '''creates the svg:defs content for the turtle'''
@@ -367,6 +377,11 @@ class BlackAndWhiteTurtle(ColorTurtle):
                                 style="stroke:black; stroke-width:1; fill:white")
 
 def test_me():
+    '''Go to package root, start your Python interpreter and do:
+       >>> from parsers import turtle
+       >>> turtle.test_me()
+
+       '''
     import src.server as server
     import time
     import sys
@@ -408,19 +423,15 @@ def test_me():
     append_image(t2, lines)
     append_image(t3, lines)
 
-
     server.Document(str(test_doc))
     threaded_server = server.ServerInThread()
     threaded_server.start()
 
-    print "Server will be active for 10 seconds."
-    for i in range(10, 0, -1):
+    print "Server will be active for 5 seconds."
+    for i in range(5, 0, -1):
         print i,
         sys.stdout.flush()
         time.sleep(1)
 
     server.stop_server(threaded_server.port)
     print "Done!"
-
-if __name__ == "__main__":
-    test_me()

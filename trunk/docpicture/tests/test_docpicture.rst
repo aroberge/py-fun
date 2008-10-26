@@ -75,7 +75,7 @@ error message.  As we don't have any parsers in this module, we will
 simply test the error message.
 
     >>> print docpicture.parse_code('parser_name', 'test_code')
-    ("<p class='warning'>Unknown parser parser_name.</p>", None)
+    ("<pre class='warning'>Unknown parser parser_name.</pre>", None)
 
 We are now ready to parse an entire document, extracting
 the directive names, code and processing it accordingly.
@@ -97,11 +97,11 @@ the directive names, code and processing it accordingly.
     ... End of text."""
     >>> print docpicture.parse_document(test_document)
     ==Begin==
-    <p>
+    <pre>
     <BLANKLINE>
     This is a test.
     It has many lines.
-    </p>
+    </pre>
     <pre class='docpicture'>
     ..docpicture:: first
        Some code
@@ -110,19 +110,19 @@ the directive names, code and processing it accordingly.
         Even more code
     <BLANKLINE>
     </pre>
-    <p class='warning'>Unknown parser first.</p>
-    <p>
+    <pre class='warning'>Unknown parser first.</pre>
+    <pre>
     Back to normal text.
     Some more text.
-    </p>
+    </pre>
     <pre class='docpicture'>
         ..docpicture:: second (indented line)
            part of the code
     </pre>
-    <p class='warning'>Unknown parser second (indented line).</p>
-    <p>
+    <pre class='warning'>Unknown parser second (indented line).</pre>
+    <pre>
         Not part of the code (same indentation as ..docpicture declaration)
     End of text.
-    </p>
+    </pre>
     ==End==
 

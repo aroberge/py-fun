@@ -63,13 +63,7 @@ Testing statements like "turtle.color('red')"
 Now we move on to testing a series of statements. These are expected to
 be received as a list of lines.
 
-We first start with some failing examples.
 
-    >>> test = ['turtle(1', 'turtle(10)', 'turtle.down()']
-    >>> t.parse_lines_of_code(test)
-    (['turtle(1', 'turtle(10)'], '')
-    >>> t.parse_lines_of_code(test[1:])
-    (['turtle(10)'], '')
 
 
     >>> test=['turtle(0).left(20) -> turtle(20)']

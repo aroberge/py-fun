@@ -7,7 +7,8 @@ Need to explain what it does here
 
 
 import re
-
+import src.svg as svg
+import src.parsers_loader
 
 BEGIN_DOCUMENT = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html
@@ -81,18 +82,18 @@ parsers_defs = {}
 #    webbrowser.open(url)
 
 docpicture_directive_pattern = re.compile("\s*\.\.docpicture::\s*(.+?)$")
-def identify_docpicture_directive(line):
-    """ Identifies if a line corresponds to a docpicture directives.
-
-        If it is a docpicture directive, it returns the indentation (number of
-        spaces at the beginning of the line) and the name of the processor;
-        otherwise it returns None.
-    """
-    result = docpicture_directive_pattern.search(line.rstrip())
-    if result is None:
-        return None
-    else:
-        return line.index("..docpicture"), result.groups()[0]
+#def identify_docpicture_directive(line):
+#    """ Identifies if a line corresponds to a docpicture directives.
+#
+#        If it is a docpicture directive, it returns the indentation (number of
+#        spaces at the beginning of the line) and the name of the processor;
+#        otherwise it returns None.
+#    """
+#    result = docpicture_directive_pattern.search(line.rstrip())
+#    if result is None:
+#        return None
+#    else:
+#        return line.index("..docpicture"), result.groups()[0]
 
 def is_code(line, indentation):
     '''return True if the indentation (number of spaces at the beginning
@@ -112,7 +113,7 @@ def parse_code(parser, code):
     try:
         return parsers[parser](code)
     except KeyError:
-        return "<p class='warning'>Unknown parser %s.</p>" % parser, None
+        return "<pre class='warning'>Unknown parser %s.</pre>" % parser, None
 
 def parse_document(text):
     '''parses an entire document, received as a string, and outputs
@@ -121,7 +122,7 @@ def parse_document(text):
     so as to retain the original look - including any existing ascii diagrams.
     '''
     lines = text.split("\n")
-    new_lines = [BEGIN_DOCUMENT, "<p>\n"]
+    new_lines = [BEGIN_DOCUMENT, "<pre>\n"]
     included_defs = []
     parsers_used = []
     indentation = None
@@ -139,7 +140,7 @@ def parse_document(text):
                     new_lines.append(current_defs)
                     current_defs = None
                 append_parser_result(new_lines, current_parser, lines_of_code)
-                new_lines.append("<p>\n"+line)
+                new_lines.append("<pre>\n"+line)
                 lines_of_code = None
                 current_parser = indentation = None
         else:
@@ -154,7 +155,7 @@ def parse_document(text):
                     except KeyError:
                         pass
                 lines_of_code = []
-                new_lines.append("</p>\n<pre class='docpicture'>")
+                new_lines.append("</pre>\n<pre class='docpicture'>")
             new_lines.append(line)
     # We have to guard against the situation where we ended with a docpicture
     if lines_of_code is not None:
@@ -162,8 +163,186 @@ def parse_document(text):
         append_parser_result(new_lines, current_parser, lines_of_code)
         new_lines.append(END_DOCUMENT)
     else:
-        new_lines.append("</p>\n"+END_DOCUMENT)
+        new_lines.append("</pre>\n"+END_DOCUMENT)
     return "\n".join(new_lines)
+
+
+def create_document(text):
+    '''parses a docstring, and outputs
+    an html document with svg code inserted by the appropriate parser.
+    The original text is inserted into some pre-formatted sections,
+    so as to retain the original look - including any existing ascii diagrams.
+    '''
+    lines = text.split("\n")
+    new_lines = [BEGIN_DOCUMENT, "<pre>\n"]
+    included_defs = []
+    parsers_used = []
+    indentation = None
+    current_parser = None
+    current_defs = None
+    lines_of_code = None
+    for line in lines:
+        if lines_of_code is not None: # we're inside docpicture code
+            if is_code(line, indentation):  # still inside
+                new_lines.append(line)
+                lines_of_code.append(line)
+            else:                           # back to regular help
+                new_lines.append("</pre>")
+                if current_defs is not None:  # need to rewrite this
+                    new_lines.append(current_defs)
+                    current_defs = None
+                append_parser_result(new_lines, current_parser, lines_of_code)
+                new_lines.append("<pre>\n"+line)
+                lines_of_code = None
+                current_parser = indentation = None
+        else:
+            parsing_call = identify_docpicture_directive(line)
+            if parsing_call is not None:
+                indentation, current_parser = parsing_call
+                if current_parser not in parsers_used:
+                    parsers_used.append(current_parser)
+                    try:
+                        current_defs = parsers_defs[current_parser]()
+                        included_defs.append(current_defs)
+                    except KeyError:
+                        pass
+                lines_of_code = []
+                new_lines.append("</pre>\n<pre class='docpicture'>")
+            new_lines.append(line)
+    # We have to guard against the situation where we ended with a docpicture
+    if lines_of_code is not None:
+        new_lines.append("</pre>")
+        append_parser_result(new_lines, current_parser, lines_of_code)
+        new_lines.append(END_DOCUMENT)
+    else:
+        new_lines.append("</pre>\n"+END_DOCUMENT)
+    return "\n".join(new_lines)
+
+class DocpictureDocument(object):
+    '''
+    A DocpictureDocument is an xml document that can contain svg images.
+
+    It is usually created from a Python docstring that contains some
+    "docpicture directives".
+
+    '''
+    def __init__(self, parsers=None):
+        if parsers is None:
+            self.parsers = {}
+        else:
+            self.parsers = parsers
+        self.reset()
+        self.style = """p{width:800px;}
+            pre{font-size: 12pt;}
+            .docpicture{color: blue;}
+            .warning{color: red;}"""
+
+    def reset(self):
+        '''resets (or sets) values to initial choices needed to process
+        a new document'''
+        self.indentation = None
+        self.current_parser_name = None
+        self.included_defs = []
+
+    def is_docpicture_directive(self, line):
+        """ Identifies if a line corresponds to a docpicture directives.
+
+            If it is a docpicture directive, it returns the indentation (number of
+            spaces at the beginning of the line) and the name of the processor;
+            otherwise it returns False.
+        """
+        result = docpicture_directive_pattern.search(line.rstrip())
+        if result is None:
+            return False
+        else:
+            self.indentation = line.index("..docpicture")
+            self.current_parser_name = result.groups()[0]
+            return True
+
+    def is_docpicture_code(self, line):
+        '''return True if the indentation (number of spaces at the beginning
+           of a line) is greater than the given indentation, False otherwise,
+           with the exception that blank lines are considered always have
+           the indentation required to be part of the docpicture code.
+        '''
+        if len(line.strip()) == 0:
+            return True
+        if line.startswith(" "*(self.indentation+1)):
+            return True
+        else:
+            return False
+
+    def process_docpicture_code(self, lines):
+        ''' feeds a list of lines to the appropriate docpicture parser'''
+        return self.parsers[self.current_parser_name].parse_lines_of_code(lines)
+
+    def embed_docpicture_code(self, lines):
+        '''includes the docpicture lines of code in the document, as well as
+        any lines found to have syntax errors by the parser, followed by
+        the drawing itself (preceded by svg defs, if not done previously).'''
+        pre = svg.XmlElement("pre", text="\n".join(lines))
+        pre.attributes["class"] = "docpicture"
+        self.body.append(pre)
+        # exclude the docpicture directive from the call
+        flag, drawing = self.process_docpicture_code(lines[1:])
+        if flag is not None:
+            pre = svg.XmlElement("pre", text="\n".join(flag))
+            pre.attributes["class"] = "warning"
+            self.body.append(pre)
+        if self.current_parser_name not in self.included_defs:
+            self.included_defs.append(self.current_parser_name)
+            self.body.append(self.parsers[self.current_parser_name].svg_defs())
+        self.body.append(drawing)
+        return
+
+    def create_document(self, text):
+        '''creates an xml document from a text given as a series of lines,
+        possibly with embedded docpicture directives.'''
+        self.document = svg.XmlDocument()
+        self.head = self.document.head
+        self.body = self.document.body
+        self.head.append(svg.XmlElement("style", text=self.style))
+        lines = text.split("\n")
+        self.process_text(lines)
+
+    def process_lines_of_text(self, lines):
+
+
+        return True
+
+        new_lines = []
+        docpicture_lines = []
+        for line in lines:
+            if self.current_parser_name is None:
+                if not self.is_docpicture_directive(line):
+                    new_lines.append(line)
+                else:
+                    text = '\n'.join(new_lines)
+                    new_lines = []
+                    self.body.append(svg.XmlElement("pre", text=text))
+                    docpicture_lines.append(line)
+            else:
+                if self.is_docpicture_code(line):
+                    docpicture_lines.append(line)
+                else:
+                    pre = svg.XmlElement("pre", text="\n".join(docpicture_lines))
+                    pre.attributes["class"] = "docpicture"
+                    self.body.append(pre)
+                    flag, drawing = self.process_docpicture_code(docpicture_lines)
+
+                    self.body.append(
+                        )
+
+
+
+
+
+
+
+
+
+
+
 
 def append_parser_result(new_lines, current_parser, lines_of_code):
     '''calls the appropriate parser to process the code and appends
@@ -191,3 +370,11 @@ def test_circle(dummy_code):
 def null_defs():
     '''fake function to simulate returning defs'''
     return "<pre>Fake defs inserted before first picture is drawn.</pre>"
+
+if __name__ == "__main__":
+    src.parsers_loader.load_parsers()
+    parsers = src.parsers_loader.PARSERS
+    for parser in parsers:
+        parsers_defs[parser] = parsers[parser].svg_defs()
+    for parser in parsers_defs:
+        print parsers_defs[parser]
