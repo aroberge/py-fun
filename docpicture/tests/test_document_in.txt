@@ -1,0 +1,21 @@
+Test document
+=============
+
+This document is used to test the docpicture module.  It is used by the
+test_docpicture.py unittest file, which defines a fake parser.
+
+This file is used in a few tests.  The result of processing it
+are found in files of the form "test_document_out_xxx.txt" or ".xhtml"
+
+..docpicture:: good
+  good text
+  other good text
+  bad text
+  
+  good line of code
+Resuming the document...
+
+..docpicture:: unknown
+  this will be ignored
+
+End of document.
