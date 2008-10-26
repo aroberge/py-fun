@@ -248,16 +248,20 @@ class DocpictureDocument(object):
         """ Identifies if a line corresponds to a docpicture directives.
 
             If it is a docpicture directive, it returns the indentation (number of
-            spaces at the beginning of the line) and the name of the processor;
-            otherwise it returns False.
+            spaces at the beginning of the line) and the name of the processor
+            if it is a known processor; otherwise it returns False.
         """
         result = docpicture_directive_pattern.search(line.rstrip())
         if result is None:
             return False
         else:
             self.indentation = line.index("..docpicture")
-            self.current_parser_name = result.groups()[0]
-            return True
+            parser_name = result.groups()[0]
+            if parser_name in self.parsers:
+                self.current_parser_name = result.groups()[0]
+                return True
+            else:
+                return False
 
     def is_docpicture_code(self, line):
         '''return True if the indentation (number of spaces at the beginning
@@ -286,7 +290,8 @@ class DocpictureDocument(object):
         # exclude the docpicture directive from the call
         flag, drawing = self.process_docpicture_code(lines[1:])
         if flag is not None:
-            pre = svg.XmlElement("pre", text="\n".join(flag))
+            text = "WARNING: unrecognized syntax\n" + "\n".join(flag)
+            pre = svg.XmlElement("pre", text=text)
             pre.attributes["class"] = "warning"
             self.body.append(pre)
         if self.current_parser_name not in self.included_defs:
@@ -305,18 +310,25 @@ class DocpictureDocument(object):
         lines = text.split("\n")
         self.process_text(lines)
 
+
     def process_lines_of_text(self, lines):
+        '''processes some text passed as a series of lines,
+        to embed docpictures where appropriate.  The lines are expected
+        NOT to end with a new line character.
 
-
-        return True
+        Appends the processed text inside the document body.'''
 
         new_lines = []
         docpicture_lines = []
         for line in lines:
+            if len(line) > 0:
+                assert line[-1] != "\n"
             if self.current_parser_name is None:
                 if not self.is_docpicture_directive(line):
                     new_lines.append(line)
                 else:
+                    # self.current_parser_name will have been set by
+                    # self.is_docpicture_directive
                     text = '\n'.join(new_lines)
                     new_lines = []
                     self.body.append(svg.XmlElement("pre", text=text))
@@ -325,14 +337,14 @@ class DocpictureDocument(object):
                 if self.is_docpicture_code(line):
                     docpicture_lines.append(line)
                 else:
-                    pre = svg.XmlElement("pre", text="\n".join(docpicture_lines))
-                    pre.attributes["class"] = "docpicture"
-                    self.body.append(pre)
-                    flag, drawing = self.process_docpicture_code(docpicture_lines)
-
-                    self.body.append(
-                        )
-
+                    self.embed_docpicture_code(docpicture_lines)
+                    self.current_parser_name = None
+                    docpicture_lines = []
+                    new_lines.append(line)
+        if new_lines:
+            text = "\n".join(new_lines)
+            self.body.append(svg.XmlElement("pre", text=text))
+        return
 
 
 
