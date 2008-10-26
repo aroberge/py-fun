@@ -75,7 +75,7 @@ _patterns = {
                 , re.VERBOSE),
 }
 
-def register(register_parser):
+def register_docpicture_parser(register_parser):
     print "called register"
     register_parser(Turtle)
     register_parser(ColorTurtle)

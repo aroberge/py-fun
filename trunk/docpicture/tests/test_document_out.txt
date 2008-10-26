@@ -1,0 +1,34 @@
+  <body>
+    <pre>Test document
+=============
+
+This document is used to test the docpicture module.  It is used by the
+test_docpicture.py unittest file, which defines a fake parser.
+
+This file is used in a few tests.  The result of processing it
+are found in files of the form "test_document_out_xxx.txt" or ".xhtml"
+</pre>
+    <pre class="docpicture">..docpicture:: good
+  good text
+  other good text
+  bad text
+  
+  good line of code</pre>
+    <pre class="warning">WARNING: unrecognized syntax
+  bad text
+  </pre>
+    <svg:svg width="0" height="0">
+    <svg:defs>
+  <!-- For testing purpose -->
+</svg:defs>
+</svg:svg>
+    <pre class="fake_drawing">('good', ())
+('good', ())
+('good', ())</pre>
+    <pre>Resuming the document...
+
+..docpicture:: unknown
+  this will be ignored
+
+End of document.</pre>
+</body>

@@ -39,7 +39,7 @@ def load_parsers(testing=False):
         imported_parsers.append(mod)
 
     for mod in imported_parsers:
-        if hasattr(mod, "register"):
+        if hasattr(mod, "register_docpicture_parser"):
             if not testing:
                 mod.register(register_parser)
             else:

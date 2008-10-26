@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.normpath(os.path.join(current_path, "..")))
 
 import docpicture
 from parsers._parser import BaseParser
+from src import svg
 
 class FakeParser(BaseParser):
     def __init__(self):
@@ -21,7 +22,11 @@ class FakeParser(BaseParser):
         'good': re.compile(".*good.*")
         }
     def draw(self, lines):
-        return lines
+        new_lines = [str(line) for line in lines]
+        text = "\n".join(new_lines)
+        pre = svg.XmlElement("pre", text=text)
+        pre.attributes["class"] = "fake_drawing"
+        return pre
 
 text_samples = [""]
 
@@ -44,9 +49,7 @@ class TestDocpictureDocument(unittest.TestCase):
         self.assert_(self.yes.indentation == 2)
         self.assert_(self.yes.current_parser_name == 'good')
 
-        self.assert_(self.yes.is_docpicture_directive("..docpicture:: g f"))
-        self.assert_(self.yes.indentation == 0)
-        self.assert_(self.yes.current_parser_name == 'g f')
+        self.assert_(not self.yes.is_docpicture_directive("..docpicture:: unknown"))
 
     def test_is_docpicture_code(self):
         self.assert_(self.yes.current_parser_name == None)
@@ -67,65 +70,78 @@ class TestDocpictureDocument(unittest.TestCase):
         self.yes.current_parser_name = 'good'
 
         bad_output = self.yes.process_docpicture_code(some_bad_lines)
-        self.assert_(bad_output[0] == [some_bad_lines[1], some_bad_lines[3]])
-        self.assert_(len(bad_output[1]) == 3)
-        for i in [0, 1, 2]:
-            self.assert_(bad_output[1][i] == ("good", ()))
-
         good_output = self.yes.process_docpicture_code(all_good_lines)
+
+        drawing_result = """  <pre class="fake_drawing">('good', ())
+('good', ())
+('good', ())</pre>
+"""
+        self.assert_(str(bad_output[1]) == drawing_result)
+        self.assert_(str(good_output[1]) == drawing_result)
+        self.assert_(bad_output[0] == ['  this is a bad line', 'not'])
         self.assert_(good_output[0] is None)
-        self.assert_(len(good_output[1]) == 3)
-        for i in [0, 1, 2]:
-            self.assert_(good_output[1][i] == ("good", ()))
 
     def test_embed_docpicture_code(self):
 
-        some_bad_lines = ["  ..docpicture:: good", "  this is a bad line", " good",
-                          "not", "good"]
-        all_good_lines = ["  ..docpicture:: good", "goodness", "very good indeed"]
+        some_bad_lines = ["  ..docpicture:: good", "  this is a bad line",
+                          " good", "not", "good"]
+        all_good_lines = ["  ..docpicture:: good", "goodness",
+                          "very good indeed"]
         self.yes.current_parser_name = 'good'
-        self.yes.body = []
+        self.yes.body = svg.XmlElement("body")
         self.yes.embed_docpicture_code(some_bad_lines)
-
         # the first time we run the test, we expect the svg defs to be included
         # before the code. Note that only 2 "good lines" are included in the
         # drawing, as the first line with "good" in it is the docpicture
         # directive, which is expected to be excluded.
-        expected_output = """[  <pre class="docpicture">
-  ..docpicture:: good
+        expected_output = """  <body>
+    <pre class="docpicture">  ..docpicture:: good
   this is a bad line
  good
 not
-good
-</pre>
-,   <pre class="warning">
+good</pre>
+    <pre class="warning">WARNING: unrecognized syntax
   this is a bad line
-not
-</pre>
-,   <svg:svg width="0" height="0">
+not</pre>
+    <svg:svg width="0" height="0">
     <svg:defs>
   <!-- For testing purpose -->
 </svg:defs>
 </svg:svg>
-, [('good', ()), ('good', ())]]"""
+    <pre class="fake_drawing">('good', ())
+('good', ())</pre>
+</body>
+"""
         self.assert_(str(self.yes.body) == expected_output)
 
-        self.yes.body = []
+        self.yes.body = svg.XmlElement("body")
         self.yes.embed_docpicture_code(all_good_lines)
+        #output = []
+        #for line in self.yes.body:
+        #    output.append(str(line))
+        #output = "\n".join(output)
         # the second time we run a different test, the svg defs do not need to be
         # included; also, no "bad" lines are generated.
-        expected_output = """[  <pre class="docpicture">
-  ..docpicture:: good
+        expected_output = """  <body>
+    <pre class="docpicture">  ..docpicture:: good
 goodness
-very good indeed
-</pre>
-, [('good', ()), ('good', ())]]"""
+very good indeed</pre>
+    <pre class="fake_drawing">('good', ())
+('good', ())</pre>
+</body>
+"""
         self.assert_(str(self.yes.body) == expected_output)
 
     def test_process_lines_of_text(self):
-        lines = open(os.path.join(current_path, "test_document_in.txt")).readlines()
-        self.yes.body = []
-        processed_lines = self.yes.process_lines_of_text(lines)
+        lines = [line.replace("\n", '') for line in
+                 open(os.path.join(current_path, "test_document_in.txt")
+                                                                ).readlines()]
+        self.yes.body = svg.XmlElement("body")
+        self.yes.process_lines_of_text(lines)
+        expected_output = open(os.path.join(current_path,
+                                            "test_document_out.txt")).read()
+        self.assert_(expected_output == str(self.yes.body))
+
 
 if __name__ == '__main__':
     unittest.main()
