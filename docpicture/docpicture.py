@@ -308,8 +308,8 @@ class DocpictureDocument(object):
         self.body = self.document.body
         self.head.append(svg.XmlElement("style", text=self.style))
         lines = text.split("\n")
-        self.process_text(lines)
-
+        self.process_lines_of_text(lines)
+        return
 
     def process_lines_of_text(self, lines):
         '''processes some text passed as a series of lines,

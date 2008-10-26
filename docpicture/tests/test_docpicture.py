@@ -38,6 +38,7 @@ class TestDocpictureDocument(unittest.TestCase):
         # an instance with a parser defined
         fake = FakeParser()
         self.yes = docpicture.DocpictureDocument(parsers = {'good': fake})
+        return
 
     def test_is_docpicture_directive(self):
         self.assert_(not self.no.is_docpicture_directive("a string"))
@@ -131,6 +132,7 @@ very good indeed</pre>
 </body>
 """
         self.assert_(str(self.yes.body) == expected_output)
+        return
 
     def test_process_lines_of_text(self):
         lines = [line.replace("\n", '') for line in
@@ -141,7 +143,17 @@ very good indeed</pre>
         expected_output = open(os.path.join(current_path,
                                             "test_document_out.txt")).read()
         self.assert_(expected_output == str(self.yes.body))
+        return
 
+    def test_create_document(self):
+        text = open(os.path.join(current_path, "test_document_in.txt")).read()
+        self.yes.create_document(text)
+        self.yes.head.append(svg.XmlElement("style",
+                                            text=".fake_drawing{color:green;}"))
+        expected_output = open(os.path.join(current_path,
+                                            "test_document_out.xml")).read()
+        self.assert_(expected_output == str(self.yes.document))
+        return
 
 if __name__ == '__main__':
     unittest.main()
