@@ -76,7 +76,6 @@ _patterns = {
 }
 
 def register_docpicture_parser(register_parser):
-    print "called register"
     register_parser(Turtle)
     register_parser(ColorTurtle)
     register_parser(BlackAndWhiteTurtle)

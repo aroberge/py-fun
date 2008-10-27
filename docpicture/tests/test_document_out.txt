@@ -15,8 +15,7 @@ are found in files of the form "test_document_out_xxx.txt" or ".xhtml"
   
   good line of code</pre>
     <pre class="warning">WARNING: unrecognized syntax
-  bad text
-  </pre>
+  bad text</pre>
     <svg:svg width="0" height="0">
     <svg:defs>
   <!-- For testing purpose -->

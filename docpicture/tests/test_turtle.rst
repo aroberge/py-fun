@@ -77,8 +77,6 @@ be received as a list of lines.
         <svg:use y="0" x="0" xlink:href="#turtle" transform="rotate(-20.0 0 0)"/>
     </svg:g>
         <svg:use xlink:href="#start_to_start" transform="translate(0, 60)"/>
-        <svg:text y="65" x="150">
-      left(20)
-    </svg:text>
+        <svg:text y="65" x="150">left(20)</svg:text>
     </svg:svg>
     <BLANKLINE>

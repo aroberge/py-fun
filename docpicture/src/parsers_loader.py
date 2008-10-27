@@ -41,7 +41,7 @@ def load_parsers(testing=False):
     for mod in imported_parsers:
         if hasattr(mod, "register_docpicture_parser"):
             if not testing:
-                mod.register(register_parser)
+                mod.register_docpicture_parser(register_parser)
             else:
                 print "Parser found:", mod.__name__
         else:

@@ -58,6 +58,8 @@ class BaseParser(object):
         ok_lines = []
         problem_lines = []
         for line in lines:
+            if line.strip() == "":
+                continue
             result = self.parse_single_line(line)
             if result[0] == None:
                 problem_lines.append(line)
