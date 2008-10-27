@@ -154,28 +154,25 @@ def get_docstring(obj):
         name = "Unknown"
     if doc is None:
         doc = "No docstring is available for this object: %s" % name
-    print doc
     return doc
 
+threaded_server = None
 def view(obj):
-    import sys, time
-    print "Server will be active for 10 seconds; try reloading the page"
-    src.parsers_loader.load_parsers()
+    global threaded_server
+    if not src.parsers_loader.PARSERS:
+        src.parsers_loader.load_parsers()
     xml_doc = DocpictureDocument(src.parsers_loader.PARSERS)
     xml_doc.create_document(get_docstring(obj))
     test_doc = src.server.Document(str(xml_doc.document))
-    threaded_server = src.server.ServerInThread()
-    threaded_server.start()
-    colors = ['red', 'green', 'yellow', 'brown', 'blue', 'magenta', 'cyan',
-              'tan', 'white', 'black', 'red']
+    if threaded_server is None:
+        threaded_server = src.server.ServerInThread()
+        threaded_server.start()
+    else:
+        print "Use the reload button of your web browser to see the new display."
 
-    for i in range(10, 0, -1):
-        print i,
-        sys.stdout.flush()
-        time.sleep(1)
-
+def stop_server():
     src.server.stop_server(threaded_server.port)
-    print "Done!"
+    print "Server shut down!"
 
 
 if __name__ == "__main__":
