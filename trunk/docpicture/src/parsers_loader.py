@@ -44,7 +44,7 @@ def load_parsers(testing=False):
                 mod.register_docpicture_parser(register_parser)
             else:
                 print "Parser found:", mod.__name__
-        else:
+        elif testing:
             print "Non-parser Python file found:", mod.__name__
     #print PARSERS
 

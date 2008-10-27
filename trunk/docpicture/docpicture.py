@@ -4,12 +4,14 @@ docpicture
 
 Need to explain what it does here
 '''
+import pydoc
+from StringIO import StringIO
 import re
 import src.svg as svg
 import src.parsers_loader
 import src.server
 
-docpicture_directive_pattern = re.compile("\s*\.\.docpicture::\s*(.+?)$")
+docpicture_directive_pattern = re.compile("^\s*\.\.docpicture::\s*(.+?)$")
 
 class DocpictureDocument(object):
     '''
@@ -28,7 +30,9 @@ class DocpictureDocument(object):
         self.style = """p{width:800px;}
             pre{font-size: 12pt;}
             .docpicture{color: blue;}
-            .warning{color: red;}"""
+            .warning{color: red;}
+            .bold{font-weight:bold; color:darkblue;}
+            """
 
     def reset(self):
         '''resets (or sets) values to initial choices needed to process
@@ -156,13 +160,31 @@ def get_docstring(obj):
         doc = "No docstring is available for this object: %s" % name
     return doc
 
+
+def bold(self, text):
+    return "<span class='bold'>%s</span>"%text
+
+pydoc.TextDoc.bold = bold
+
 threaded_server = None
 def view(obj):
     global threaded_server
     if not src.parsers_loader.PARSERS:
         src.parsers_loader.load_parsers()
     xml_doc = DocpictureDocument(src.parsers_loader.PARSERS)
-    xml_doc.create_document(get_docstring(obj))
+    #xml_doc.create_document(get_docstring(obj))
+
+    my_stdin = StringIO()
+    def my_pager(text):
+        my_stdin.write(pydoc.plain(text))
+        return
+    pydoc.pager = my_pager
+
+    pydoc.help(obj)
+    xml_doc.create_document(my_stdin.getvalue())
+    my_stdin.close()
+
+
     test_doc = src.server.Document(str(xml_doc.document))
     if threaded_server is None:
         threaded_server = src.server.ServerInThread()
@@ -171,7 +193,10 @@ def view(obj):
         print "Use the reload button of your web browser to see the new display."
 
 def stop_server():
+    global threaded_server
     src.server.stop_server(threaded_server.port)
+    del threaded_server
+    threaded_server = None
     print "Server shut down!"
 
 
