@@ -38,7 +38,6 @@ and even
    turtle.color("red")
    turtle(20).forward(125) -> turtle(20)
 
-
 """
 
 class RawPen:
@@ -57,14 +56,12 @@ class RawPen:
         [-50.0, 0.0]
 
         =====================
-        Ok, let's see something like this in picture.
+        Using docpicture.view, you can see something like this in picture.
 
         ..docpicture:: turtle
             turtle(0).forward(75) -> turtle(0)
         """
         pass
-
-
 
     def left(self, angle):
         """ Turn left angle units (units are by default degrees,
@@ -81,7 +78,7 @@ class RawPen:
         67.0
 
         ================
-        Let's add some picture
+        Using docpicture.view, you can see something like this in picture.
         ..docpicture:: turtle
           turtle(22).left(45) -> turtle(67)
 
@@ -104,7 +101,7 @@ class RawPen:
 
 
         ================
-        Let's add some picture
+        Using docpicture.view, you can see something like this in picture.
         ..docpicture:: turtle
           turtle(22).left(45) -> turtle(337)
         """
@@ -117,7 +114,7 @@ class RawPen:
         >>> turtle.up()
 
         ================
-        Let's add some picture
+        Using docpicture.view, you can see something like this in picture.
         ..docpicture:: turtle
            turtle.up()
            turtle(10).forward(100) -> turtle(10)
@@ -132,14 +129,13 @@ class RawPen:
 
 
         ================
-        Let's add some picture
+        Let's add a picture
         ..docpicture:: turtle
            turtle.down()
            turtle(10).forward(100) -> turtle(10)
 
         """
         pass
-
 
     def color(self, *args):
         """ Set the pen color.
@@ -156,10 +152,10 @@ class RawPen:
         >>> turtle.color('brown')
 
         ================
-        Let's add some picture
+        Using docpicture.view, you can see something like this in picture.
         ..docpicture:: turtle
            turtle.down()
-           turtle.color("red")
+           turtle.color("brown")
            turtle(10).forward(100) -> turtle(10)
         """
         pass
