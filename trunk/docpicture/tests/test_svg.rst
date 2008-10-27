@@ -15,9 +15,7 @@ Here we test the creation of various SvgElements.
     <BLANKLINE>
     >>> elem = svg.SvgElement("text", text="This is a test.")
     >>> print elem
-    <svg:text>
-      This is a test.
-    </svg:text>
+      <svg:text>This is a test.</svg:text>
     <BLANKLINE>
     >>> elem = svg.SvgElement("g")
     >>> elem2 = svg.SvgElement("circle", cx=10, cy=30, r="10", color="red")

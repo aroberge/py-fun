@@ -23,17 +23,20 @@ For docpictures, we modify slightly the notation so as to include
 the angle at which the turtle is rotated.  For example, we could have
 
 ..docpicture:: bw_turtle
-   turtle(20).forward(25) -> turtle(20)
+   turtle(20).forward(125) -> turtle(20)
 
 We also have some other styles available, such as
 
 ..docpicture:: color_turtle
-   turtle(20).forward(25) -> turtle(20)
+   turtle.down()
+   turtle(20).forward(125) -> turtle(20)
 
 and even
 
 ..docpicture:: turtle
-   turtle(20).forward(25) -> turtle(20)
+   turtle.down()
+   turtle.color("red")
+   turtle(20).forward(125) -> turtle(20)
 
 
 """

@@ -155,5 +155,17 @@ very good indeed</pre>
         self.assert_(expected_output == str(self.yes.document))
         return
 
+class TestVariousFunctions(unittest.TestCase):
+    '''Testing various functions in the docpicture module.'''
+
+    def test_get_docstring(self):
+        s = BaseParser()
+        tests = [(s, 'Base class for all the parsers'),
+            (self, 'Testing various functions in the docpicture module.'),
+            (self.test_get_docstring,
+            "No docstring is available for this object: 'test_get_docstring'")]
+        for obj, desc in tests:
+            self.assert_(desc == docpicture.get_docstring(obj))
+
 if __name__ == '__main__':
     unittest.main()
