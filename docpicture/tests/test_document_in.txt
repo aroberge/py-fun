@@ -18,4 +18,18 @@ Resuming the document...
 ..docpicture:: unknown
   this will be ignored
 
+Let's try a directive with missing code
+..docpicture:: good
+Some normal line
+
+Then, two directives in a row
+..docpicture:: good
+  good text
+..docpicture:: good
+ good text
+
+Normal text, followed by another directive
+..docpicture:: good
+  good text
+
 End of document.

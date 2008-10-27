@@ -52,10 +52,10 @@ class DocpictureDocument(object):
         if result is None:
             return False
         else:
-            self.indentation = line.index("..docpicture")
             parser_name = result.groups()[0]
             if parser_name in self.parsers:
                 self.current_parser_name = result.groups()[0]
+                self.indentation = line.index("..docpicture")
                 return True
             else:
                 return False
@@ -84,6 +84,12 @@ class DocpictureDocument(object):
         pre = svg.XmlElement("pre", text="\n".join(lines))
         pre.attributes["class"] = "docpicture"
         self.body.append(pre)
+        if len(lines) == 1:  # missing code!
+            text = "WARNING: Missing code for this docpicture.\n"
+            pre = svg.XmlElement("pre", text=text)
+            pre.attributes["class"] = "warning"
+            self.body.append(pre)
+            return
         # exclude the docpicture directive from the call
         flag, drawing = self.process_docpicture_code(lines[1:])
         if flag is not None:
@@ -135,9 +141,13 @@ class DocpictureDocument(object):
                     docpicture_lines.append(line)
                 else:
                     self.embed_docpicture_code(docpicture_lines)
-                    self.current_parser_name = None
                     docpicture_lines = []
-                    new_lines.append(line)
+                    if not self.is_docpicture_directive(line):
+                        new_lines.append(line)
+                        self.current_parser_name = None
+                    else:  # two docpicture directives in a row
+                        docpicture_lines.append(line)
+
         # we have to take care of the last bunch of unprocessed lines
         if new_lines:
             text = "\n".join(new_lines)
@@ -145,22 +155,6 @@ class DocpictureDocument(object):
         elif docpicture_lines:
             self.embed_docpicture_code(docpicture_lines)
         return
-
-def get_docstring(obj):
-    '''gets the docstring corresponding to a given object'''
-    try:
-        doc = obj.__doc__
-    except:
-        doc = None
-    try:
-        name = repr(obj.__name__)
-    except:
-        name = "Unknown"
-    if doc is None:
-        doc = "No docstring is available for this object: %s" % name
-    return doc
-
-
 
 def my_help(obj):
     _io = StringIO()
@@ -191,7 +185,7 @@ def view(obj):
     xml_doc = DocpictureDocument(src.parsers_loader.PARSERS)
     xml_doc.create_document(my_help(obj))
 
-    test_doc = src.server.Document(str(xml_doc.document))
+    dummy = src.server.Document(str(xml_doc.document))
     if threaded_server is None:
         threaded_server = src.server.ServerInThread()
         threaded_server.start()
