@@ -152,6 +152,7 @@ very good indeed</pre>
                                             text=".fake_drawing{color:green;}"))
         expected_output = open(os.path.join(current_path,
                                             "test_document_out.xml")).read()
+        sys.stderr.write(str(len(expected_output)) + " " + str(len(str(self.yes.document))) + "\n")
         self.assert_(expected_output == str(self.yes.document))
         return
 

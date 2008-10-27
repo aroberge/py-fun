@@ -29,5 +29,24 @@ are found in files of the form "test_document_out_xxx.txt" or ".xhtml"
 ..docpicture:: unknown
   this will be ignored
 
-End of document.</pre>
+Let's try a directive with missing code</pre>
+    <pre class="docpicture">..docpicture:: good</pre>
+    <pre class="warning">WARNING: Missing code for this docpicture.
+</pre>
+    <pre>Some normal line
+
+Then, two directives in a row</pre>
+    <pre class="docpicture">..docpicture:: good
+  good text</pre>
+    <pre class="fake_drawing">('good', ())</pre>
+    <pre class="docpicture">..docpicture:: good
+ good text
+</pre>
+    <pre class="fake_drawing">('good', ())</pre>
+    <pre>Normal text, followed by another directive</pre>
+    <pre class="docpicture">..docpicture:: good
+  good text
+</pre>
+    <pre class="fake_drawing">('good', ())</pre>
+    <pre>End of document.</pre>
 </body>
