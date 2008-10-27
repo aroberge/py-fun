@@ -161,10 +161,27 @@ def get_docstring(obj):
     return doc
 
 
-def bold(self, text):
-    return "<span class='bold'>%s</span>"%text
 
-pydoc.TextDoc.bold = bold
+def my_help(obj):
+    _io = StringIO()
+    def my_pager(text):
+        _io.write(pydoc.plain(text))
+        return
+    def bold(self, text):
+        return "<span class='bold'>%s</span>"%text
+    #
+    saved_pager = pydoc.pager
+    saved_bold = pydoc.TextDoc.bold
+    pydoc.pager = my_pager
+    pydoc.TextDoc.bold = bold
+    #
+    pydoc.help(obj)
+    _help = _io.getvalue()
+    _io.close()
+    pydoc.pager = saved_pager
+    pydoc.TextDoc.bold = saved_bold
+    return _help
+
 
 threaded_server = None
 def view(obj):
@@ -172,18 +189,7 @@ def view(obj):
     if not src.parsers_loader.PARSERS:
         src.parsers_loader.load_parsers()
     xml_doc = DocpictureDocument(src.parsers_loader.PARSERS)
-    #xml_doc.create_document(get_docstring(obj))
-
-    my_stdin = StringIO()
-    def my_pager(text):
-        my_stdin.write(pydoc.plain(text))
-        return
-    pydoc.pager = my_pager
-
-    pydoc.help(obj)
-    xml_doc.create_document(my_stdin.getvalue())
-    my_stdin.close()
-
+    xml_doc.create_document(my_help(obj))
 
     test_doc = src.server.Document(str(xml_doc.document))
     if threaded_server is None:
