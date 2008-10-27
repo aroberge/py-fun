@@ -1,6 +1,6 @@
 """
 This is a fake turtle module (with no relevant executable code) obtained through
-severely amputing the original turtle module, for the purpose of
+severely amputating the original turtle module, for the purpose of
 demonstrating the docpicture concept.
 
 From the original:
