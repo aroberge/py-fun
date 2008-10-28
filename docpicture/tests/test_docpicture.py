@@ -54,6 +54,10 @@ class TestDocpictureDocument(unittest.TestCase):
 
         self.assert_(not self.yes.is_docpicture_directive("..docpicture:: unknown"))
 
+    def test_retrieve_docpicture_parser(self):
+        self.assert_(self.yes.retrieve_docpicture_parser("unknown") is None)
+        self.assert_(self.yes.retrieve_docpicture_parser("good") is not None)
+        
     def test_is_docpicture_code(self):
         self.assert_(self.yes.current_parser_name == None)
         self.assert_(self.yes.indentation == None)
