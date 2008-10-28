@@ -111,7 +111,7 @@ class DocpictureDocument(object):
             self.body.append(pre)
         if self.current_parser_name not in self.included_defs:
             self.included_defs.append(self.current_parser_name)
-            self.body.append(self.parsers[self.current_parser_name].svg_defs())
+            self.body.append(self.parsers[self.current_parser_name].get_svg_defs())
         self.body.append(drawing)
         return
 

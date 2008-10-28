@@ -81,7 +81,7 @@ class Turtle(BaseParser):
         self.text_x = 150  # position of text for command
         self.set_defaults()
 
-    def svg_defs(self):
+    def get_svg_defs(self):
         '''returns an object representing all the svg defs'''
         defs = svg.SvgDefs()
         defs.append(self.turtle_defs())
@@ -172,7 +172,7 @@ class Turtle(BaseParser):
     def image_frame(self):
         '''creates a frame for the image'''
         return svg.SvgElement("rect", width=self.width, height=self.height,
-                                style="stroke:blue; stroke-width:1; fill:white")
+                                style="stroke:blue; stroke-width:2; fill:white")
 
     def line_trace(self):
         '''creates the code for the line traced by the turtle'''
@@ -282,7 +282,7 @@ class ColorTurtle(Turtle):
         Turtle.__init__(self)
         self.directive_name = 'color_turtle'
 
-    def svg_defs(self):
+    def get_svg_defs(self):
         '''returns an object representing all the svg defs'''
         defs = svg.SvgDefs()
         defs.append(self.turtle_defs())
@@ -368,7 +368,7 @@ class BlackAndWhiteTurtle(ColorTurtle):
     def image_frame(self):
         '''creates a frame for the image'''
         return svg.SvgElement("rect", width=self.width, height=self.height,
-                                style="stroke:black; stroke-width:1; fill:white")
+                                style="stroke:black; stroke-width:2; fill:white")
 
 def test_me():
     '''Go to package root, start your Python interpreter and do:
@@ -390,8 +390,8 @@ def test_me():
         pre{font-size: 12pt;}
         .docpicture{color: blue;}
         .warning{color: red;}"""))
-    test_doc.body.append(t.svg_defs())
-    test_doc.body.append(t3.svg_defs())
+    test_doc.body.append(t.get_svg_defs())
+    test_doc.body.append(t3.get_svg_defs())
     test_doc.body.append(svg.XmlElement("p", text="""Test drawing.
             An error has been intentionally introduced in the third drawing."""))
     lines = ['turtle.down()', 'turtle.color("red")',
