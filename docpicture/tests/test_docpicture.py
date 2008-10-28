@@ -28,7 +28,9 @@ class FakeParser(BaseParser):
         pre.attributes["class"] = "fake_drawing"
         return pre
 
-text_samples = [""]
+def find_me():
+    '''Just a test function.'''
+    pass
 
 class TestDocpictureDocument(unittest.TestCase):
 
@@ -36,8 +38,8 @@ class TestDocpictureDocument(unittest.TestCase):
         # an instance with no parser defined
         self.no = docpicture.DocpictureDocument()
         # an instance with a parser defined
-        fake = FakeParser()
-        self.yes = docpicture.DocpictureDocument(parsers = {'good': fake})
+        self.fake = FakeParser()
+        self.yes = docpicture.DocpictureDocument(parsers = {'good': self.fake})
         return
 
     def test_is_docpicture_directive(self):
@@ -152,9 +154,15 @@ very good indeed</pre>
                                             text=".fake_drawing{color:green;}"))
         expected_output = open(os.path.join(current_path,
                                             "test_document_out.xml")).read()
-        sys.stderr.write(str(len(expected_output)) + " " + str(len(str(self.yes.document))) + "\n")
         self.assert_(expected_output == str(self.yes.document))
         return
+    
+    def test_find_object(self):
+        self.assert_(not self.no.find_object(self.fake, 'unknown'))
+        self.assert_(self.no.find_object(self.fake, 'draw'))
+        self.assert_(self.no.find_object(self.fake, 'find_me')==find_me)
+        self.assert_(self.no.find_object(self.fake.draw, 'find_me')==find_me)
+        self.assert_(self.no.find_object(find_me, 'FakeParser')==FakeParser)
 
 if __name__ == '__main__':
     unittest.main()

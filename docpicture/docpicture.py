@@ -7,6 +7,8 @@ Need to explain what it does here
 import pydoc
 from StringIO import StringIO
 import re
+import sys
+
 import src.svg as svg
 import src.parsers_loader
 import src.server
@@ -171,6 +173,19 @@ class DocpictureDocument(object):
         elif docpicture_lines:
             self.embed_docpicture_code(docpicture_lines)
         return
+
+
+    def find_object(self, obj, attr):
+        '''given an object "obj", attempts to find an attribute
+        in the module where obj is located, or an attribute of the
+        module if obj is a module'''
+        try:
+            return getattr(obj, attr)
+        except:
+            try:
+                return getattr(sys.modules[obj.__module__], attr)
+            except:
+                return False
 
 def my_help(obj):
     _io = StringIO()
