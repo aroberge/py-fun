@@ -12,6 +12,9 @@ import src.parsers_loader
 import src.server
 
 docpicture_directive_pattern = re.compile("^\s*\.\.docpicture::\s*(.+?)$")
+# note: sometimes, the Python help display code indented with a string like:
+# "    |   ".
+indented_d_pattern = re.compile("^\s*\|\s*\.\.docpicture::\s*(.+?)$")
 
 class DocpictureDocument(object):
     '''
@@ -38,6 +41,7 @@ class DocpictureDocument(object):
         '''resets (or sets) values to initial choices needed to process
         a new document'''
         self.indentation = None
+        self.vertical_bar_indentation = False
         self.current_parser_name = None
         self.included_defs = []
 
@@ -50,15 +54,19 @@ class DocpictureDocument(object):
         """
         result = docpicture_directive_pattern.search(line.rstrip())
         if result is None:
-            return False
-        else:
-            parser_name = result.groups()[0]
-            if parser_name in self.parsers:
-                self.current_parser_name = result.groups()[0]
-                self.indentation = line.index("..docpicture")
-                return True
-            else:
+            result = indented_d_pattern.search(line.rstrip())
+            if result is None:
                 return False
+            else:  # line start with something like "     |   "
+                self.vertical_bar_indentation = True
+
+        parser_name = result.groups()[0]
+        if parser_name in self.parsers:
+            self.current_parser_name = result.groups()[0]
+            self.indentation = line.index("..docpicture")
+            return True
+        else:
+            return False
 
     def is_docpicture_code(self, line):
         '''return True if the indentation (number of spaces at the beginning
@@ -66,6 +74,8 @@ class DocpictureDocument(object):
            with the exception that blank lines are considered always have
            the indentation required to be part of the docpicture code.
         '''
+        if self.vertical_bar_indentation:
+            line = line.replace(" | ", "   ", 1)
         if len(line.strip()) == 0:
             return True
         if line.startswith(" "*(self.indentation+1)):
@@ -135,9 +145,13 @@ class DocpictureDocument(object):
                     text = '\n'.join(new_lines)
                     new_lines = []
                     self.body.append(svg.XmlElement("pre", text=text))
+                    if self.vertical_bar_indentation:
+                        line = line.replace(" | ", "   ", 1)
                     docpicture_lines.append(line)
             else:
                 if self.is_docpicture_code(line):
+                    if self.vertical_bar_indentation:
+                        line = line.replace(" | ", "   ", 1)
                     docpicture_lines.append(line)
                 else:
                     self.embed_docpicture_code(docpicture_lines)
@@ -146,6 +160,8 @@ class DocpictureDocument(object):
                         new_lines.append(line)
                         self.current_parser_name = None
                     else:  # two docpicture directives in a row
+                        if self.vertical_bar_indentation:
+                            line = line.replace(" | ", "   ", 1)
                         docpicture_lines.append(line)
 
         # we have to take care of the last bunch of unprocessed lines
@@ -203,3 +219,6 @@ def stop_server():
 if __name__ == "__main__":
     import fake_turtle
     view(fake_turtle)
+    import time
+    time.sleep(5)
+    stop_server()

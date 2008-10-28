@@ -23,20 +23,20 @@ For docpictures, we modify slightly the notation so as to include
 the angle at which the turtle is rotated.  For example, we could have
 
 ..docpicture:: bw_turtle
-   turtle(20).forward(125) -> turtle(20)
+   turtle(20).forward(125)
 
 We also have some other styles available, such as
 
 ..docpicture:: color_turtle
    turtle.down()
-   turtle(20).forward(125) -> turtle(20)
+   turtle(20).forward(125)
 
 and even
 
 ..docpicture:: turtle
    turtle.down()
    turtle.color("red")
-   turtle(20).forward(125) -> turtle(20)
+   turtle(20).forward(125)
 
 """
 
@@ -59,7 +59,7 @@ class RawPen:
         Using docpicture.view, you can see something like this in picture.
 
         ..docpicture:: turtle
-            turtle(0).forward(75) -> turtle(0)
+            turtle(0).forward(75)
         """
         pass
 
@@ -80,7 +80,7 @@ class RawPen:
         ================
         Using docpicture.view, you can see something like this in picture.
         ..docpicture:: turtle
-          turtle(22).left(45) -> turtle(67)
+          turtle(22).left(45)
 
         """
         pass
@@ -103,7 +103,7 @@ class RawPen:
         ================
         Using docpicture.view, you can see something like this in picture.
         ..docpicture:: turtle
-          turtle(22).left(45) -> turtle(337)
+          turtle(22).right(45)
         """
         pass
 
@@ -117,7 +117,7 @@ class RawPen:
         Using docpicture.view, you can see something like this in picture.
         ..docpicture:: turtle
            turtle.up()
-           turtle(10).forward(100) -> turtle(10)
+           turtle(10).forward(100)
         """
         pass
 
@@ -132,7 +132,7 @@ class RawPen:
         Let's add a picture
         ..docpicture:: turtle
            turtle.down()
-           turtle(10).forward(100) -> turtle(10)
+           turtle(10).forward(100)
 
         """
         pass
@@ -156,6 +156,6 @@ class RawPen:
         ..docpicture:: turtle
            turtle.down()
            turtle.color("brown")
-           turtle(10).forward(100) -> turtle(10)
+           turtle(10).forward(100)
         """
         pass
