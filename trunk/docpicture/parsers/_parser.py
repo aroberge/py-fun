@@ -48,7 +48,7 @@ class BaseParser(object):
                 return name, result.groups()
         return None, line
 
-    def parse_lines_of_code(self, lines):
+    def create_drawing(self, lines):
         '''Parses all received lines of code.
 
            If errors are found, returns a list of line with errors and an

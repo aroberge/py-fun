@@ -86,8 +86,10 @@ class DocpictureDocument(object):
             return False
 
     def process_docpicture_code(self, lines):
-        ''' feeds a list of lines to the appropriate docpicture parser'''
-        return self.parsers[self.current_parser_name].parse_lines_of_code(lines)
+        ''' feeds a list of lines to the appropriate docpicture parser
+        and some svg (or other xml) instructions for including the
+        corresponding drawing.'''
+        return self.parsers[self.current_parser_name].create_drawing(lines)
 
     def embed_docpicture_code(self, lines):
         '''includes the docpicture lines of code in the document, as well as
