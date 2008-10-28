@@ -33,8 +33,8 @@ class BaseParser(object):
     def __init__(self):
         self.patterns = _patterns  # definitely needs to be overriden!
 
-    def svg_defs(self):
-        '''default svg_defs; normally overriden by parsers'''
+    def get_svg_defs(self):
+        '''returns default svg_defs; normally overriden by parsers'''
         defs = svg.SvgDefs()
         defs.append(svg.Comment("For testing purpose"))
         return defs
