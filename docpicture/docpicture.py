@@ -236,6 +236,5 @@ def stop_server():
 if __name__ == "__main__":
     import fake_turtle
     view(fake_turtle)
-    import time
-    time.sleep(5)
+    dummy = raw_input("Press any key to end.")
     stop_server()

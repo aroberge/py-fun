@@ -46,7 +46,7 @@ def load_parsers(testing=False):
                 print "Parser found:", mod.__name__
         elif testing:
             print "Non-parser Python file found:", mod.__name__
-    #print PARSERS
+    print PARSERS
 
 if __name__ == "__main__":
     load_parsers(testing=True)

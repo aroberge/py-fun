@@ -4,6 +4,13 @@ a local docpicture parser included for testing) obtained through
 severely amputating the original turtle module, for the purpose of
 demonstrating the docpicture concept.
 
+
+Aside: just for a quick test, we include another type of object.
+..docpicture:: websequence
+  Alice->Bob: Authentication Request
+  Bob-->Alice: Authentication Response
+
+
 From the original:
 ====================
 
