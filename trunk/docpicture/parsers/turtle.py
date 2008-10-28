@@ -98,7 +98,7 @@ class Turtle(BaseParser):
         self.command = None
 
     def draw(self, lines):
-        '''fake function; normally would convert parsed lines of code
+        '''Converts parsed lines of code
            into svg drawing statements'''
         self.compute_layout_parameters(lines)
         return self.create_svg_object()
