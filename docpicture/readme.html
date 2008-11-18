@@ -7,28 +7,19 @@ body{max-width:800px;}
 </head>
 <body>
 <h1>Welcome to docpicture!</h1>
-<p>This is the initial release of docpicture (release 0.1 on October 27, 2008).  
-It is at this time just a proof of concept.
+<p>This is the second release of docpicture (release 0.2 on October 31, 2008).  
+It is still mostly a proof of concept.
 Hopefully, it will grow to meet your needs.</p>
 <p>The idea behind docpicture is to be able to embed images inside docstrings.
 These images are defined via a domain specific language, easily understood
 by people familiar with the field, but much more expressive when viewed as actual
 images.   More information can be found on recent entries on 
 <a href="http://aroberge.blogspot.com/">my blog</a>.</p>
-<p>Start your Python interpreter in the directory where this file is located
-and type the following, for a demonstration.</p>
+<p>Simply type</p>
 <pre>
->>> import fake_turtle
->>> help(fake_turtle)
->>> help(fake_turtle.RawPen.forward)
-
->>> import docpicture
->>> docpicture.view(fake_turtle)
->>> docpicture.view(fake_turtle.RawPen.forward)
+python docpicture.py
 </pre>
-
-<p>That's it for now! Please give me some feedback at 
-<a href="mailto:andre.roberge@gmail.com">andre.roberge@gmail.com</a>
-</p>
+<p>and you should be greeted with a demo.  I encourage you to read the text of
+each example to understand what is being done.</p>
 </body>
 </html>
