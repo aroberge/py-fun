@@ -20,6 +20,9 @@
   <body>
     <div id="header">
       <div class="top">
+        <div class="title"><a href="/"><img src="/static/images/logo.png" alt="Crunchy Python Wiki" height="50px"/>
+        <img src="http://code.google.com/appengine/images/appengine-noborder-120x30.gif"
+alt="Powered by Google App Engine" style="top:0;position:absolute;left:100px;"/></a></div>
         <div class="login">
           {% if user %}
             <span class="item nickname">{{ user.nickname }}</span> |
@@ -28,7 +31,6 @@
             <span class="item"><a href="{{ login_url|escape }}">Sign in</a></span>
           {% endif %}
         </div>
-        <div class="title"><a href="/"><img src="/static/images/logo.png" alt="Crunchy Python Wiki"/></a></div>
       </div>
       <div class="bottom">
         <div class="attribution">
@@ -41,7 +43,7 @@
             {% endif %}
           {% endif %}
         </div>
-        <div class="buttons"><span class="space_for_logo"> </span><span class="item"><input type="button" value="New Page" onclick="NewPage()"/></span>{% block buttons %}{% endblock %}</div>
+        <div class="buttons"><span class="item"><input type="button" value="New Page" onclick="NewPage()"/></span>{% block buttons %}{% endblock %}</div>
         <div style="clear: both"></div>
       </div>
     </div>
