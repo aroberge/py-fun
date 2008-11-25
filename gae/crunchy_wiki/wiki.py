@@ -34,6 +34,9 @@ from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 
+from docutils.core import publish_parts
+from src import rst
+
 # Set to true if we want to have our webapp print stack traces, etc
 _DEBUG = True
 
@@ -158,7 +161,8 @@ class Page(object):
       WikiWords(),
       ExternalLink(),
     ]
-    content = self.content
+    content = rst.rst_to_html(self.content)
+    #content = self.content
     for transform in transforms:
       content = transform.run(content)
     return content

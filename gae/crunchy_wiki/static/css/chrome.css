@@ -3,8 +3,7 @@ body {
 }
 
 #header .top {
-  height: 33px;
-  position: relative;
+  height: 60px;
 }
 
 #header .top .title {
@@ -14,7 +13,6 @@ body {
 }
 
 #header .top .title img {
-  height: 50px;
   border: 0;
 }
 
@@ -30,7 +28,7 @@ body {
 
 #header .bottom {
   clear: both;
-  background-color: #cccccc;/*#c3d9ff;*/
+  background-color: #c3d9ff;
   margin: 0;
   padding: 3px;
   padding-left: 0;
@@ -41,14 +39,6 @@ body {
   float: right;
   padding-top: 3px;
   padding-right: 4px;
-}
-
-#header .bottom .buttons .space_for_logo{
-    padding: 5px;
-    padding-bottom: 7px;
-    padding-left: 100px;
-    background-color: white;
-    margin:0;
 }
 
 #header .bottom .buttons .item {
