@@ -20,9 +20,8 @@
   <body>
     <div id="header">
       <div class="top">
-        <div class="title"><a href="/"><img src="/static/images/logo.png" alt="Crunchy Python Wiki" height="50px"/>
-        <img src="http://code.google.com/appengine/images/appengine-noborder-120x30.gif"
-alt="Powered by Google App Engine" style="top:0;position:absolute;left:100px;"/></a></div>
+        <div class="title"><a href="/"><img src="/static/images/logo.png" alt="Crunchy Python Wiki" height="50px"/></a>
+</div>
         <div class="login">
           {% if user %}
             <span class="item nickname">{{ user.nickname }}</span> |
@@ -49,6 +48,9 @@ alt="Powered by Google App Engine" style="top:0;position:absolute;left:100px;"/>
     </div>
     <div id="body">{% block body %}{% endblock %}</div>
     <div id="footer">
+        <a href="http://code.google.com/p/googleappengine/">
+        <img src="http://code.google.com/appengine/images/appengine-silver-120x30.gif"
+alt="Powered by Google App Engine"/></a>
     </div>
   </body>
 </html>

@@ -55,6 +55,9 @@ body {
 #footer {
   margin-top: 4em;
 }
+#footer img{
+    border:0;
+}
 
 a.button, input[type^="submit"], input[type^="button"] {
   margin: 0;
