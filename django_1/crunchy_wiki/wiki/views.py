@@ -84,3 +84,11 @@ def save_page(request, page_name):
         page = Page(name=page_name, content=content)
     page.save()
     return HttpResponseRedirect("/%s/" % page_name)
+
+def delete_page(request, page_name):
+    try:
+        page = Page.objects.get(pk=page_name)
+        page.delete()
+    except Page.DoesNotExist:
+        page = Page(name=page_name, content=content)
+    return HttpResponseRedirect("/%s/" % page_name)
