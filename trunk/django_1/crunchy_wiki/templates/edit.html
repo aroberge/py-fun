@@ -8,4 +8,10 @@
             <textarea name="content" rows="20" cols="60">{{content}}</textarea><br/>
             <input type="submit" value="Save Page"/>
         </form>
+
+        <h1>Delete {{page_name}}: Can not be undone!</h1>
+        <form method="post" action="/{{page_name|escape}}/delete/">
+            <input type="submit" value="Delete Page"/>
+        </form>
+
 {%endblock%}
