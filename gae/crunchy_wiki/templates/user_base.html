@@ -1,0 +1,35 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <title>{% block title %}{{ application_name }}{% endblock %}</title>
+    <link href="/static/css/base.css" rel="stylesheet" type="text/css"/>
+    <link href="/static/css/chrome.css" rel="stylesheet" type="text/css"/>
+    {% block head %}{% endblock %}
+  </head>
+  <body>
+    <div id="header">
+      <div class="top">
+        <div class="title">
+            <a href="/">
+                <img src="/static/images/logo.png" alt="Crunchy Python Wiki" height="50px"/>
+            </a>
+        </div>
+        <div class="login">
+          {% if user %}
+            <span class="item nickname">{{ user.nickname }}</span> |
+            <span class="item"><a href="{{ logout_url|escape }}">Sign out</a></span>
+          {% else %}
+            <span class="item"><a href="{{ login_url|escape }}">Sign in</a></span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div id="body">{% block body %}{% endblock %}</div>
+    <div id="footer">
+        <a href="http://code.google.com/p/googleappengine/">
+        <img src="http://code.google.com/appengine/images/appengine-silver-120x30.gif"
+alt="Powered by Google App Engine"/></a>
+    </div>
+  </body>
+</html>

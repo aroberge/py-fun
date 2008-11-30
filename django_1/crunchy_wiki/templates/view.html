@@ -1,12 +1,8 @@
-{% load markup %}
-<html>
-    <head>
-        <title>{{page_name}}</title>
-    </head>
-    <body>
-        <h1>{{page_name}}</h1>
-        {{content|restructuredtext}}
-        <hr/>
-        <a href="/crunchy_wiki/{{page_name}}/edit/">Edit this page?</a>
-    </body>
-</html>
+{% extends "base.html" %}
+
+{% block title%} {{page_name}} {%endblock%}
+{% block login%} <a href="/{{page_name}}/edit/">Edit this page?</a></div>{%endblock%}
+
+{% block content%}
+        {{content|safe}}
+{%endblock%}

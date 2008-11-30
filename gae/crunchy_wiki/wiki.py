@@ -30,15 +30,16 @@ import wsgiref.handlers
 
 from google.appengine.api import datastore
 from google.appengine.api import datastore_types
-from google.appengine.api import users
+#from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 
 from docutils.core import publish_parts
 from src import rst
+from src.user_utils import users, is_editor
 
 # Set to true if we want to have our webapp print stack traces, etc
-_DEBUG = True
+_DEBUG = False
 
 class BaseRequestHandler(webapp.RequestHandler):
     """Supplies a common template generation function.
@@ -50,14 +51,21 @@ class BaseRequestHandler(webapp.RequestHandler):
     def generate(self, template_name, template_values={}):
           values = {
               'request': self.request,
-              'user': users.GetCurrentUser(),
+              'user': users.get_current_user(),
               'login_url': users.CreateLoginURL(self.request.uri),
               'logout_url': users.CreateLogoutURL(self.request.uri),
-              'application_name': 'Wiki',
+              'application_name': 'Crunchy Python',
           }
           values.update(template_values)
           directory = os.path.dirname(__file__)
           path = os.path.join(directory, os.path.join('templates', template_name))
+          #os.chdir(directory)
+          try:
+            test_file = open("test.html", 'w')
+            test_file.write(template.render(path, values, debug=_DEBUG))
+            test_file.close()
+          except:
+            sys.stderr.write("\nCan not open file.\n")
           self.response.out.write(template.render(path, values, debug=_DEBUG))
 
 class WikiPage(BaseRequestHandler):
@@ -71,9 +79,8 @@ class WikiPage(BaseRequestHandler):
     to the datastore.
     """
     def get(self, page_name):
-        # Load the main page by default
         if not page_name:
-            page_name = 'MainPage'
+            page_name = 'CrunchyPython'
         page = Page.load(page_name)
 
         # Default to edit for pages that do not yet exist
@@ -85,13 +92,14 @@ class WikiPage(BaseRequestHandler):
             if not mode in modes:
                 mode = 'view'
 
-        # User must be logged in to edit
-        if mode == 'edit' and not users.GetCurrentUser():
-            self.redirect(users.CreateLoginURL(self.request.uri))
-            return
-
         # Generate the appropriate template
-        self.generate(mode + '.html', {'page': page})
+        if is_editor():
+            self.generate(mode + '.html', {'page': page})
+        else:
+            try:
+                self.generate('user_view.html', {'page':page})
+            except:
+                self.generate('does_not_exist.html', {'page':page})
 
     def post(self, page_name):
         # User must be logged in to edit
@@ -119,22 +127,22 @@ class Page(object):
     seamlessly. To create OR edit a page, just create a Page instance and
     call save().
     """
-    def __init__(self, name, entity=None):
+    def __init__(self, name, entity=None, user=None):
         self.name = name
         self.entity = entity
         if entity:
             self.content = entity['content']
-            if entity.has_key('user'):
+            if 'user' in entity:
                 self.user = entity['user']
             else:
-                self.user = None
+                self.user = user
             self.created = entity['created']
             self.modified = entity['modified']
         else:
             # New pages should start out with a simple title to get the user going
             now = datetime.datetime.now()
-            self.content = '<h1>' + cgi.escape(name) + '</h1>'
-            self.user = None
+            self.content = cgi.escape(name)
+            self.user = user
             self.created = now
             self.modified = now
 
@@ -156,7 +164,6 @@ class Page(object):
             ExternalLink(),
         ]
         content = rst.rst_to_html(self.content)
-        #content = self.content
         for transform in transforms:
             content = transform.run(content)
         return content
@@ -202,6 +209,7 @@ class Page(object):
         return Page.load(name).entity
 
 
+
 class Transform(object):
     """Abstraction for a regular expression transform.
 
@@ -238,7 +246,7 @@ class WikiWords(Transform):
     We look up all words, and we only link those words that currently exist.
     """
     def __init__(self):
-        self.regexp = re.compile(r'[A-Z][a-z]+([A-Z][a-z]+)+')
+        self.regexp = re.compile(r'[A-Z][a-z0-9]+([A-Z][a-z0-9]+)+')
 
     def replace(self, match):
         wikiword = match.group(0)
@@ -272,11 +280,8 @@ class ExternalLink(Transform):
 
 
 def main():
-    application = webapp.WSGIApplication([
-      ('/(.*)', WikiPage),
-    ], debug=_DEBUG)
+    application = webapp.WSGIApplication([('/(.*)', WikiPage)], debug=_DEBUG)
     wsgiref.handlers.CGIHandler().run(application)
-
 
 if __name__ == '__main__':
     main()
