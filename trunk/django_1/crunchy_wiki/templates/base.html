@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
+    <head>
+        <link href="/static/css/base.css" rel="stylesheet" type="text/css"/>
+        <link href="/static/css/chrome.css" rel="stylesheet" type="text/css"/>
+        <title>{% block title %}{%endblock%}</title>
+    </head>
+    <div id="header">
+      <div class="top">
+        <div class="title">
+            <a href="/CrunchyPython">
+                <img src="/static/images/logo.png" alt="Crunchy Python Wiki" height="50px"/>
+            </a>
+        </div>
+        <!-- login for Google App Engine will go here; for this local
+        app, we use this instead to edit the page.-->
+        <div class="login">
+            <a href="/SearchPage">Search</a>
+            {% block login %} {%endblock%}
+      </div>
+    </div>
+    <div id="body">{% block content %}{% endblock %}</div>
+    <div id="footer">
+        <a href="http://code.google.com/p/googleappengine/">
+        <img src="http://code.google.com/appengine/images/appengine-silver-120x30.gif"
+alt="Powered by Google App Engine"/></a>
+    </div>
+</html>

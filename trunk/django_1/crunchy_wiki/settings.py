@@ -45,7 +45,7 @@ MEDIA_URL = ''
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.
 # Examples: "http://foo.com/media/", "/media/".
-ADMIN_MEDIA_PREFIX = '/media/'
+ADMIN_MEDIA_PREFIX = '/Users/andre/py-fun/django_1/crunchy_wiki/static/'
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '@6v1#yv-bb7)3!6_@e+gkx7wivj4!e#8%ipg1q%ah)5ud!5=9a'

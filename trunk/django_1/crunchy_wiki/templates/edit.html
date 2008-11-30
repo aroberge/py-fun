@@ -1,12 +1,11 @@
-<html>
-    <head>
-        <title>{{page_name}} : Editing</title>
-    </head>
-    <body>
+{% extends "base.html" %}
+
+{% block title%} {{page_name}} : Edit{%endblock%}
+
+{% block content%}
         <h1>Editing {{page_name}}</h1>
-        <form method="post" action="/crunchy_wiki/{{page_name}}/save/">
+        <form method="post" action="/{{page_name|escape}}/save/">
             <textarea name="content" rows="20" cols="60">{{content}}</textarea><br/>
             <input type="submit" value="Save Page"/>
         </form>
-    </body>
-</html>
+{%endblock%}
