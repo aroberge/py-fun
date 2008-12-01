@@ -23,6 +23,8 @@ import sys
 from django.template.loader import render_to_string
 from docutils import core, io
 
+from src import crunchy_rst
+
 def rst_to_html(input_string, source_path=None, destination_path=None,
                input_encoding='unicode', doctitle=1, initial_header_level=1):
     """
@@ -57,6 +59,7 @@ def to_html(page_content, page_name):
     return content
 
 def save_hard_copy(file_name, template, _dict):
+    return
     sys.stderr.write(render_to_string(template, _dict))
 
 class Transform(object):
