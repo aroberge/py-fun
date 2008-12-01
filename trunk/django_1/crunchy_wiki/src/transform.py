@@ -1,9 +1,8 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # Copyright 2008 André Roberge
 #
-# adapted from wiki.py in cccwiki app
+# Some of the code has been adapted from wiki.py in cccwiki app
 # Copyright 2008 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +18,46 @@
 # limitations under the License.
 
 import re
+import sys
+
+from django.template.loader import render_to_string
+from docutils import core, io
+
+def rst_to_html(input_string, source_path=None, destination_path=None,
+               input_encoding='unicode', doctitle=1, initial_header_level=1):
+    """
+    Given an input string, returns it as the body of an html document.
+
+    Adapted from example.py included in docutils distribution.
+    """
+    overrides = {'input_encoding': input_encoding,
+                 'doctitle_xform': doctitle,
+                 'initial_header_level': initial_header_level,
+                 # the next two are for security reasons, to prevent malicious
+                 # insertion of raw html code.
+                 'file_insertion_enabled': False,
+                 'raw_enabled': False,
+                 }
+    parts = core.publish_parts(
+        source=input_string, source_path=source_path,
+        destination_path=destination_path,
+        writer_name='html', settings_overrides=overrides)
+    return parts['html_body']
+
+def to_html(page_content, page_name):
+    # need to use "safe" in view.html with django 1.0 and the following:
+
+    content = rst_to_html(page_content, page_name)
+
+    for transform in [WikiWords(), ExternalLink()]:
+        content = transform.run(content)
+
+    save_hard_copy(page_name, "view.html", {"page_name": page_name,
+                                            "content": content})
+    return content
+
+def save_hard_copy(file_name, template, _dict):
+    sys.stderr.write(render_to_string(template, _dict))
 
 class Transform(object):
     """Abstraction for a regular expression transform.
@@ -63,6 +102,11 @@ class WikiWords(Transform):
 def to_wiki_link(name):
     return '<a class="wikiword" href="/%s">%s</a>' % (name, name)
 
+def linkify_list(pages):
+    new_pages = []
+    for page in pages:
+        new_pages.append({'name':to_wiki_link(page.name)})
+    return new_pages
 
 class ExternalLink(Transform):
     """A transform that make external hyperlinks open in new window/tab
