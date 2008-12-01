@@ -5,9 +5,7 @@ from django.shortcuts import render_to_response
 from django.http import HttpResponseRedirect
 from django import forms
 
-from src import rst
-from src import wikify
-from src import utils
+from src import transform
 
 class SearchForm(forms.Form):
     text = forms.CharField(label="Enter search Term")
@@ -17,27 +15,25 @@ def search_page(request):
     if request.method == "POST":
         pages = []
         contents = []
+        nothing = []
         f = SearchForm(request.POST)
         if not f.is_valid():
             return render_to_response("search.html", {"form": f})
         else:
             if f.cleaned_data["text"] == "*":
-                _pages = Page.objects.filter()
-                for page in _pages:
-                    pages.append({'name':wikify.to_wiki_link(page.name)})
+                pages = transform.linkify_list(Page.objects.filter())
             else:
-                _pages = Page.objects.filter(name__contains = f.cleaned_data["text"])
-                for page in _pages:
-                    pages.append({'name':wikify.to_wiki_link(page.name)})
+                pages = transform.linkify_list(Page.objects.filter(
+                                       name__contains = f.cleaned_data["text"]))
                 if f.cleaned_data["search_content"]:
-                    _contents = Page.objects.filter(content__contains = f.cleaned_data["text"])
-                else:
-                    _contents = []
-                for page in _contents:
-                    contents.append({'name':wikify.to_wiki_link(page.name)})
+                    contents = transform.linkify_list(Page.objects.filter(
+                                    content__contains = f.cleaned_data["text"]))
+
+            if not (contents or pages):
+                nothing = ['dummy value']
             return render_to_response("search.html",
                                       {"form": f, "pages": pages,
-                                       "contents": contents})
+                                       "contents": contents, "nothing": nothing})
     f = SearchForm()
     return render_to_response("search.html", {"form": f})
 
@@ -51,18 +47,8 @@ def view_page(request, page_name):
     except Page.DoesNotExist:
         return render_to_response("create.html", {"page_name": page_name})
 
-    # need to use "safe" in view.html with django 1.0 and the following:
-    content = rst.rst_to_html(page.content)
+    content = transform.to_html(page.content, page_name)
 
-    transforms = [
-            wikify.AutoLink(),
-            wikify.WikiWords(),
-            wikify.ExternalLink(),
-        ]
-    for transform in transforms:
-        content = transform.run(content)
-    utils.save_hard_copy(page_name, "view.html", {"page_name": page_name,
-                                            "content": content})
     return render_to_response("view.html", {"page_name": page_name,
                                             "content": content})
 
