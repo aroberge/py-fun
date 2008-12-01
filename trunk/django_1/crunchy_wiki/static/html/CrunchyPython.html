@@ -3,10 +3,11 @@
     <head>
         <link href="/static/css/base.css" rel="stylesheet" type="text/css"/>
         <link href="/static/css/chrome.css" rel="stylesheet" type="text/css"/>
-        <title>{% block title %}{%endblock%}</title>
+        <title> CrunchyPython </title>
     </head>
     <body>
     <div id="header">
+
       <div class="top">
         <div class="title">
             <a href="/CrunchyPython">
@@ -16,12 +17,27 @@
         <!-- login for Google App Engine will go here; for this local
         app, we use this instead to edit the page.-->
         <div class="login">
-            <a href="/static/html/{{page_name|escape}}.html">Interact?</a>
+            <a href="/static/html/CrunchyPython.html">Interact?</a>
+
             <a href="/SearchPage">Search</a>
-            {% block login %} {%endblock%}
+             <a href="/CrunchyPython/edit/">Edit this page?</a></div>
       </div>
     </div>
-    <div id="body">{% block content %}{% endblock %}</div>
+    <div id="body">
+        <div class="document" id="welcome-to-crunchy-python">
+<h1 class="title">Welcome to Crunchy Python!</h1>
+<p>This is a test.</p>
+
+<pre title="doctest linenumber=1" xml:space="preserve">
+&gt;&gt;&gt; print greeting
+Hello, World!
+</pre>
+<p>And a link to the</p>
+<p>See the <a class="reference external" href="http://www.python.org" target="_blank"><img src="/static/images/external.png"/>Official Python site</a> for information.</p>
+<p>See the <a class="reference external" href="http://www.python.org" target="_blank"><img src="/static/images/external.png"/>Python home page</a> for info.</p>
+</div>
+
+</div>
     <div id="footer">
         <a href="http://code.google.com/p/googleappengine/" target="_blank">
         <img src="http://code.google.com/appengine/images/appengine-silver-120x30.gif"

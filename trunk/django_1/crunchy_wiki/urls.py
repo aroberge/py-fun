@@ -21,5 +21,7 @@ urlpatterns = patterns('',
     (r'^static/css/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root': '/Users/andre/py-fun/django_1/crunchy_wiki/static/css/'}),
     (r'^static/images/(?P<path>.*)$', 'django.views.static.serve',
-        {'document_root': '/Users/andre/py-fun/django_1/crunchy_wiki/static/images/'})
+        {'document_root': '/Users/andre/py-fun/django_1/crunchy_wiki/static/images/'}),
+    (r'^static/html/(?P<path>.*)$', 'django.views.static.serve',
+        {'document_root': '/Users/andre/py-fun/django_1/crunchy_wiki/static/html/'})
 )

@@ -19,6 +19,7 @@
 
 import re
 import sys
+from xml.etree.ElementTree import tostring, fromstring
 
 from django.template.loader import render_to_string
 from docutils import core, io
@@ -59,8 +60,9 @@ def to_html(page_content, page_name):
     return content
 
 def save_hard_copy(file_name, template, _dict):
+    out = fromstring(render_to_string(template, _dict))
     return
-    sys.stderr.write(render_to_string(template, _dict))
+    sys.stderr.write(tostring(out))
 
 class Transform(object):
     """Abstraction for a regular expression transform.
