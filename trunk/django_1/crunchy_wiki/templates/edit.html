@@ -9,9 +9,10 @@
             <input type="submit" value="Save Page"/>
         </form>
 
-        <h1>Delete {{page_name}}: Can not be undone!</h1>
+        <h1>Delete {{page_name}}: Can not be undone!
         <form method="post" action="/{{page_name|escape}}/delete/">
             <input type="submit" value="Delete Page"/>
         </form>
+        </h1>
 
 {%endblock%}
