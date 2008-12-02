@@ -34,7 +34,6 @@ class InterpreterDirective(rst.Directive):
     final_argument_whitespace = False
     option_spec = {
         'linenumber' : int_or_one,
-        'log_id' : str
     }
     has_content = True
     def run(self):
@@ -43,7 +42,7 @@ class InterpreterDirective(rst.Directive):
                                     'parrot', 'Parrots', 'TypeInfoConsole']:
             raise ValueError("Wrong interpreter type: %s" % (self.arguments[0].strip(),))
         listOut = [ x.strip() for x in self.arguments ]
-        for key in [ "linenumber", "log_id" ]:
+        for key in [ "linenumber"]:
             if self.options.has_key(key):
                 listOut.append(key + "=%s" % (str(self.options[key]),))
         titleAttr = " ".join(listOut)
@@ -54,8 +53,7 @@ class EditorDirective(rst.Directive):
     optional_arguments = 5
     final_argument_whitespace = False
     option_spec = {
-        'linenumber' : int_or_one,
-        'log_id' : str
+        'linenumber' : int_or_one
     }
     has_content = True
     def run(self):
@@ -65,7 +63,7 @@ class EditorDirective(rst.Directive):
                                    'external', 'no_internal']:
                 raise ValueError("Invalid argument: %s" % (arg.strip(),))
         listOut = [ x.strip() for x in ['editor'] + self.arguments ]
-        for key in [ "linenumber", "log_id" ]:
+        for key in [ "linenumber"]:
             if self.options.has_key(key):
                 listOut.append(key + "=%s" % (str(self.options[key]),))
         titleAttr = " ".join(listOut)
@@ -75,15 +73,14 @@ class DocTestDirective(rst.Directive):
     required_arguments = 0
     optional_arguments = 1
     option_spec = {
-        'linenumber' : int_or_one,
-        'log_id' : str
+        'linenumber' : int_or_one
     }
     has_content = True
     def run(self):
         self.assert_has_content()
         code = linesep.join(self.content)
         listOut = [ x.strip() for x in ['doctest'] + self.arguments ]
-        for key in [ "linenumber", "log_id" ]:
+        for key in [ "linenumber"]:
             if self.options.has_key(key):
                 listOut.append(key + "=%s" % (str(self.options[key]),))
         titleAttr = " ".join(listOut)

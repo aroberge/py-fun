@@ -19,7 +19,9 @@ class CrunchyPage(object):
     # We define some class variables that will be shared amongst all instances.
     # tag -> attribute -> keyword -> handler function
     handlers3 = {'pre':{
-                        'title':{'python':style.pygments_style},
+                        'title':{'python':style.pygments_style,
+                                 'python_code':style.pygments_style,
+                                 'py_code':style.pygments_style},
                         'class':{'doctest-block':style.pygments_style}
                         }
                 }
