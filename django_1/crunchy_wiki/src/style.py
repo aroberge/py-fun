@@ -8,7 +8,7 @@ from pygments.formatters import HtmlFormatter
 from pygments.styles import get_style_by_name
 from pygments.lexers._mapping import LEXERS
 
-from src.utilities import extract_code
+from src.utilities import extract_code, is_interpreter_session
 
 _pygment_lexer_names = {}
 _pygment_language_names = []
@@ -22,13 +22,19 @@ lexers = {}
 
 def pygments_style(page, elem, dummy_uid='42'):
     cssclass = 'tango'
+    text = extract_code(elem)
     if 'class' in elem.attrib:
         if 'doctest-block' in elem.attrib['class']:
-            elem.attrib['title'] = 'pycon'
+            if is_interpreter_session(text):
+                elem.attrib['title'] = 'pycon'
+            else:
+                elem.attrib['title'] = 'python'
     language = elem.attrib['title'].split()[0]
+    import sys
+    sys.stderr.write("\n%s\n"%language)
     if language in ['py_code', 'python_code']:
         language = "python"
-    text = extract_code(elem)
+
     styled_code = _style(text, language, cssclass).encode("utf-8")
     vlam = elem.attrib['title']
     if 'linenumber' in vlam:
