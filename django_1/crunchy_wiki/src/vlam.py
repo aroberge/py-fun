@@ -7,6 +7,7 @@ mostly of major removal of elements.
 
 from StringIO import StringIO
 from xml.etree import ElementTree as et
+import src.style as style
 
 DTD = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" '\
 '"http://www.w3.org/TR/xhtml1/DTD/strict.dtd">\n'
@@ -16,7 +17,12 @@ class CrunchyPage(object):
        interactive elements.
     '''
     # We define some class variables that will be shared amongst all instances.
-    handlers3 = {} # tag -> attribute -> keyword -> handler function
+    # tag -> attribute -> keyword -> handler function
+    handlers3 = {'pre':{
+                        'title':{'python':style.pygments_style},
+                        'class':{'doctest-block':style.pygments_style}
+                        }
+                }
 
     def __init__(self, file_content):
         """
