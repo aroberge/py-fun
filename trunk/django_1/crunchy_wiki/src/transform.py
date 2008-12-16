@@ -19,20 +19,15 @@
 
 import os
 import re
-import sys
-from xml.etree.ElementTree import tostring, fromstring
 
 from django.template.loader import render_to_string
-from docutils import core, io
+from docutils import core
 
-from src import crunchy_rst
+from src import crunchy_rst # initializes the special directives
 from src import vlam
 
 static_path = os.path.normpath(os.path.join(
                             os.path.dirname(__file__), '..', 'static', 'html'))
-
-DTD = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" '\
-'"http://www.w3.org/TR/xhtml1/DTD/strict.dtd">\n'
 
 def rst_to_html(input_string, source_path=None, destination_path=None,
                input_encoding='unicode', doctitle=1, initial_header_level=1):
@@ -75,14 +70,6 @@ def save_hard_copy(file_name, template, _dict):
     f = open(path, 'w')
     f.write(page.read())
     f.close()
-
-    #out = fromstring(render_to_string(template, _dict).replace(
-    #    ' xmlns="http://www.w3.org/1999/xhtml"', ''))
-    #path = os.path.join(static_path, file_name+'.html')
-    #f = open(path, 'w')
-    #f.write(tostring(out))
-    #f.close()
-
     return
 
 

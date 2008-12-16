@@ -1,0 +1,116 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/strict.dtd">
+
+<html>
+    <head>
+        <script src="/javascript/jquery.js" type="text/javascript"> </script><style type="text/css">.tango .hll { background-color: #ffffcc }
+.tango  { background: #f8f8f8; }
+.tango .c { color: #8f5902; font-style: italic } /* Comment */
+.tango .err { color: #a40000; border: 1px solid #ef2929 } /* Error */
+.tango .g { color: #000000 } /* Generic */
+.tango .k { color: #204a87; font-weight: bold } /* Keyword */
+.tango .l { color: #000000 } /* Literal */
+.tango .n { color: #000000 } /* Name */
+.tango .o { color: #ce5c00; font-weight: bold } /* Operator */
+.tango .x { color: #000000 } /* Other */
+.tango .p { color: #000000; font-weight: bold } /* Punctuation */
+.tango .cm { color: #8f5902; font-style: italic } /* Comment.Multiline */
+.tango .cp { color: #8f5902; font-style: italic } /* Comment.Preproc */
+.tango .c1 { color: #8f5902; font-style: italic } /* Comment.Single */
+.tango .cs { color: #8f5902; font-style: italic } /* Comment.Special */
+.tango .gd { color: #a40000 } /* Generic.Deleted */
+.tango .ge { color: #000000; font-style: italic } /* Generic.Emph */
+.tango .gr { color: #ef2929 } /* Generic.Error */
+.tango .gh { color: #000080; font-weight: bold } /* Generic.Heading */
+.tango .gi { color: #00A000 } /* Generic.Inserted */
+.tango .go { color: #000000; font-style: italic } /* Generic.Output */
+.tango .gp { color: #8f5902 } /* Generic.Prompt */
+.tango .gs { color: #000000; font-weight: bold } /* Generic.Strong */
+.tango .gu { color: #800080; font-weight: bold } /* Generic.Subheading */
+.tango .gt { color: #a40000; font-weight: bold } /* Generic.Traceback */
+.tango .kc { color: #204a87; font-weight: bold } /* Keyword.Constant */
+.tango .kd { color: #204a87; font-weight: bold } /* Keyword.Declaration */
+.tango .kn { color: #204a87; font-weight: bold } /* Keyword.Namespace */
+.tango .kp { color: #204a87; font-weight: bold } /* Keyword.Pseudo */
+.tango .kr { color: #204a87; font-weight: bold } /* Keyword.Reserved */
+.tango .kt { color: #204a87; font-weight: bold } /* Keyword.Type */
+.tango .ld { color: #000000 } /* Literal.Date */
+.tango .m { color: #0000cf; font-weight: bold } /* Literal.Number */
+.tango .s { color: #4e9a06 } /* Literal.String */
+.tango .na { color: #c4a000 } /* Name.Attribute */
+.tango .nb { color: #204a87 } /* Name.Builtin */
+.tango .nc { color: #000000 } /* Name.Class */
+.tango .no { color: #000000 } /* Name.Constant */
+.tango .nd { color: #5c35cc; font-weight: bold } /* Name.Decorator */
+.tango .ni { color: #ce5c00 } /* Name.Entity */
+.tango .ne { color: #cc0000; font-weight: bold } /* Name.Exception */
+.tango .nf { color: #000000 } /* Name.Function */
+.tango .nl { color: #f57900 } /* Name.Label */
+.tango .nn { color: #000000 } /* Name.Namespace */
+.tango .nx { color: #000000 } /* Name.Other */
+.tango .py { color: #000000 } /* Name.Property */
+.tango .nt { color: #204a87; font-weight: bold } /* Name.Tag */
+.tango .nv { color: #000000 } /* Name.Variable */
+.tango .ow { color: #204a87; font-weight: bold } /* Operator.Word */
+.tango .w { color: #f8f8f8; text-decoration: underline } /* Text.Whitespace */
+.tango .mf { color: #0000cf; font-weight: bold } /* Literal.Number.Float */
+.tango .mh { color: #0000cf; font-weight: bold } /* Literal.Number.Hex */
+.tango .mi { color: #0000cf; font-weight: bold } /* Literal.Number.Integer */
+.tango .mo { color: #0000cf; font-weight: bold } /* Literal.Number.Oct */
+.tango .sb { color: #4e9a06 } /* Literal.String.Backtick */
+.tango .sc { color: #4e9a06 } /* Literal.String.Char */
+.tango .sd { color: #8f5902; font-style: italic } /* Literal.String.Doc */
+.tango .s2 { color: #4e9a06 } /* Literal.String.Double */
+.tango .se { color: #4e9a06 } /* Literal.String.Escape */
+.tango .sh { color: #4e9a06 } /* Literal.String.Heredoc */
+.tango .si { color: #4e9a06 } /* Literal.String.Interpol */
+.tango .sx { color: #4e9a06 } /* Literal.String.Other */
+.tango .sr { color: #4e9a06 } /* Literal.String.Regex */
+.tango .s1 { color: #4e9a06 } /* Literal.String.Single */
+.tango .ss { color: #4e9a06 } /* Literal.String.Symbol */
+.tango .bp { color: #3465a4 } /* Name.Builtin.Pseudo */
+.tango .vc { color: #000000 } /* Name.Variable.Class */
+.tango .vg { color: #000000 } /* Name.Variable.Global */
+.tango .vi { color: #000000 } /* Name.Variable.Instance */
+.tango .il { color: #0000cf; font-weight: bold } /* Literal.Number.Integer.Long */</style><link href="/static/css/base.css" rel="stylesheet" type="text/css" />
+        <link href="/static/css/chrome.css" rel="stylesheet" type="text/css" />
+        <title> CrunchyDirectives </title>
+    </head>
+    <body>
+    <div id="header">
+      <div class="top">
+        <div class="title">
+            <a href="/CrunchyPython">
+                <img alt="Crunchy Python Wiki" height="50px" src="/static/images/logo.png" />
+            </a>
+        </div>
+        
+        <div class="login">
+            <a href="/static/html/CrunchyDirectives.html">Interact?</a>
+            <a href="/SearchPage">Search</a>
+             <a href="/CrunchyDirectives/edit/">Edit this page?</a></div>
+      </div>
+    </div>
+    <div id="body">
+        <div class="document" id="welcome-to-crunchy-python">
+<h1 class="title">Welcome to Crunchy Python!</h1>
+<p>This is a test.</p>
+<blockquote>
+<pre class="tango" title="pycon">
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">greeting</span>
+<span class="go">Hello, World!</span></pre>
+</blockquote>
+<p>And a link to the</p>
+<p>See the <a class="reference external" href="http://www.python.org" target="_blank"><img src="/static/images/external.png" />Official Python site</a> for information.</p>
+<p>See the <a class="reference external" href="http://www.python.org" target="_blank"><img src="/static/images/external.png" />Python home page</a> for info.</p>
+<p>And, for pure code:</p>
+<pre class="tango" title="python_code" xml:space="preserve">
+<span class="k">print</span> <span class="s">'Hello World!'</span></pre>
+<div class="section" id="end-of-test">
+<h1>End of test</h1>
+<p>Or, is it?</p>
+</div>
+</div>
+
+</div>
+    </body>
+</html>
