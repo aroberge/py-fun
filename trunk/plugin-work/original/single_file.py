@@ -1,44 +1,49 @@
-# reference: http://svn.effbot.org/public/stuff/sandbox/topdown/tdop-1.py
-# see http://effbot.org/zone/simple-top-down-parsing.htm for explanation
+""" A simple expression calculator entirely contained in a single file.
+
+See http://effbot.org/zone/simple-top-down-parsing.txt for detailed explanations
+as to how it works.
+
+We use this as the basic example used to demonstrate various plugin frameworks.
+"""
 
 import re
 
-class literal_token:
+class literal_token(object):
     def __init__(self, value):
         self.value = value
     def nud(self):
         return self.value
 
-class operator_add_token:
+class operator_add_token(object):
     lbp = 10
     def nud(self):
         return expression(100)
     def led(self, left):
         return left + expression(10)
 
-class operator_sub_token:
+class operator_sub_token(object):
     lbp = 10
     def nud(self):
         return -expression(100)
     def led(self, left):
         return left - expression(10)
 
-class operator_mul_token:
+class operator_mul_token(object):
     lbp = 20
     def led(self, left):
         return left * expression(20)
 
-class operator_div_token:
+class operator_div_token(object):
     lbp = 20
     def led(self, left):
         return left / expression(20)
 
-class operator_pow_token:
+class operator_pow_token(object):
     lbp = 30
     def led(self, left):
         return left ** expression(30-1)
 
-class end_token:
+class end_token(object):
     lbp = 0
 
 def tokenize(program):
@@ -70,19 +75,22 @@ def expression(rbp=0):
         left = t.led(left)
     return left
 
-def parse(program):
+def calculate(program):
     global token, next
     next = tokenize(program).next
     token = next()
-    print program, "->", expression()
+    return int(expression())
 
-parse("+1")
-parse("-1")
-parse("10")
-parse("2**2**3")
-parse("1+2")
-parse("1+2+3")
-parse("1+2*3")
-parse("1*2+3")
-parse("1*2/3")
-#parse("*1") # invalid syntax
+if __name__ == "__main__":
+    assert calculate("+1") == 1
+    assert calculate("-1") == -1
+    assert calculate("10") == 10
+    assert calculate("1+2") == 3
+    assert calculate("1+2+3") == 6
+    assert calculate("1+2-3") == 0
+    assert calculate("1+2*3") == 7
+    assert calculate("1*2+3") == 5
+    assert calculate("6*2/3") == 4
+    assert calculate("2**3") == 8
+    assert calculate("2*2**3") == 16
+    print "Done!"
