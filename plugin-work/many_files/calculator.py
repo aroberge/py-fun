@@ -12,7 +12,7 @@ arbitrarily named files.
 
 import re
 
-OPERATORS = {}
+from plugins.base import OPERATORS, init_plugins
 
 class literal_token(object):
     def __init__(self, value):
@@ -50,17 +50,8 @@ def calculate(program):
     token = next()
     return int(expression())
 
-def init_operators():
-    '''simulated plugin initializer'''
-    import op_1, op_2
-    OPERATORS['+'] = op_1.operator_add_token
-    OPERATORS['-'] = op_1.operator_sub_token
-    OPERATORS['*'] = op_1.operator_mul_token
-    OPERATORS['/'] = op_1.operator_div_token
-    OPERATORS['**'] = op_2.operator_pow_token
-
 if __name__ == "__main__":
-    init_operators()
+    init_plugins(expression)
     assert calculate("+1") == 1
     assert calculate("-1") == -1
     assert calculate("10") == 10
