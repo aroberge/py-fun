@@ -3,11 +3,7 @@
 See http://effbot.org/zone/simple-top-down-parsing.txt for detailed explanations
 as to how it works.
 
-This is the main file used to demonstrate plugin frameworks.  In this
-example, we import known objects residing in separate python files explicitly
-specified by name.
-In a true plugin system, we would import arbitrary objects residing in
-arbitrarily named files.
+This is the main file used to demonstrate plugin frameworks.  
 """
 
 import re
