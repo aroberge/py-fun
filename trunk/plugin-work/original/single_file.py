@@ -64,7 +64,7 @@ def tokenize(program):
             raise SyntaxError("unknown operator: %r" % operator)
     yield end_token()
 
-def expression(rbp=0):
+def expression(rbp=0):  # note that expression is a global object in this module
     global token
     t = token
     token = next()

@@ -1,5 +1,7 @@
 '''Externally defined basic operators for arithmetic operations'''
 
+# Note that "expression" is an object defined globally via indirect means.
+
 class operator_add_token(object):
     lbp = 10
     def nud(self):
