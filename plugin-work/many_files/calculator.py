@@ -3,7 +3,7 @@
 See http://effbot.org/zone/simple-top-down-parsing.txt for detailed explanations
 as to how it works.
 
-This is the main file used to demonstrate plugin frameworks.  
+This is the main file used to demonstrate plugin frameworks.
 """
 
 import re
@@ -44,7 +44,7 @@ def calculate(program):
     global token, next
     next = tokenize(program).next
     token = next()
-    return int(expression())
+    return expression()
 
 if __name__ == "__main__":
     init_plugins(expression)
