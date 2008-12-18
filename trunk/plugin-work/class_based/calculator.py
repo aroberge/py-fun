@@ -44,7 +44,7 @@ def calculate(program):
     global token, next
     next = tokenize(program).next
     token = next()
-    return int(expression())
+    return expression()
 
 if __name__ == "__main__":
     init_plugins(expression)
