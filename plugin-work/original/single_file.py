@@ -1,6 +1,6 @@
 """ A simple expression calculator entirely contained in a single file.
 
-See http://effbot.org/zone/simple-top-down-parsing.txt for detailed explanations
+See http://effbot.org/zone/simple-top-down-parsing.htm for detailed explanations
 as to how it works.
 
 We use this as the basic example used to demonstrate various plugin frameworks.
