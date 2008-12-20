@@ -9,9 +9,6 @@ import sys
 
 OPERATORS = {}
 
-class Plugin(object):
-    pass
-
 def init_plugins(expression):
     '''simple plugin initializer
 

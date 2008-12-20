@@ -1,7 +1,8 @@
 """ A simple expression calculator.
 
-See http://effbot.org/zone/simple-top-down-parsing.htm for detailed explanations
-as to how it works.
+See
+http://aroberge.blogspot.com/2008/12/plugins-part-4-crunchy-style-plugin.html
+for an explanation.
 
 This is the main file used to demonstrate plugin frameworks.
 """

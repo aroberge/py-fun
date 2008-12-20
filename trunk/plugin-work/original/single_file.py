@@ -1,9 +1,9 @@
 """ A simple expression calculator entirely contained in a single file.
 
-See http://effbot.org/zone/simple-top-down-parsing.htm for detailed explanations
-as to how it works.
+See http://aroberge.blogspot.com/2008/12/plugins-part-1-application.html
+for an explanation.
 
-We use this as the basic example used to demonstrate various plugin frameworks.
+This is the basic application used to demonstrate various plugin frameworks.
 """
 
 import re
