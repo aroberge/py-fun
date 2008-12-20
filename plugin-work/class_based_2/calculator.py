@@ -5,9 +5,12 @@ Work in progress...
 This is the main file used to demonstrate plugin frameworks.
 """
 
+import os
+import sys
 import re
 
-from plugins.base import OPERATORS, init_plugins, activate, desactivate
+from plugins.base import OPERATORS, init_plugins, activate, desactivate,\
+                         register_plugins
 
 class literal_token(object):
     def __init__(self, value):
@@ -61,6 +64,7 @@ if __name__ == "__main__":
     try:
         assert calculate("2**3") == 8
     except SyntaxError:
+        print "Correcting error..."
         activate("**")
     assert calculate("2*2**3") == 16
 
@@ -70,5 +74,17 @@ if __name__ == "__main__":
     except SyntaxError:
         activate('+')
     assert calculate("1+2") == 3
+
+    # Simulating dynamic external plugin initialization
+    external_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                              'external')
+    sys.path.insert(0, external_dir)
+    mod = __import__('op_3')
+    mod.expression = expression
+    # register this plugin using our default method
+    register_plugins()
+    # Since it is not activated by default, we need to do it explictly
+    activate('%')
+    assert calculate("7%2") == 1
 
     print "Done!"

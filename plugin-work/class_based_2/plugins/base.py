@@ -11,7 +11,7 @@ OPERATORS = {}
 # We will leave one symbol "**" out of the list as a test.
 preferences = ['+', '-', '*', '/']
 
-# We also keep track of all available plugins
+# We also keep track of all available plugins, activated or not
 all_plugins = {}
 
 class Plugin(object):
@@ -19,12 +19,15 @@ class Plugin(object):
 
     def activate(self):
         '''activate a given plugin'''
-        OPERATORS[self.symbol] = self.__class__
+        if self.symbol not in OPERATORS:
+            print "Activating %s" % self.symbol
+            OPERATORS[self.symbol] = self.__class__
         if self.symbol not in all_plugins:
             all_plugins[self.symbol] = self.__class__
 
     def desactivate(self):
         '''desactivate a given plugin'''
+        print "Desactivating %s" % self.symbol
         if self.symbol in OPERATORS:
             del OPERATORS[self.symbol]
 
