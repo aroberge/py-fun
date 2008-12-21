@@ -1,6 +1,7 @@
 """ A simple expression calculator.
 
-Work in progress...
+See http://aroberge.blogspot.com/2008/12/plugins-part-5-activation-and.html
+for details.
 
 This is the main file used to demonstrate plugin frameworks.
 """
@@ -9,7 +10,7 @@ import os
 import sys
 import re
 
-from plugins.base import OPERATORS, init_plugins, activate, desactivate,\
+from plugins.base import OPERATORS, init_plugins, activate, deactivate,\
                          register_plugins
 
 class literal_token(object):
@@ -68,7 +69,7 @@ if __name__ == "__main__":
         activate("**")
     assert calculate("2*2**3") == 16
 
-    desactivate('+')
+    deactivate('+')
     try:
         assert calculate("1+2") == 3
     except SyntaxError:
