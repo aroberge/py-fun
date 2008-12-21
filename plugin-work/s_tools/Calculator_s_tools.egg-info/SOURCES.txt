@@ -1,0 +1,10 @@
+setup.py
+Calculator_s_tools.egg-info/PKG-INFO
+Calculator_s_tools.egg-info/SOURCES.txt
+Calculator_s_tools.egg-info/dependency_links.txt
+Calculator_s_tools.egg-info/entry_points.txt
+Calculator_s_tools.egg-info/top_level.txt
+plugins/__init__.py
+plugins/base.py
+plugins/op_1.py
+plugins/op_2.py
