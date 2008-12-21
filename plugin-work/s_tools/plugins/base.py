@@ -12,11 +12,9 @@ import pkg_resources  # setuptools specific
 
 OPERATORS = {}
 ENTRYPOINT = 'plugin_tutorial.s_tools'  # same name as in setup.py
-PLUGIN_DIR = os.path.dirname(os.path.realpath(__file__))
 
 class Plugin(object):
-    '''A Borg class.
-    '''
+    '''A Borg class.'''
     _shared_states = {}
     def __init__(self):
         self.__dict__ = self._shared_states
