@@ -1,4 +1,4 @@
-'''Simple class based plugin system with activation/desactivation
+'''Simple class based plugin system with activation/deactivation
 '''
 
 import os
@@ -25,9 +25,9 @@ class Plugin(object):
         if self.symbol not in all_plugins:
             all_plugins[self.symbol] = self.__class__
 
-    def desactivate(self):
-        '''desactivate a given plugin'''
-        print "Desactivating %s" % self.symbol
+    def deactivate(self):
+        '''deactivate a given plugin'''
+        print "deactivating %s" % self.symbol
         if self.symbol in OPERATORS:
             del OPERATORS[self.symbol]
 
@@ -37,11 +37,11 @@ def activate(symbol):
         return
     all_plugins[symbol]().activate()
 
-def desactivate(symbol):
-    '''desactivate a given plugin, based on its symbol'''
+def deactivate(symbol):
+    '''deactivate a given plugin, based on its symbol'''
     if symbol not in OPERATORS:
         return
-    all_plugins[symbol]().desactivate()
+    all_plugins[symbol]().deactivate()
 
 
 def init_plugins(expression):
