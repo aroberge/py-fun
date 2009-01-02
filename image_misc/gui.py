@@ -2,7 +2,8 @@
 Playing with images....
 '''
 
-from Tkinter import Canvas, Tk, Label
+#from Tkinter import Canvas, Tk, Label
+import Tkinter as tk
 import Image, ImageTk, ImageChops, ImageStat # PIL
 import aggdraw
 from random import randint
@@ -17,7 +18,12 @@ def fitness(im1, im2):
     compared with the original one (img1), the fitness given is 0, and when the
     image is identical, the fitness value is 100."""
     global FITNESS_OFFSET
-    stat = ImageStat.Stat(ImageChops.difference(im1, im2))
+    try:
+        stat = ImageStat.Stat(ImageChops.difference(im1, im2))
+    except:
+        print "missing alpha channel in original image?"
+        im1.putalpha(255)
+        stat = ImageStat.Stat(ImageChops.difference(im1, im2))
     fit = 1. - sum(stat.rms[:3])/(255*3)
     if FITNESS_OFFSET == 0:
         black_image = aggdraw.Draw("RGBA", im1.size, "black")
@@ -52,17 +58,20 @@ class DNA(object):
         _type = randint(0, 2)
         if _type == 0: # colour
             col_index = randint(0, 3)
-            self.dna[selected][1][col_index] = randint(0, 255)
+            self.dna[selected][1][col_index] += randint(0, 255)
+            self.dna[selected][1][col_index] /= 2
         elif _type == 1: # x coordinate
             coord = randint(0, self.edges-1)
-            self.dna[selected][0][2*coord] = randint(0, self.width)
+            self.dna[selected][0][2*coord] += randint(0, self.width)
+            self.dna[selected][0][2*coord] /=2
         elif _type == 2: # y coordinate
             coord = randint(0, self.edges-1)
-            self.dna[selected][0][2*coord+1] = randint(0, self.height)
+            self.dna[selected][0][2*coord+1] += randint(0, self.height)
+            self.dna[selected][0][2*coord+1] /=2
 
-class AggDrawCanvas(Canvas):
+class AggDrawCanvas(tk.Canvas):
     def __init__(self, width, height, win):
-        Canvas.__init__(self, win)
+        tk.Canvas.__init__(self, win)
         self.image_id = None
         self.img = None
         self.win = win
@@ -71,9 +80,9 @@ class AggDrawCanvas(Canvas):
         self._size = width, height
         self.config(width=width, height=height+20)
         self.info = self.create_text(width/2, height+20)
-        self.pack()
         self.dna = DNA(self._width, self._height)
         self.mutations = 0
+        self.display_every = 1
 
     def draw_dna(self):
         if self.img is None:
@@ -93,6 +102,8 @@ class AggDrawCanvas(Canvas):
         self.delete(self.context)
         raw = Image.fromstring('RGBA', self._size, s)
         self.fitness = fitness(mona_lisa, raw)
+        if self.mutations % self.display_every: # display only every 10 images
+            return
         self.itemconfig(self.info,
                         text="%2.2f  %d"%(self.fitness, self.mutations),
                         fill="black")
@@ -101,35 +112,81 @@ class AggDrawCanvas(Canvas):
         self.image_id = self.create_image(self._width/2, self._height/2, image=self.image)
         self.update()
 
-win = Tk()
+class App(object):
+    """The main application window"""
+    def __init__(self, parent):
+        frame = tk.Frame(parent)
+        frame.pack()
+        self.original_image = tk.Canvas(frame)
+        self.original_image.pack(side=tk.LEFT)
+        self.best_fit = AggDrawCanvas(frame)
+        self.current_fit = AggDrawCanvas(frame)
+
+    def load_image(self, filename):
+        self.target_image = Image.open(filename)
+        img = ImageTk.PhotoImage(self.target_image)
+        width, height = img.width(), img.height()
+        self.original_image.config(width=width, height=height)
+        self.original_image.create_image(width/2, height/2, image=img)
+        self.best_fit.set_size(width, height)
+        self.current_fit.set_size(width, height)
+
+
+
+
+#root = tk.Tk()
+#
+#app = App(root)
+#
+#root.mainloop()
+#root.destroy() # optional; see description below
+
+win = tk.Tk()
 
 mona_lisa = Image.open("mona_lisa.png")
+#mona_lisa = Image.open("mona.png")
 img = ImageTk.PhotoImage(mona_lisa)
 
-original_image = Canvas(win)
-original_image.pack()
-fitness_label = Label(win)
+PAUSED = False
+def key(event):
+    print "pressed", repr(event.char)
+    global PAUSED
+    if event.char == 'p':
+        PAUSED = not PAUSED
+    print PAUSED
+
+win.bind("<Key>", key)
+
+
+original_image = tk.Canvas(win)
+original_image.grid(row=0)
+#fitness_label = Label(win)
 
 _w, _h = img.width(), img.height()
 original_image.config(width=_w, height=_h)
 original_image.create_image(_w/2, _h/2, image=img)
 
 best_fit = AggDrawCanvas(_w, _h, win)
+best_fit.grid(row=1, column=0)
 best_fit.dna.dna = []
 best_fit.draw_dna()
 
 current_fit = AggDrawCanvas(_w, _h, win)
+current_fit.grid(row=1, column=1)
+current_fit.display_every = 1 # 10
 current_fit.dna.init_dna()
 current_fit.draw_dna()
 
 while True:
-    current_fit.dna.mutate()
-    current_fit.draw_dna()
-    if current_fit.fitness > best_fit.fitness:
-        best_fit.dna.dna = copy.deepcopy(current_fit.dna.dna)
-        best_fit.draw_dna()
-    else:
-        current_fit.dna.dna = copy.deepcopy(best_fit.dna.dna)
+    while not PAUSED:
+        current_fit.dna.mutate()
+        current_fit.draw_dna()
+        if current_fit.fitness > best_fit.fitness:
+            best_fit.dna.dna = copy.deepcopy(current_fit.dna.dna)
+            best_fit.draw_dna()
+        else:
+            current_fit.dna.dna = copy.deepcopy(best_fit.dna.dna)
+
 
 if __name__ == '__main__':
     win.mainloop()
