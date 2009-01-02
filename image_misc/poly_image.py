@@ -10,6 +10,7 @@ import time
 import copy
 
 import Tkinter as tk
+import tkFileDialog
 import Image, ImageTk, ImageChops, ImageStat # from PIL
 import aggdraw
 
@@ -45,6 +46,7 @@ class DNA(object):
         self.width = width
         self.height = height
         self.dna = []
+        self.init_dna()
 
     def init_dna(self):
         for i in range(self.polygons):
@@ -79,14 +81,25 @@ class AggDrawCanvas(tk.Canvas):
         self.img = None
         self.win = win
         self.original = original # original image
+        self.set_size(width, height)
+        self.display_every = 1
+
+    def new_original(self, original):
+        self.original = original
+        self.mutations = 0
+        _img = ImageTk.PhotoImage(self.original)
+        self.set_size(_img.width(), _img.height())
+        del self.img
+        self.img = Image.new("RGBA", self._size, "black")
+        self.dna = DNA(self._width, self._height)
+        self.context = aggdraw.Draw(self.img)
+
+    def set_size(self, width, height):
         self._width = width
         self._height = height
         self._size = width, height
         self.config(width=width, height=height+20)
         self.info = self.create_text(width/2, height+20)
-        self.dna = DNA(self._width, self._height)
-        self.mutations = 0
-        self.display_every = 1
 
     def draw_dna(self):
         if self.img is None:
@@ -122,32 +135,34 @@ class App(object):
         parent.controls = self
 
         top_frame = tk.Frame(parent)
+        filename_button = tk.Button(top_frame, text="New image",
+                                    command=self.load_image)
+        filename_button.pack(side=tk.LEFT)
         self.original_image = tk.Canvas(top_frame)
-        self.load_image("mona_lisa.png")
         self.original_image.pack(side=tk.LEFT)
         top_frame.pack()
-
+        self.original = None
         image_fitting = tk.Frame(parent)
-        self.best_fit = AggDrawCanvas(self._width, self._height, image_fitting,
+        self.best_fit = AggDrawCanvas(100, 100, image_fitting,
                                       self.original)
         self.best_fit.pack(side=tk.LEFT)
-        self.best_fit.dna.dna = []
-        self.best_fit.draw_dna()
-        self.current_fit = AggDrawCanvas(self._width, self._height,
+        self.current_fit = AggDrawCanvas(100, 100,
                                          image_fitting, self.original)
         self.current_fit.pack(side=tk.LEFT)
         self.current_fit.display_every = 1 # 10
-        self.current_fit.dna.init_dna()
-        self.current_fit.draw_dna()
         image_fitting.pack()
 
-    def load_image(self, filename):
+    def load_image(self):
+        filename = tkFileDialog.askopenfilename()
         self.original = Image.open(filename)
         img = ImageTk.PhotoImage(self.original)
         self._width, self._height = width, height = img.width(), img.height()
         self.original_image.config(width=width, height=height)
         self.original_image.create_image(width/2, height/2, image=img)
         self.__img = img  # need to keep a reference otherwise it disappears!
+        self.best_fit.new_original(self.original)
+        self.best_fit.fitness = -1
+        self.current_fit.new_original(self.original)
 
     def reset(self):
         self.running = False
