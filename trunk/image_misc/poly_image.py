@@ -1,17 +1,22 @@
 '''
-Playing with images....
+Application to approximate an image by a set of polygons.
+
+Inspired by:
+http://rogeralsing.com/2008/12/07/genetic-programming-evolution-of-mona-lisa/
 '''
 
-#from Tkinter import Canvas, Tk, Label
-import Tkinter as tk
-import Image, ImageTk, ImageChops, ImageStat # PIL
-import aggdraw
 from random import randint
 import time
 import copy
 
+import Tkinter as tk
+import Image, ImageTk, ImageChops, ImageStat # from PIL
+import aggdraw
+
+from state_engine import StateEngine
+
 FITNESS_OFFSET = 0
-saved = [None, None]
+
 def fitness(im1, im2):
     """Calculate a value derived from the root mean squared of the difference
     between two images.  It is normalized so that when a black image is
@@ -43,9 +48,9 @@ class DNA(object):
 
     def init_dna(self):
         for i in range(self.polygons):
-            self.dna.append(self.random_polygon())
+            self.dna.append(self.create_random_polygon())
 
-    def random_polygon(self):
+    def create_random_polygon(self):
         edges = []
         for i in range(self.edges):
             edges.append(randint(0, self.width))
@@ -58,23 +63,22 @@ class DNA(object):
         _type = randint(0, 2)
         if _type == 0: # colour
             col_index = randint(0, 3)
-            self.dna[selected][1][col_index] += randint(0, 255)
-            self.dna[selected][1][col_index] /= 2
+            self.dna[selected][1][col_index] = randint(0, 255)
         elif _type == 1: # x coordinate
             coord = randint(0, self.edges-1)
-            self.dna[selected][0][2*coord] += randint(0, self.width)
-            self.dna[selected][0][2*coord] /=2
+            self.dna[selected][0][2*coord] = randint(0, self.width)
         elif _type == 2: # y coordinate
             coord = randint(0, self.edges-1)
-            self.dna[selected][0][2*coord+1] += randint(0, self.height)
-            self.dna[selected][0][2*coord+1] /=2
+            self.dna[selected][0][2*coord+1] = randint(0, self.height)
+
 
 class AggDrawCanvas(tk.Canvas):
-    def __init__(self, width, height, win):
+    def __init__(self, width, height, win, original):
         tk.Canvas.__init__(self, win)
         self.image_id = None
         self.img = None
         self.win = win
+        self.original = original # original image
         self._width = width
         self._height = height
         self._size = width, height
@@ -101,7 +105,7 @@ class AggDrawCanvas(tk.Canvas):
         s = self.context.tostring()
         self.delete(self.context)
         raw = Image.fromstring('RGBA', self._size, s)
-        self.fitness = fitness(mona_lisa, raw)
+        self.fitness = fitness(self.original, raw)
         if self.mutations % self.display_every: # display only every 10 images
             return
         self.itemconfig(self.info,
@@ -112,60 +116,67 @@ class AggDrawCanvas(tk.Canvas):
         self.image_id = self.create_image(self._width/2, self._height/2, image=self.image)
         self.update()
 
+class App(object):
+    """The main application window"""
+    def __init__(self, parent):
+        parent.controls = self
 
-#root = tk.Tk()
-#
-#app = App(root)
-#
-#root.mainloop()
-#root.destroy() # optional; see description below
+        top_frame = tk.Frame(parent)
+        self.original_image = tk.Canvas(top_frame)
+        self.load_image("mona_lisa.png")
+        self.original_image.pack(side=tk.LEFT)
+        top_frame.pack()
 
-win = tk.Tk()
+        image_fitting = tk.Frame(parent)
+        self.best_fit = AggDrawCanvas(self._width, self._height, image_fitting,
+                                      self.original)
+        self.best_fit.pack(side=tk.LEFT)
+        self.best_fit.dna.dna = []
+        self.best_fit.draw_dna()
+        self.current_fit = AggDrawCanvas(self._width, self._height,
+                                         image_fitting, self.original)
+        self.current_fit.pack(side=tk.LEFT)
+        self.current_fit.display_every = 1 # 10
+        self.current_fit.dna.init_dna()
+        self.current_fit.draw_dna()
+        image_fitting.pack()
 
-mona_lisa = Image.open("mona_lisa.png")
-#mona_lisa = Image.open("mona.png")
-img = ImageTk.PhotoImage(mona_lisa)
+    def load_image(self, filename):
+        self.original = Image.open(filename)
+        img = ImageTk.PhotoImage(self.original)
+        self._width, self._height = width, height = img.width(), img.height()
+        self.original_image.config(width=width, height=height)
+        self.original_image.create_image(width/2, height/2, image=img)
+        self.__img = img  # need to keep a reference otherwise it disappears!
 
-PAUSED = False
-def key(event):
-    print "pressed", repr(event.char)
-    global PAUSED
-    if event.char == 'p':
-        PAUSED = not PAUSED
-    print PAUSED
+    def reset(self):
+        self.running = False
+        print "reset not truly implemented"
 
-win.bind("<Key>", key)
+    def run(self):
+        self.running = True
+        while self.running:
+            done = self.step()
+        return done
 
-
-original_image = tk.Canvas(win)
-original_image.grid(row=0)
-#fitness_label = Label(win)
-
-_w, _h = img.width(), img.height()
-original_image.config(width=_w, height=_h)
-original_image.create_image(_w/2, _h/2, image=img)
-
-best_fit = AggDrawCanvas(_w, _h, win)
-best_fit.grid(row=1, column=0)
-best_fit.dna.dna = []
-best_fit.draw_dna()
-
-current_fit = AggDrawCanvas(_w, _h, win)
-current_fit.grid(row=1, column=1)
-current_fit.display_every = 1 # 10
-current_fit.dna.init_dna()
-current_fit.draw_dna()
-
-while True:
-    while not PAUSED:
-        current_fit.dna.mutate()
-        current_fit.draw_dna()
-        if current_fit.fitness > best_fit.fitness:
-            best_fit.dna.dna = copy.deepcopy(current_fit.dna.dna)
-            best_fit.draw_dna()
+    def step(self):
+        '''single mutation step; currently never ends on its own'''
+        self.current_fit.dna.mutate()
+        self.current_fit.draw_dna()
+        if self.current_fit.fitness > self.best_fit.fitness:
+            self.best_fit.dna.dna = copy.deepcopy(self.current_fit.dna.dna)
+            self.best_fit.draw_dna()
         else:
-            current_fit.dna.dna = copy.deepcopy(best_fit.dna.dna)
+            self.current_fit.dna.dna = copy.deepcopy(self.best_fit.dna.dna)
+        return False # would return True to end the simulation
 
+    def pause(self):
+        '''self explanatory'''
+        self.running = False
 
-if __name__ == '__main__':
-    win.mainloop()
+if __name__  == "__main__":
+    main_app = tk.Tk()
+    main_app.title('Image approximation with polygons')
+    App(main_app)
+    StateEngine(main_app)
+    main_app.mainloop()
