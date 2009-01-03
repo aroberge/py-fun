@@ -21,16 +21,20 @@ class StateEngine(object):
     """GUI state engine for animated simulations that can be started,
        paused and resumed, or reset from the beginning."""
 
-    def __init__(self, parent):
+    def __init__(self, parent, parent_window=None):
         ''' initializes a display with three buttons.  One must pass a
             reference to a "parent" which, itself, must have a reference to
             an animation "controls" with five methods: start, run, step, pause, reset.
         '''
 
         self.parent = parent
+        if parent_window is None:   # for poly_image.py
+            self.parent_window = self.parent
+        else:
+            self.parent_window = parent_window
         fnt = ("Arial", 12, "bold")
 
-        ctrlFrame = tk.Frame(parent)
+        ctrlFrame = tk.Frame(self.parent_window)
         self.start_btn = tk.Button(ctrlFrame, width=11, text="Start", font=fnt,
                                 state = tk.NORMAL, padx=15, command=self.start)
         self.step_btn = tk.Button(ctrlFrame, width=11, text="Step", font=fnt,
