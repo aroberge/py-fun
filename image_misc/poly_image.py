@@ -10,13 +10,16 @@ import time
 import copy
 
 import Tkinter as tk
-import tkFileDialog
+import tkFileDialog, tkMessageBox
 import Image, ImageTk, ImageChops, ImageStat # from PIL
 import aggdraw
 
 from state_engine import StateEngine
 
 FITNESS_OFFSET = 0
+
+# todo: investigate the use of ImageStat.Stat(image, mask)
+# todo: investigate the use of stat.mean instead of stat.rms
 
 def fitness(im1, im2):
     """Calculate a value derived from the root mean squared of the difference
@@ -45,12 +48,12 @@ class DNA(object):
         self.edges = edges
         self.width = width
         self.height = height
-        self.dna = []
+        self.genes = []
         self.init_dna()
 
     def init_dna(self):
         for i in range(self.polygons):
-            self.dna.append(self.create_random_polygon())
+            self.genes.append(self.create_random_polygon())
 
     def create_random_polygon(self):
         edges = []
@@ -65,31 +68,36 @@ class DNA(object):
         _type = randint(0, 2)
         if _type == 0: # colour
             col_index = randint(0, 3)
-            self.dna[selected][1][col_index] = randint(0, 255)
+            #choice = self.dna[selected][1][col_index]
+            #choice = int(0.7*choice + 0.301*randint(0, 255))
+            #self.dna[selected][1][col_index] = choice
+            self.genes[selected][1][col_index] = randint(0, 255)
         elif _type == 1: # x coordinate
             coord = randint(0, self.edges-1)
-            self.dna[selected][0][2*coord] = randint(0, self.width)
+            #choice = self.dna[selected][0][2*coord]
+            #choice = int(0.7*choice + 0.301*randint(0, self.width))
+            #self.dna[selected][0][2*coord] = choice
+            self.genes[selected][0][2*coord] = randint(0, self.width)
         elif _type == 2: # y coordinate
             coord = randint(0, self.edges-1)
-            self.dna[selected][0][2*coord+1] = randint(0, self.height)
-
+            #choice = self.dna[selected][0][2*coord+1]
+            #choice = int(0.7*choice + 0.301*randint(0, self.height))
+            #self.dna[selected][0][2*coord+1] = choice
+            self.genes[selected][0][2*coord+1] = randint(0, self.height)
 
 class AggDrawCanvas(tk.Canvas):
-    def __init__(self, width, height, win, original):
-        tk.Canvas.__init__(self, win)
+    def __init__(self, parent, original):
+        tk.Canvas.__init__(self, parent)
         self.image_id = None
         self.img = None
-        self.win = win
-        self.original = original # original image
-        self.set_size(width, height)
         self.display_every = 1
+        self.background = (0, 0, 0)
 
     def new_original(self, original):
         self.original = original
         self.mutations = 0
         _img = ImageTk.PhotoImage(self.original)
         self.set_size(_img.width(), _img.height())
-        del self.img
         self.img = Image.new("RGBA", self._size, "black")
         self.dna = DNA(self._width, self._height)
         self.context = aggdraw.Draw(self.img)
@@ -102,13 +110,9 @@ class AggDrawCanvas(tk.Canvas):
         self.info = self.create_text(width/2, height+20)
 
     def draw_dna(self):
-        if self.img is None:
-            self.img = Image.new("RGBA", self._size, "black")
-            self.context = aggdraw.Draw(self.img)
-        else:
-            brush = aggdraw.Brush((0, 0, 0), opacity=255)
-            self.context.rectangle((0, 0, self._width, self._height), brush)
-        for gene in self.dna.dna:
+        brush = aggdraw.Brush(self.background, opacity=255)
+        self.context.rectangle((0, 0, self._width, self._height), brush)
+        for gene in self.dna.genes:
             brush = aggdraw.Brush(tuple(gene[1][0:3]), opacity=gene[1][3])
             self.context.polygon(gene[0], brush)
         self.redraw()
@@ -116,10 +120,9 @@ class AggDrawCanvas(tk.Canvas):
     def redraw(self):
         self.mutations += 1
         s = self.context.tostring()
-        self.delete(self.context)
         raw = Image.fromstring('RGBA', self._size, s)
         self.fitness = fitness(self.original, raw)
-        if self.mutations % self.display_every: # display only every 10 images
+        if self.mutations % self.display_every:
             return
         self.itemconfig(self.info,
                         text="%2.2f  %d"%(self.fitness, self.mutations),
@@ -129,28 +132,38 @@ class AggDrawCanvas(tk.Canvas):
         self.image_id = self.create_image(self._width/2, self._height/2, image=self.image)
         self.update()
 
+
 class App(object):
     """The main application window"""
     def __init__(self, parent):
         parent.controls = self
 
-        top_frame = tk.Frame(parent)
-        filename_button = tk.Button(top_frame, text="New image",
+        # Main window
+        filename_button = tk.Button(parent, text="New image",
                                     command=self.load_image)
-        filename_button.pack(side=tk.LEFT)
-        self.original_image = tk.Canvas(top_frame)
-        self.original_image.pack(side=tk.LEFT)
-        top_frame.pack()
+        filename_button.pack(side=tk.TOP)
+        self.original_image = tk.Canvas(parent)
+        self.original_image.pack(side=tk.TOP)
+
         self.original = None
-        image_fitting = tk.Frame(parent)
-        self.best_fit = AggDrawCanvas(100, 100, image_fitting,
-                                      self.original)
-        self.best_fit.pack(side=tk.LEFT)
-        self.current_fit = AggDrawCanvas(100, 100,
-                                         image_fitting, self.original)
-        self.current_fit.pack(side=tk.LEFT)
-        self.current_fit.display_every = 1 # 10
-        image_fitting.pack()
+        # Best fit window
+        self.best_fit_window = tk.Toplevel()
+        self.best_fit_window.title("Current best fit.")
+        self.best_fit = AggDrawCanvas(self.best_fit_window, self.original)
+        self.best_fit.pack()
+
+        # Current fit window
+        cur_fit_window = tk.Toplevel()
+        cur_fit_window.title("Current fit trial")
+        self.current_fit = AggDrawCanvas(cur_fit_window, self.original)
+        self.current_fit.pack()
+
+        def prevent_accidental_closure():
+            """prevents accidental closure of "child" window"""
+            tkMessageBox.showinfo("Quit?",
+                "Use the main window (where images are loaded) to end this program.")
+        self.best_fit_window.protocol("WM_DELETE_WINDOW", prevent_accidental_closure)
+        cur_fit_window.protocol("WM_DELETE_WINDOW", prevent_accidental_closure)
 
     def load_image(self):
         filename = tkFileDialog.askopenfilename()
@@ -165,10 +178,19 @@ class App(object):
         self.current_fit.new_original(self.original)
 
     def reset(self):
+        '''restarts the image fitting with a new set of polygons'''
         self.running = False
-        print "reset not truly implemented"
+        if tkMessageBox.askokcancel("",
+                "New starting set of polygons?\nNote: you will lose all changes done so far."):
+            self.best_fit.dna.init_dna()
+            self.best_fit.mutations = 0
+            self.best_fit.draw_dna()
+            self.current_fit.dna.genes = self.best_fit.dna.genes
+            self.current_fit.mutations = 0
+            self.current_fit.draw_dna()
 
     def run(self):
+        '''starts or resume/restarts the "fitting".'''
         self.running = True
         while self.running:
             done = self.step()
@@ -179,10 +201,10 @@ class App(object):
         self.current_fit.dna.mutate()
         self.current_fit.draw_dna()
         if self.current_fit.fitness > self.best_fit.fitness:
-            self.best_fit.dna.dna = copy.deepcopy(self.current_fit.dna.dna)
+            self.best_fit.dna.genes = copy.deepcopy(self.current_fit.dna.genes)
             self.best_fit.draw_dna()
         else:
-            self.current_fit.dna.dna = copy.deepcopy(self.best_fit.dna.dna)
+            self.current_fit.dna.genes = copy.deepcopy(self.best_fit.dna.genes)
         return False # would return True to end the simulation
 
     def pause(self):
@@ -192,6 +214,6 @@ class App(object):
 if __name__  == "__main__":
     main_app = tk.Tk()
     main_app.title('Image approximation with polygons')
-    App(main_app)
-    StateEngine(main_app)
+    main_window = App(main_app)
+    StateEngine(main_app, main_window.best_fit_window)
     main_app.mainloop()
