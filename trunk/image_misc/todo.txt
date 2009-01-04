@@ -1,9 +1,6 @@
 * Implement dna as plugin, with different mutate methods
 * Implement "step" as plugin, with different strategies
 
-
-
-
 Best fit:
  *display*
    some title DONE
