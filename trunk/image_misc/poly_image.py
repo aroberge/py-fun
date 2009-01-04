@@ -208,6 +208,12 @@ class BestFitWindow(FitWindow):
                                         text="Select background color",
                                         command=self.parent.set_background_color)
         set_color_btn.pack()
+        self.color_value = tk.Label(main_frame)
+        self.color_value.configure(text=self.fit.background)
+        self.color_value.pack(fill=tk.X, padx=2, pady=2)
+        self.color_sample = tk.Label(main_frame)
+        self.color_sample.pack(fill=tk.BOTH, padx=2, pady=2)
+        self.color_sample.configure(background=self.fit.background)
         save_polygons_btn = tk.Button(main_frame, width=25,
                                         text="Save polygons",
                                         command=self.save_poly)
@@ -217,6 +223,7 @@ class BestFitWindow(FitWindow):
                                         command=self.load_poly)
         load_polygons_btn.pack()
         self.control_frame.pack(side=tk.LEFT)
+
 
     def save_poly(self):
         filename = tkFileDialog.asksaveasfilename()
@@ -284,7 +291,7 @@ class App(object):
         try:
             self.original = Image.open(filename)
         except IOError:
-            print "IOError"
+            print "ignored IOError; most likely not an valid image file"
             return
         img = ImageTk.PhotoImage(self.original)
         width, height = img.width(), img.height()
@@ -302,6 +309,8 @@ class App(object):
         color = scc.choose_color()
         self.best_fit.background = color
         self.current_fit.background = color
+        self.best_fit_window.color_value.configure(text=color)
+        self.best_fit_window.color_sample.configure(background=color)
 
     def reset(self):
         '''restarts the image fitting with a new set of polygons'''
