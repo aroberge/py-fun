@@ -12,29 +12,36 @@
 Best fit:
  *display*
    some title DONE
-   fitness
-   max nb polygons
-   max nb sides
-   nb beneficial mutations
-   nb total mutations
+   fitness  DONE
+   nb polygons
+   nb sides
+   nb beneficial mutations DONE
  *controls*
-   stop/pause/resume  (reset = new dna)
-   "display every" control
-   max nb polygons
-   max nb sides
+   stop/pause/resume  (reset = new dna) DONE
+   "display every" control DONE
+   nb polygons
+   nb sides
    import/export dna
    save image (png, svg)
    fitness function -> plugin
    mutation method -> plugin
+   background colour -> rectangle of the right colour
+
+Export dna:
+ r g b nb_polygons nb_sides polygon_1 polygon_2 ...
+ where
+   polygon_1 = x1 y1 x2 y2 ... xN yN r g b alpha
+and
+ r g b is the colour of the background
 
 
 Current fit:
  *display*
    some title DONE
-   fitness
-   nb total mutations
+   fitness DONE
+   nb total mutations DONE
  *controls*
-   "display every" control
+   "display every" control DONE
 
 original image
     load image DONE
