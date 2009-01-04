@@ -1,12 +1,7 @@
-* Save dna
-* Import dna
-* Save image
 * Implement dna as plugin, with different mutate methods
 * Implement "step" as plugin, with different strategies
-* calculate image per second and display it.
-* implement scrolling window?  or two windows: one for original picture,
-  one for rest of the program.
-* implement control for "display every".
+
+
 
 
 Best fit:
@@ -16,23 +11,17 @@ Best fit:
    nb polygons
    nb sides
    nb beneficial mutations DONE
+   image per second DONE
  *controls*
    stop/pause/resume  (reset = new dna) DONE
    "display every" control DONE
-   nb polygons
-   nb sides
-   import/export dna
+   nb polygons  -> give warning that all dna will be reset
+   nb sides     -> give a warning about lenghthening/shortening the dna
+   import/export dna DONE
    save image (png, svg)
    fitness function -> plugin
    mutation method -> plugin
-   background colour -> rectangle of the right colour
-
-Export dna:
- r g b nb_polygons nb_sides polygon_1 polygon_2 ...
- where
-   polygon_1 = x1 y1 x2 y2 ... xN yN r g b alpha
-and
- r g b is the colour of the background
+   background colour -> rectangle of the right colour DONE
 
 
 Current fit:
