@@ -10,12 +10,13 @@ import time
 import copy
 
 import Tkinter as tk
-import tkFileDialog, tkMessageBox, tkSimpleDialog
+import tkFileDialog, tkMessageBox
 import Image, ImageTk, ImageChops, ImageStat # from PIL
 import aggdraw
 
-from state_engine import StateEngine
+from src.state_engine import StateEngine
 from src.color_chooser import SimpleColorChooser
+import src.dialogs as dialogs
 
 FITNESS_OFFSET = 0
 
@@ -77,6 +78,57 @@ class DNA(object):
         elif _type == 2: # y coordinate
             coord = randint(0, self.edges-1)
             self.genes[selected][0][2*coord+1] = randint(0, self.height)
+
+    def small_mutate(self, max_change):
+        '''makes a small mutation - guaranteed to be different from current
+           state but within acceptable range of values'''
+        selected = randint(0, self.polygons-1)
+        _type = randint(0, 2)
+        delta = 0
+        while delta == 0:
+            delta = 5 - randint(0, max_change)
+        if _type == 0: # colour
+            col_index = randint(0, 3)
+            current = self.genes[selected][1][col_index]
+            self.genes[selected][1][col_index] += delta
+            if self.genes[selected][1][col_index] < 0:
+                if current != 0:
+                    self.genes[selected][1][col_index] = 0
+                else:
+                    self.genes[selected][1][col_index] = 1
+            elif self.genes[selected][1][col_index] > 255:
+                if current != 255:
+                    self.genes[selected][1][col_index] = 255
+                else:
+                    self.genes[selected][1][col_index] = 254
+        elif _type == 1: # x coordinate
+            coord = randint(0, self.edges-1)
+            current = self.genes[selected][0][2*coord]
+            self.genes[selected][0][2*coord] += delta
+            if self.genes[selected][0][2*coord] < 0:
+                if current != 0:
+                    self.genes[selected][0][2*coord] = 0
+                else:
+                    self.genes[selected][0][2*coord] = 1
+            elif self.genes[selected][0][2*coord] > self.width:
+                if current != self.width:
+                    self.genes[selected][0][2*coord] = self.width
+                else:
+                    self.genes[selected][0][2*coord] = self.width -1
+        elif _type == 2: # y coordinate
+            coord = randint(0, self.edges-1)
+            current = self.genes[selected][0][2*coord+1]
+            self.genes[selected][0][2*coord+1] += delta
+            if self.genes[selected][0][2*coord+1] < 0:
+                if current != 0:
+                    self.genes[selected][0][2*coord+1] = 0
+                else:
+                    self.genes[selected][0][2*coord+1] = 1
+            elif self.genes[selected][0][2*coord+1] > self.height:
+                if current != self.height:
+                    self.genes[selected][0][2*coord+1] = self.height
+                else:
+                    self.genes[selected][0][2*coord+1] = self.height-1
 
 class AggDrawCanvas(tk.Canvas):
     def __init__(self, parent, original):
@@ -143,17 +195,6 @@ def prevent_accidental_closure():
     tkMessageBox.showinfo("Quit?",
         "Use the main window (where images are loaded) to end this program.")
 
-class ImageFrequency(tkSimpleDialog.Dialog):
-    def body(self, parent):
-        self.parent = parent
-        tk.Label(parent, text="Select the image drawing frequency").pack()
-        self.choice = tk.Entry(parent)
-        self.choice.pack()
-        return self.choice # initial focus
-
-    def apply(self):
-        self.result=self.choice.get()
-
 class FitWindow(tk.Toplevel):
     def __init__(self, parent, original_image, title):
         tk.Toplevel.__init__(self)
@@ -193,12 +234,11 @@ class FitWindow(tk.Toplevel):
 
     def set_show_every(self):
         set_frequency_dialog = ImageFrequency(self)
-        try:
-            self.fit.display_every = int(set_frequency_dialog.result)
+        if set_frequency_dialog.result is not None:
+            self.fit.display_every = set_frequency_dialog.result
             self.show_every_btn.config(text =
                             "Display every %d image.\n" % self.fit.display_every)
-        except:
-            tkMessageBox.showerror('', "Integer value required.")
+
 
 class BestFitWindow(FitWindow):
 
@@ -222,8 +262,28 @@ class BestFitWindow(FitWindow):
                                         text="Load polygons",
                                         command=self.load_poly)
         load_polygons_btn.pack()
+        self.set_nb_polygons_btn = tk.Button(main_frame, width=25, height=1,
+                    text="Use N polygons.", command=self.set_nb_polygons)
+        self.set_nb_polygons_btn.pack()
+        self.set_nb_sides_btn = tk.Button(main_frame, width=25, height=1,
+                    text="Number of sides per polygon.", command=self.set_nb_sides)
+        self.set_nb_sides_btn.pack()
         self.control_frame.pack(side=tk.LEFT)
 
+
+    def set_nb_polygons(self):
+        set_frequency_dialog = ImageFrequency(self)
+        if set_frequency_dialog.result is not None:
+            self.fit.display_every = set_frequency_dialog.result
+            self.show_every_btn.config(text =
+                            "Display every %d image.\n" % self.fit.display_every)
+
+    def set_nb_sides(self):
+        set_frequency_dialog = ImageFrequency(self)
+        if set_frequency_dialog.result is not None:
+            self.fit.display_every = set_frequency_dialog.result
+            self.show_every_btn.config(text =
+                            "Display every %d image.\n" % self.fit.display_every)
 
     def save_poly(self):
         filename = tkFileDialog.asksaveasfilename()
@@ -333,7 +393,16 @@ class App(object):
 
     def step(self):
         '''single mutation step; currently never ends on its own'''
-        self.current_fit.dna.mutate()
+        if self.best_fit.fitness < 82.:
+            self.current_fit.dna.mutate()
+        elif self.best_fit.fitness < 87.:
+            self.current_fit.dna.small_mutate(64)
+        elif self.best_fit.fitness < 91.:
+            self.current_fit.dna.small_mutate(32)
+        elif self.best_fit.fitness < 95.:
+            self.current_fit.dna.small_mutate(16)
+        else:
+            self.current_fit.dna.small_mutate(8)
         self.current_fit.draw_dna()
         if self.current_fit.fitness > self.best_fit.fitness:
             self.best_fit.dna.genes = copy.deepcopy(self.current_fit.dna.genes)
