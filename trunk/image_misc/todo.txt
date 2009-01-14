@@ -31,3 +31,6 @@ Current fit:
 
 original image
     load image DONE
+
+
+http://blog.nihilogic.dk/2009/01/genetic-mona-lisa.html

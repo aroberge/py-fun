@@ -24,14 +24,14 @@ class SimpleColorChooser(object):
         left = tk.Frame(self.top)
         left.pack(side=tk.LEFT, fill=tk.BOTH, expand=1, padx=2, pady=2)
 
-        self.red = tk.Scale(left, label="Red",from_=0,to=255,orient=tk.HORIZONTAL,
-                         command=self.update_color)
+        self.red = tk.Scale(left, label="Red", from_=0, to=255, length=256,
+                            orient=tk.HORIZONTAL, command=self.update_color)
         self.red.pack(fill=tk.X, expand=1)
-        self.green = tk.Scale(left, label="Green",from_=0,to=255,orient=tk.HORIZONTAL,
-                           command=self.update_color)
+        self.green = tk.Scale(left, label="Green", from_=0, to=255, length=256,
+                            orient=tk.HORIZONTAL, command=self.update_color)
         self.green.pack(fill=tk.X, expand=1)
-        self.blue = tk.Scale(left, label="Blue",from_=0,to=255,orient=tk.HORIZONTAL,
-                          command=self.update_color)
+        self.blue = tk.Scale(left, label="Blue", from_=0, to=255, length=256,
+                            orient=tk.HORIZONTAL, command=self.update_color)
         self.blue.pack(fill=tk.X, expand=1)
 
         right = tk.Frame(self.top)
@@ -41,6 +41,7 @@ class SimpleColorChooser(object):
         self.value.pack(fill=tk.X, padx=2, pady=2)
         self.sample = tk.Label(right)
         self.sample.pack(fill=tk.BOTH, expand=1, padx=2, pady=2)
+        self.sample.config(width=10)
         copy = tk.Button(right, text="Ok", command=self.copy_color_value)
         copy.pack(fill=tk.X, padx=2, pady=2)
 

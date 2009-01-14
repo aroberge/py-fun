@@ -3,6 +3,14 @@
 import tkMessageBox, tkSimpleDialog
 import Tkinter as tk
 
+class NotImplementedDialog(object):
+    def __init__(self, message):
+        tkMessageBox.showinfo("", message)
+
+class SaveImage(NotImplementedDialog):
+    def __init__(self):
+        NotImplementedDialog.__init__(self, "Saving image not yet implemented")
+
 class ValidatedIntegerDialog(tkSimpleDialog.Dialog):
     def validate(self):
         result = self.choice.get()
