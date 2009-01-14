@@ -23,6 +23,29 @@ FITNESS_OFFSET = 0
 # todo: investigate the use of ImageStat.Stat(image, mask)
 # todo: investigate the use of stat.mean instead of stat.rms
 
+class Fitness(object):
+    def __init__(self):
+        self.fitness_offset = 0
+    def evaluate(self, im1, im2, background="black"):
+        """Calculate a value derived from the root mean squared of the difference
+        between two images.  It is normalized so that when a black image is
+        compared with the original one (img1), the fitness given is 0, and when the
+        image is identical, the fitness value is 100."""
+        try:
+            stat = ImageStat.Stat(ImageChops.difference(im1, im2))
+        except:
+            print "missing alpha channel in original image?"
+            im1.putalpha(255)
+            stat = ImageStat.Stat(ImageChops.difference(im1, im2))
+        fit = 1. - sum(stat.rms[:3])/(255*3)
+        if self.fitness_offset == 0:
+            black_image = aggdraw.Draw("RGBA", im1.size, background)
+            s = black_image.tostring()
+            raw = Image.fromstring('RGBA', im1.size, s)
+            stat = ImageStat.Stat(ImageChops.difference(im1, raw))
+            self.fitness_offset = 1. - sum(stat.rms[:3])/(255*3)
+        return 100*(fit-self.fitness_offset)/(1.-self.fitness_offset)
+
 def fitness(im1, im2, background="black"):
     """Calculate a value derived from the root mean squared of the difference
     between two images.  It is normalized so that when a black image is
@@ -215,7 +238,7 @@ class FitWindow(tk.Toplevel):
                     text="Display every %d image." % self.fit.display_every,
                                          command=self.set_show_every)
         self.show_every_btn.pack()
-        self.image_frame.pack(side=tk.LEFT)
+        self.image_frame.pack(side=tk.RIGHT)
         self.setup_controls(main_frame)
         main_frame.pack()
 
@@ -233,7 +256,7 @@ class FitWindow(tk.Toplevel):
                           self.fit.ave_gen_per_second))
 
     def set_show_every(self):
-        set_frequency_dialog = ImageFrequency(self)
+        set_frequency_dialog = dialogs.ImageFrequency(self)
         if set_frequency_dialog.result is not None:
             self.fit.display_every = set_frequency_dialog.result
             self.show_every_btn.config(text =
@@ -243,16 +266,19 @@ class FitWindow(tk.Toplevel):
 class BestFitWindow(FitWindow):
 
     def setup_controls(self, main_frame):
-        self.control_frame = tk.Frame(main_frame)
+        #self.control_frame = tk.Frame(main_frame)
         set_color_btn = tk.Button(main_frame, width=25,
                                         text="Select background color",
                                         command=self.parent.set_background_color)
         set_color_btn.pack()
-        self.color_value = tk.Label(main_frame)
-        self.color_value.configure(text=self.fit.background)
-        self.color_value.pack(fill=tk.X, padx=2, pady=2)
-        self.color_sample = tk.Label(main_frame)
-        self.color_sample.pack(fill=tk.BOTH, padx=2, pady=2)
+        small_frame = tk.Frame(main_frame)
+        self.color_value = tk.Label(small_frame)
+        self.color_value.configure(text=self.fit.background, width=10)
+        self.color_value.pack(side=tk.LEFT)
+        self.color_sample = tk.Label(small_frame)
+        self.color_sample.configure(width=14)
+        self.color_sample.pack(side=tk.LEFT)
+        small_frame.pack()
         self.color_sample.configure(background=self.fit.background)
         save_polygons_btn = tk.Button(main_frame, width=25,
                                         text="Save polygons",
@@ -268,22 +294,27 @@ class BestFitWindow(FitWindow):
         self.set_nb_sides_btn = tk.Button(main_frame, width=25, height=1,
                     text="Number of sides per polygon.", command=self.set_nb_sides)
         self.set_nb_sides_btn.pack()
-        self.control_frame.pack(side=tk.LEFT)
+        self.save_image_btn = tk.Button(main_frame, width=25, height=1,
+                    text="Save image.", command=self.save_image)
+        self.save_image_btn.pack()
+        #self.control_frame.pack(side=tk.LEFT)
 
+    def save_image(self):
+        dialogs.SaveImage()
 
     def set_nb_polygons(self):
-        set_frequency_dialog = ImageFrequency(self)
-        if set_frequency_dialog.result is not None:
-            self.fit.display_every = set_frequency_dialog.result
-            self.show_every_btn.config(text =
-                            "Display every %d image.\n" % self.fit.display_every)
+        polygons_dialog = dialogs.NumberOfPolygons(self)
+        #if set_frequency_dialog.result is not None:
+        #    self.fit.display_every = set_frequency_dialog.result
+        #    self.show_every_btn.config(text =
+        #                    "Display every %d image.\n" % self.fit.display_every)
 
     def set_nb_sides(self):
-        set_frequency_dialog = ImageFrequency(self)
-        if set_frequency_dialog.result is not None:
-            self.fit.display_every = set_frequency_dialog.result
-            self.show_every_btn.config(text =
-                            "Display every %d image.\n" % self.fit.display_every)
+        sides_dialog = dialogs.NumberOfSides(self)
+        #if sides_dialog.result is not None:
+        #    self.fit.display_every = set_frequency_dialog.result
+        #    self.show_every_btn.config(text =
+        #                    "Display every %d image.\n" % self.fit.display_every)
 
     def save_poly(self):
         filename = tkFileDialog.asksaveasfilename()
@@ -351,7 +382,7 @@ class App(object):
         try:
             self.original = Image.open(filename)
         except IOError:
-            print "ignored IOError; most likely not an valid image file"
+            print "ignored IOError; most likely not a valid image file."
             return
         img = ImageTk.PhotoImage(self.original)
         width, height = img.width(), img.height()
