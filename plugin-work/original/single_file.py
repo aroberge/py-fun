@@ -93,4 +93,5 @@ if __name__ == "__main__":
     assert calculate("6*2/3") == 4
     assert calculate("2**3") == 8
     assert calculate("2*2**3") == 16
+    assert calculate("5-1-2") == 2
     print "Done!"
