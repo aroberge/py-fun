@@ -11,62 +11,15 @@ import copy
 
 import Tkinter as tk
 import tkFileDialog, tkMessageBox
-import Image, ImageTk, ImageChops, ImageStat # from PIL
+import Image, ImageTk, ImageStat # from PIL
 import aggdraw
 
+import src.dialogs as dialogs
 from src.state_engine import StateEngine
 from src.color_chooser import SimpleColorChooser
-import src.dialogs as dialogs
+from src.fitness import FitnessRMS, FitnessMean
 
-FITNESS_OFFSET = 0
-START_DEFAULT_COLOR = "#e3e3b0"
-
-# todo: investigate the use of ImageStat.Stat(image, mask)
-# todo: investigate the use of stat.mean instead of stat.rms
-
-class Fitness(object):
-    def __init__(self):
-        self.fitness_offset = 0
-    def evaluate(self, im1, im2, background="black"):
-        """Calculate a value derived from the root mean squared of the
-        difference between two images.  It is normalized so that when a
-        black image is compared with the original one (img1), the fitness given
-        is 0, and when the image is identical, the fitness value is 100."""
-        try:
-            stat = ImageStat.Stat(ImageChops.difference(im1, im2))
-        except:
-            print "missing alpha channel in original image?"
-            im1.putalpha(255)
-            stat = ImageStat.Stat(ImageChops.difference(im1, im2))
-        fit = 1. - sum(stat.rms[:3])/(255*3)
-        if self.fitness_offset == 0:
-            blank_image = aggdraw.Draw("RGBA", im1.size, background)
-            s = blank_image.tostring()
-            raw = Image.fromstring('RGBA', im1.size, s)
-            stat = ImageStat.Stat(ImageChops.difference(im1, raw))
-            self.fitness_offset = 1. - sum(stat.rms[:3])/(255*3)
-        return 100*(fit-self.fitness_offset)/(1.-self.fitness_offset)
-
-def fitness(im1, im2, background="black"):
-    """Calculate a value derived from the root mean squared of the difference
-    between two images.  It is normalized so that when a black image is
-    compared with the original one (img1), the fitness given is 0, and when the
-    image is identical, the fitness value is 100."""
-    global FITNESS_OFFSET
-    try:
-        stat = ImageStat.Stat(ImageChops.difference(im1, im2))
-    except:
-        print "missing alpha channel in original image?"
-        im1.putalpha(255)
-        stat = ImageStat.Stat(ImageChops.difference(im1, im2))
-    fit = 1. - sum(stat.rms[:3])/(255*3)
-    if FITNESS_OFFSET == 0:
-        blank_image = aggdraw.Draw("RGBA", im1.size, background)
-        s = blank_image.tostring()
-        raw = Image.fromstring('RGBA', im1.size, s)
-        stat = ImageStat.Stat(ImageChops.difference(im1, raw))
-        FITNESS_OFFSET = 1. - sum(stat.rms[:3])/(255*3)
-    return 100*(fit-FITNESS_OFFSET)/(1.-FITNESS_OFFSET)
+START_DEFAULT_COLOR = "#000000"
 
 class DNA(object):
     '''A simple DNA class containing the required information for an
@@ -82,7 +35,7 @@ class DNA(object):
         self.init_dna()
 
     def init_dna(self):
-        self.genes = []  # re-initialize to avoid extra genes...
+        self.genes = []
         for i in range(self.polygons):
             self.genes.append(self.create_random_polygon())
 
@@ -107,14 +60,13 @@ class DNA(object):
             coord = randint(0, self.sides-1)
             self.genes[selected][0][2*coord+1] = randint(0, self.height)
 
-    def make_copy(self, other):
+    def clone(self, other):
         self.background = other.background
         self.genes = copy.deepcopy(other.genes)
         self.polygons = other.polygons
         self.sides = other.sides
         self.width = other.width
         self.height = other.height
-
 
 class AggDrawCanvas(tk.Canvas):
     """Drawing canvas that uses the Anti Grain Graphics (agg) library
@@ -145,6 +97,7 @@ class AggDrawCanvas(tk.Canvas):
         '''resets some basic values based on loading a new original image
            displayed elsewhere.
         '''
+        self._fitness = FitnessRMS(draw=aggdraw.Draw)
         self.original = original
         self.mutations = 0
         _img = ImageTk.PhotoImage(self.original)
@@ -182,7 +135,7 @@ class AggDrawCanvas(tk.Canvas):
         self.calc_average_time()
         s = self.context.tostring()
         raw = Image.fromstring('RGBA', self.size_, s)
-        self.fitness = fitness(self.original, raw, self.background)
+        self.fitness = self._fitness.evaluate(self.original, raw, self.background)
         self.parent.update_info()
         if self.mutations % self.display_every:
             return
@@ -270,7 +223,7 @@ class OriginalImageWindow(tk.Toplevel):
         self.info_filename.pack()
         self.info_rgb = tk.Label(info_frame, text="")
         self.info_rgb.pack()
-        self.pack()
+        #self.pack()
 
 
     def new_image(self, img, filename):
@@ -376,12 +329,11 @@ class App(object):
     def set_show_every(self):
         set_frequency_dialog = dialogs.ImageFrequency(self.parent)
         if set_frequency_dialog.result is not None:
-            self.display_every = set_frequency_dialog.result
+            self.best_fit.display_every = set_frequency_dialog.result
             self.show_every_btn.config(text =
-                            "Display every %d image.\n" % self.display_every)
+                            "Display every %d image.\n" % self.best_fit.display_every)
 
     def load_image(self):
-        global FITNESS_OFFSET
         filename = tkFileDialog.askopenfilename()
         if not filename:
             return
@@ -390,12 +342,11 @@ class App(object):
         except IOError:
             print "ignored IOError; most likely not a valid image file."
             return
-        FITNESS_OFFSET = 0
         self.original_image_window.new_image(self.original, filename)
         self.best_fit.new_original(self.original)
         self.best_fit.draw_dna()
         self.current_fit.new_original(self.original)
-        self.current_fit.dna.make_copy(self.best_fit.dna)
+        self.current_fit.dna.clone(self.best_fit.dna)
         self.current_fit.draw_dna()
 
     def save_image(self):
@@ -488,7 +439,7 @@ class App(object):
         self.best_fit.mutations = 0
         self.best_fit.draw_dna()
         self.current_fit.new_dna()
-        self.current_fit.dna.make_copy(self.best_fit.dna)
+        self.current_fit.dna.clone(self.best_fit.dna)
         self.current_fit.mutations = 0
         self.current_fit.draw_dna()
 
@@ -504,7 +455,8 @@ class App(object):
         except:
             return
         if tkMessageBox.askokcancel("",
-                "New starting set of polygons?\nNote: you will lose all changes done so far."):
+                "New starting set of polygons?\n"
+                "Note: you will lose all changes done so far."):
             self.new_dna()
 
     def run(self):
