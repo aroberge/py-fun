@@ -1,0 +1,9 @@
+< ?xml version="1.0" encoding="UTF-8" ?>
+   <module>
+     <moduleprefs title="hello world example" />
+	<content type="html">
+	  < ![CDATA[
+		Hello, world!
+	  ]]>
+        </content>
+   </module>
