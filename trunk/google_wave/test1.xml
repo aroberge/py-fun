@@ -2,6 +2,7 @@
 <Module>
   <ModulePrefs title="Tabs Demo" height="140" scrolling="true" >
     <Require feature="tabs" />
+    <Require feature="dynamic-height"/>
   </ModulePrefs>
   <Content type="html">
   <![CDATA[
@@ -49,6 +50,8 @@
       var selectedTab = tabs.getSelectedTab();
       p.innerHTML = "This is dynamic content generated in callback for tab " + selectedTab.getName();
       document.getElementById(tabId).appendChild(p);
+      // Tells gadget to resize itself
+       gadgets.window.adjustHeight();
     }
 
     // Call init function to initialize and display tabs.
