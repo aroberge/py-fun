@@ -16,7 +16,7 @@
 
         tabs.addTab("World", {
            contentContainer: document.getElementById("gui_tab"),
-           callback: fetch_info
+           callback: update_info
         });
 
         tabs.addTab("Program editor", {
@@ -31,30 +31,28 @@
         });
     }
 
-    function fetch_info(tabId) {
-
-      var selectedTab = tabs.getSelectedTab();
-
-      var editor_info = document.getElementById("program_edit");
+    function update_info(tabId) {
+      // this updates the information using the latest program entered by
+      // the user and any world information.
+      // for now, it should simply display what it reads.
       var editor_display = document.getElementById("program_from_editor");
-      editor_display.innerHTML = editor_info.innerHTML;
+      editor_display.innerHTML = document.getElementById("program_edit").value;
 
-      var world_info = document.getElementById("world_edit");
       var world_display = document.getElementById("world_from_editor");
-      world_display.innerHTML = world_info.innerHTML;
-       gadgets.window.adjustHeight();
+      world_display.innerHTML = document.getElementById("world_edit").value;
+      gadgets.window.adjustHeight();
     }
 
     // Call init function to initialize and display tabs.
     gadgets.util.registerOnLoadHandler(init);
     </script>
 
-  // Problem statement
-  <div id="problem_tab" style="display:none">
-    <textarea>Problem statement</textarea>
-  </div>
 
-  // This will be the GUI stuff
+    <div id="problem_tab" style="display:none">
+      <textarea>Problem statement</textarea>
+    </div>
+
+
     <div id="gui_tab" style="display:none">
     <h2>Program entered</h2>
     <pre id="program_from_editor"> </pre>
