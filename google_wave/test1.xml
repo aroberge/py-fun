@@ -6,51 +6,42 @@
   </ModulePrefs>
   <Content type="html">
   <![CDATA[
-    // adapted from http://code.google.com/apis/gadgets/docs/ui.html#Tabs
     <script type="text/javascript">
-    // Initialize tabs, designate the tab named "Two" as
-    // the tab selected by default.
-    var tabs = new gadgets.TabSet(__MODULE_ID__, "Two");
+    var tabs = new gadgets.TabSet(__MODULE_ID__);
     function init() {
-        // Technique #1: Capture the tab's ID when you create it, and use the ID
-        // to add content to the tab's corresponding <div>.
-        var one_Id = tabs.addTab('<div style="color: red; font-weight: bold; background-color:#ccf;">Cool Tab</div>');
-        document.getElementById(one_Id).innerHTML = "Content for tab One.";
 
-        // Technique #2: Create the tab and define a corresponding <div> in the
-        // HTML portion of the gadget. Add static content to the <div>.
-
-        tabs.addTab("Two", {
-           contentContainer: document.getElementById("two_id")
+        tabs.addTab("Problem statement", {
+           contentContainer: document.getElementById("problem_tab")
         });
 
-        // Technique #3: Create the tab and define a corresponding <div> in the
-        // HTML portion of the gadget. Add static content to the <div>.
-        // Use a callback function to add dynamic content to the static content.
+        tabs.addTab("World", {
+           contentContainer: document.getElementById("gui_tab"),
+           callback: fetch_info
+        });
 
-        tabs.addTab("Three", {
-           contentContainer: document.getElementById("three_id"),
-           callback: callback
+        tabs.addTab("Program editor", {
+           contentContainer: document.getElementById("program_editor_tab")
         });
 
         // Technique #4: Create the tab with a tooltip message. If specified <div>
         // doesn't exist, tabs library creates one.
         // Invoke callback function.
-        tabs.addTab("Four", {
-           contentContainer: document.getElementById("four_id"),
-           callback: callback,
-           tooltip: "I'm special"
+        tabs.addTab("World Editor", {
+           contentContainer: document.getElementById("world_editor_tab")
         });
     }
 
-    // Callback that provides content to tabs Three and Four
-    function callback(tabId) {
-      var p = document.createElement("p");
-      // Get selected tab
+    function fetch_info(tabId) {
+
       var selectedTab = tabs.getSelectedTab();
-      p.innerHTML = "This is dynamic content generated in callback for tab " + selectedTab.getName();
-      document.getElementById(tabId).appendChild(p);
-      // Tells gadget to resize itself
+
+      var editor_info = document.getElementById("program_edit");
+      var editor_display = document.getElementById("program_from_editor");
+      editor_display.innerHTML = editor_info.innerHTML;
+
+      var world_info = document.getElementById("world_edit");
+      var world_display = document.getElementById("world_from_editor");
+      world_display.innerHTML = world_info.innerHTML;
        gadgets.window.adjustHeight();
     }
 
@@ -58,8 +49,29 @@
     gadgets.util.registerOnLoadHandler(init);
     </script>
 
-   <div id="two_id" style="display:none">Content for tab Two.</div>
-   <div id="three_id" style="display:none">This is static content for tab Three.</div>
+  // Problem statement
+  <div id="problem_tab" style="display:none">
+    <textarea>Problem statement</textarea>
+  </div>
+
+  // This will be the GUI stuff
+    <div id="gui_tab" style="display:none">
+    <h2>Program entered</h2>
+    <pre id="program_from_editor"> </pre>
+    <h2>World defined</h2>
+    <pre id="world_from_editor"> </pre>
+   </div>
+
+    <div id="program_editor_tab" style="display:none">
+      <h2>Enter program below.</h2>
+      <textarea id="program_edit"> </textarea>
+    </div>
+
+    <div id="world_editor_tab" style="display:none">
+      <h2>Enter world below.</h2>
+      <textarea id="world_edit"> </textarea>
+    </div>
+
   ]]>
   </Content>
 </Module>
