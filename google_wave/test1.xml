@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Module>
-  <ModulePrefs title="Tabs Demo" height="140" scrolling="true" >
+  <ModulePrefs title="RuR-GvR" height="240" scrolling="true" >
     <Require feature="tabs" />
     <Require feature="dynamic-height"/>
   </ModulePrefs>
   <Content type="html">
   <![CDATA[
+    <style>
+        textarea{width:100%; rows:10;}
+  </style>
     <script type="text/javascript">
     var tabs = new gadgets.TabSet(__MODULE_ID__);
     function init() {
-
-        tabs.addTab("Problem statement", {
-           contentContainer: document.getElementById("problem_tab")
-        });
 
         tabs.addTab("World", {
            contentContainer: document.getElementById("gui_tab"),
@@ -46,12 +45,6 @@
     // Call init function to initialize and display tabs.
     gadgets.util.registerOnLoadHandler(init);
     </script>
-
-
-    <div id="problem_tab" style="display:none">
-      <textarea>Problem statement</textarea>
-    </div>
-
 
     <div id="gui_tab" style="display:none">
     <h2>Program entered</h2>
