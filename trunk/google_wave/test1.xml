@@ -145,10 +145,10 @@ gadgets.util.registerOnLoadHandler(init);
     </script>
 
     <div id="gui_tab">
-      <h2>Program entered</h2>
-      <pre id="program_from_editor"> </pre>
-      <h2>World defined</h2>
-      <pre id="world_from_editor"> </pre>
+      <h2 style="display:none;">Program entered</h2>
+      <pre id="program_from_editor" style="display:none;"> </pre>
+      <h2 style="display:none;">World defined</h2>
+      <pre id="world_from_editor" style="display:none;"> </pre>
 
       <canvas id="canvas" height="500" width="500"></canvas>
       <input type="button" id="execute-button" value="Execute" />
@@ -166,12 +166,128 @@ gadgets.util.registerOnLoadHandler(init);
 
     <div id="program_editor_tab" style="display:none">
       <h2>Enter program below.</h2>
-      <textarea id="program-editor"></textarea>
+      <textarea id="program-editor">define face_west:
+  while not_facing_west:
+    turnleft
+
+define face_east:
+  while not_facing_east:
+    turnleft
+
+define face_north:
+  while not_facing_north:
+    turnleft
+
+define face_south:
+  while not_facing_south:
+    turnleft
+
+define go_to_south_wall:
+  face_south
+  while front_is_clear:
+    move
+
+define go_to_next_bit:
+  face_east
+  move
+
+define set_carry_bit:
+  move
+  move
+  face_east
+  move
+  putbeeper
+  face_west
+  move
+
+define add_bit:
+  move
+  if next_to_a_beeper:
+    set_carry_bit
+  else:
+    move
+    putbeeper
+
+define copy_bit:
+  face_north
+  if next_to_a_beeper:
+    add_bit
+  else:
+    move
+    if next_to_a_beeper:
+      move
+      putbeeper
+  go_to_south_wall
+
+define carry_bit:
+  pickbeeper
+  face_south
+  move
+  face_east
+  while next_to_a_beeper:
+    pickbeeper
+    move
+  putbeeper
+  face_north
+  move
+  face_east
+
+define main:
+  while front_is_clear:
+    copy_bit
+    face_east
+    go_to_next_bit
+  face_west
+  while front_is_clear:
+    move
+  face_north
+  do 3:
+    move
+  face_east
+  while front_is_clear:
+    if not_next_to_a_beeper:
+      move
+    else:
+      carry_bit
+
+main
+turnoff</textarea>
     </div>
 
     <div id="world_editor_tab" style="display:none">
       <h2>Enter world below.</h2>
-      <textarea id="world-editor"></textarea>
+      <textarea id="world-editor">Robot 1 1 N 8
+Wall 8 1 E 4
+
+# the first number (86)
+Beepers 1 1 0
+Beepers 2 1 1
+Beepers 3 1 1
+Beepers 4 1 0
+Beepers 5 1 1
+Beepers 6 1 0
+Beepers 7 1 1
+Beepers 8 1 0
+
+# the second number (59)
+Beepers 1 2 1
+Beepers 2 2 1
+Beepers 3 2 0
+Beepers 4 2 1
+Beepers 5 2 1
+Beepers 6 2 1
+Beepers 7 2 0
+Beepers 8 2 0
+
+# the expected result (145)
+Beepers 1 5 1
+Beepers 2 5 0
+Beepers 3 5 0
+Beepers 4 5 0
+Beepers 5 5 1
+Beepers 6 5 0
+Beepers 7 5 0
+Beepers 8 5 1</textarea>
     </div>
 
   ]]>
