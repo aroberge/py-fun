@@ -7,60 +7,169 @@
   <Content type="html">
   <![CDATA[
     <style>
-        textarea{width:100%; rows:10;}
-  </style>
+        textarea{
+          width:100%; height:300px; }
+        #canvas {
+          border: 1px solid black;
+          width: 500px;
+          height: 500px;
+        }
+    </style>
     <script type="text/javascript">
-    var tabs = new gadgets.TabSet(__MODULE_ID__);
-    function init() {
+      var CLOSURE_NO_DEPS = true;
+      var CLOSURE_BASE_PATH = "http://gvr.carduner.net/ui/";
+    </script>
+    <script src="http://gvr.carduner.net/ui/closure/goog/base.js"></script>
+    <script src="http://gvr.carduner.net/ui/deps.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.0/jquery.min.js"></script>
+    <script type="text/javascript">
+goog.require("gvr");
+goog.require("gvr.web.client");
+goog.require("gvr.world.parser");
 
-        tabs.addTab("World", {
-           contentContainer: document.getElementById("gui_tab"),
-           callback: update_info
-        });
+var world;
+var program;
+var renderer;
+var runner;
 
-        tabs.addTab("Program editor", {
-           contentContainer: document.getElementById("program_editor_tab")
-        });
+var tabs = new gadgets.TabSet(__MODULE_ID__);
 
-        // Technique #4: Create the tab with a tooltip message. If specified <div>
-        // doesn't exist, tabs library creates one.
-        // Invoke callback function.
-        tabs.addTab("World Editor", {
-           contentContainer: document.getElementById("world_editor_tab")
+function updateExecutionButtons(){
+    if (runner !== null && runner.running){
+        $("#stop-button").removeAttr("disabled");
+        $("#execute-button, #step-button").attr("disabled","disabled");
+    } else {
+        $("#stop-button").attr("disabled","disabled");
+        $("#execute-button, #step-button").removeAttr("disabled");
+    }
+}
+
+function executeProgram(){
+    $("#reload-button").click();
+    var lines = $('#program-editor').val().split('\n');
+    try{
+        var program = gvr.lang.parser.newParser(lines, world.robot).parse();
+        var renderer = gvr.newRenderer('canvas', world);
+        runner = gvr.newRunner(program, renderer);
+        runner.run(
+            parseInt($("#speed").val()),
+            function(success){
+                updateExecutionButtons();
+            });
+        updateExecutionButtons();
+    } catch (e){
+        gvr.alert(e.message);
+        runner.stop();
+        updateExecutionButtons();
+    }
+}
+function reloadWorld(){
+    var lines = $("#world-editor").val().split('\n');
+    world = gvr.newWorld();
+    gvr.world.parser.newParser(lines, world).parse();
+    gvr.newRenderer('canvas', world).render();
+}
+
+function stopExecution(){
+    runner.stop();
+    updateExecutionButtons();
+}
+
+function stateUpdated(){
+    var program = wave.getState().get('program-code')
+    if (program){
+        $("#program-editor").val(program);
+    }
+    var world = wave.getState().get('world-code');
+    if (world){
+        $("#world-editor").val(program);
+    }
+}
+
+function init() {
+    tabs.addTab("World", {
+                    contentContainer: document.getElementById("gui_tab"),
+                    callback: update_info
+                });
+    tabs.addTab("Program editor", {
+                    contentContainer: document.getElementById("program_editor_tab")
+                });
+
+    // Technique #4: Create the tab with a tooltip message. If specified <div>
+    // doesn't exist, tabs library creates one.
+    // Invoke callback function.
+    tabs.addTab("World Editor", {
+                    contentContainer: document.getElementById("world_editor_tab")
+                });
+
+    world = gvr.newWorld();
+    program = gvr.lang.parser.newParser(['move','turnoff'], world.robot).parse();
+    renderer = gvr.newRenderer('canvas', world);
+    renderer.render();
+
+    $("#execute-button").click(executeProgram);
+
+    $("#reload-button").click(reloadWorld);
+
+    $("#stop-button").click(stopExecution);
+    if (wave && wave.isInWaveContainer()) {
+        wave.setStateCallback(stateUpdated);
+    }
+}
+
+function update_info(tabId) {
+    // this updates the information using the latest program entered by
+    // the user and any world information.
+    // for now, it should simply display what it reads.
+    var editor_display = document.getElementById("program_from_editor");
+    editor_display.innerHTML = document.getElementById("program-editor").value;
+    //alert("wave is:"+(typeof wave));
+    // for some reason, wave is always undefined here.
+    if (typeof wave !== "undefined" && wave && wave.isInWaveContainer()){
+      wave.getState().submitDelta(
+        {
+         'program-code':$("#program-editor").val(),
+         'world-code':$("#world-editor").val()
         });
     }
 
-    function update_info(tabId) {
-      // this updates the information using the latest program entered by
-      // the user and any world information.
-      // for now, it should simply display what it reads.
-      var editor_display = document.getElementById("program_from_editor");
-      editor_display.innerHTML = document.getElementById("program_edit").value;
+    var world_display = document.getElementById("world_from_editor");
+    world_display.innerHTML = document.getElementById("world-editor").value;
+    gadgets.window.adjustHeight();
+}
 
-      var world_display = document.getElementById("world_from_editor");
-      world_display.innerHTML = document.getElementById("world_edit").value;
-      gadgets.window.adjustHeight();
-    }
-
-    // Call init function to initialize and display tabs.
-    gadgets.util.registerOnLoadHandler(init);
+// Call init function to initialize and display tabs.
+gadgets.util.registerOnLoadHandler(init);
     </script>
 
-    <div id="gui_tab" style="display:none">
-    <h2>Program entered</h2>
-    <pre id="program_from_editor"> </pre>
-    <h2>World defined</h2>
-    <pre id="world_from_editor"> </pre>
-   </div>
+    <div id="gui_tab">
+      <h2>Program entered</h2>
+      <pre id="program_from_editor"> </pre>
+      <h2>World defined</h2>
+      <pre id="world_from_editor"> </pre>
+
+      <canvas id="canvas" height="500" width="500"></canvas>
+      <input type="button" id="execute-button" value="Execute" />
+      <input type="button" id="stop-button" value="Stop" />
+      <input type="button" id="reload-button" value="Reload" />
+      Speed:
+      <select id="speed">
+        <option value="200">Slow</option>
+        <option value="50">Medium</option>
+        <option value="5" selected="selected">Fast</option>
+        <option value="-1">Instant</option>
+      </select>
+
+    </div>
 
     <div id="program_editor_tab" style="display:none">
       <h2>Enter program below.</h2>
-      <textarea id="program_edit"> </textarea>
+      <textarea id="program-editor"></textarea>
     </div>
 
     <div id="world_editor_tab" style="display:none">
       <h2>Enter world below.</h2>
-      <textarea id="world_edit"> </textarea>
+      <textarea id="world-editor"></textarea>
     </div>
 
   ]]>
