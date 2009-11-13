@@ -101,6 +101,8 @@ function init() {
     tabs.addTab("World Editor", {
                     contentContainer: document.getElementById("world_editor_tab")
                 });
+    tabs.setSelectedTab(0);
+    gadgets.window.adjustHeight();
 
     world = gvr.newWorld();
     program = gvr.lang.parser.newParser(['move','turnoff'], world.robot).parse();
