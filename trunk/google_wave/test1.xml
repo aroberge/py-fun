@@ -2,6 +2,7 @@
 <Module>
   <ModulePrefs title="RuR-GvR" height="240" scrolling="true" >
     <Require feature="tabs" />
+    <Require feature="wave" />
     <Require feature="dynamic-height"/>
   </ModulePrefs>
   <Content type="html">
