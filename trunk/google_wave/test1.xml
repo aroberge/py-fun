@@ -113,7 +113,6 @@ function init() {
 
     $("#stop-button").click(stopExecution);
 
-    alert("Welcome to GvR!\n wave is:"+(typeof wave));
     if (wave && wave.isInWaveContainer()) {
         wave.setStateCallback(stateUpdated);
     }
@@ -125,7 +124,7 @@ function update_info(tabId) {
     // for now, it should simply display what it reads.
     var editor_display = document.getElementById("program_from_editor");
     editor_display.innerHTML = document.getElementById("program-editor").value;
-    //alert("wave is:"+(typeof wave));
+    alert("This alert should be superfluous?!?\n wave is:"+(typeof wave));
     //if (typeof wave !== "undefined" && wave && wave.isInWaveContainer()){
     if (wave && wave.isInWaveContainer()){
       wave.getState().submitDelta(
