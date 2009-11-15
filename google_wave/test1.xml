@@ -83,7 +83,7 @@ function stateUpdated(){
     }
     var world = wave.getState().get('world-code');
     if (world){
-        $("#world-editor").val(program);
+        $("#world-editor").val(world);
     }
 }
 
@@ -124,6 +124,7 @@ function update_info(tabId) {
     // for now, it should simply display what it reads.
     var editor_display = document.getElementById("program_from_editor");
     editor_display.innerHTML = document.getElementById("program-editor").value;
+
     var world_display = document.getElementById("world_from_editor");
     world_display.innerHTML = document.getElementById("world-editor").value;
 
@@ -135,7 +136,6 @@ function update_info(tabId) {
          'world-code':$("#world-editor").val()
         });
     }
-
 
     gadgets.window.adjustHeight();
 }
