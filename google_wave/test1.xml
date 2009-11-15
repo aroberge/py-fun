@@ -127,8 +127,7 @@ function update_info(tabId) {
     var world_display = document.getElementById("world_from_editor");
     world_display.innerHTML = document.getElementById("world-editor").value;
 
-    //alert("This alert should be superfluous?!?\n wave is:"+(typeof wave));
-    dummy = typeof wave;
+    alert("This alert should be superfluous?!?\n wave is:"+(typeof wave));
     if (wave && wave.isInWaveContainer()){
       wave.getState().submitDelta(
         {
