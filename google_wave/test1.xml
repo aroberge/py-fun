@@ -96,9 +96,6 @@ function init() {
                     contentContainer: document.getElementById("program_editor_tab")
                 });
 
-    // Technique #4: Create the tab with a tooltip message. If specified <div>
-    // doesn't exist, tabs library creates one.
-    // Invoke callback function.
     tabs.addTab("World Editor", {
                     contentContainer: document.getElementById("world_editor_tab")
                 });
@@ -115,6 +112,8 @@ function init() {
     $("#reload-button").click(reloadWorld);
 
     $("#stop-button").click(stopExecution);
+
+    alert("Welcome to GvR!\n wave is:"+(typeof wave));
     if (wave && wave.isInWaveContainer()) {
         wave.setStateCallback(stateUpdated);
     }
