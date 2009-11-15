@@ -3,6 +3,7 @@
   <ModulePrefs title="RuR-GvR" height="240" scrolling="true" >
     <Require feature="tabs" />
     <Require feature="wave" />
+    <Require feature="rpc"/>
     <Require feature="dynamic-height"/>
   </ModulePrefs>
   <Content type="html">
@@ -128,7 +129,7 @@ function update_info(tabId) {
     var world_display = document.getElementById("world_from_editor");
     world_display.innerHTML = document.getElementById("world-editor").value;
 
-    alert("This alert should be superfluous?!?\n wave is:"+(typeof wave));
+    //alert("This alert should be superfluous?!?\n wave is:"+(typeof wave));
     if (wave && wave.isInWaveContainer()){
       wave.getState().submitDelta(
         {
