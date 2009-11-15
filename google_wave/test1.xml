@@ -124,8 +124,11 @@ function update_info(tabId) {
     // for now, it should simply display what it reads.
     var editor_display = document.getElementById("program_from_editor");
     editor_display.innerHTML = document.getElementById("program-editor").value;
-    alert("This alert should be superfluous?!?\n wave is:"+(typeof wave));
-    //if (typeof wave !== "undefined" && wave && wave.isInWaveContainer()){
+    var world_display = document.getElementById("world_from_editor");
+    world_display.innerHTML = document.getElementById("world-editor").value;
+
+    //alert("This alert should be superfluous?!?\n wave is:"+(typeof wave));
+
     if (wave && wave.isInWaveContainer()){
       wave.getState().submitDelta(
         {
@@ -134,8 +137,7 @@ function update_info(tabId) {
         });
     }
 
-    var world_display = document.getElementById("world_from_editor");
-    world_display.innerHTML = document.getElementById("world-editor").value;
+
     gadgets.window.adjustHeight();
 }
 
