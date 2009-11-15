@@ -126,7 +126,7 @@ function update_info(tabId) {
     // for now, it should simply display what it reads.
     var editor_display = document.getElementById("program_from_editor");
     editor_display.innerHTML = document.getElementById("program-editor").value;
-    //alert("wave is:"+(typeof wave));
+    alert("wave is:"+(typeof wave));
     // for some reason, wave is always undefined here.
     if (typeof wave !== "undefined" && wave && wave.isInWaveContainer()){
       wave.getState().submitDelta(
