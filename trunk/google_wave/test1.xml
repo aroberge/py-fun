@@ -169,7 +169,6 @@ gadgets.util.registerOnLoadHandler(init);
 
     <div id="program_editor_tab" style="display:none">
       <h2>Enter program below.</h2>
-      //<textarea id="program-editor" onKeyUp="update_info(42)">define face_west:
       <textarea id="program-editor">define face_west:
 
   while not_facing_west:
@@ -261,7 +260,6 @@ turnoff</textarea>
 
     <div id="world_editor_tab" style="display:none">
       <h2>Enter world below.</h2>
-      //<textarea id="world-editor" onKeyUp="update_info(42)">Robot 1 1 N 8
       <textarea id="world-editor">Robot 1 1 N 8
 
 Wall 8 1 E 4
