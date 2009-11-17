@@ -128,6 +128,10 @@ function update_info(tabId) {
     var world_display = document.getElementById("world_from_editor");
     world_display.innerHTML = document.getElementById("world-editor").value;
 
+    if (first_time){
+        first_time = false;
+        alert("This alert should be superfluous?!?\n wave is:"+(typeof wave));
+    }
     if (typeof wave != 'undefined' && wave.isInWaveContainer()){
       wave.getState().submitDelta(
         {
