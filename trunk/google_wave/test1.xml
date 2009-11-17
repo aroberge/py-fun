@@ -128,11 +128,7 @@ function update_info(tabId) {
     var world_display = document.getElementById("world_from_editor");
     world_display.innerHTML = document.getElementById("world-editor").value;
 
-    if (first_time){
-        first_time = false;
-        alert("This alert should be superfluous?!?\n wave is:"+(typeof wave));
-    }
-    if (wave && wave.isInWaveContainer()){
+    if (typeof wave != 'undefined' && wave.isInWaveContainer()){
       wave.getState().submitDelta(
         {
          'program-code':$("#program-editor").val(),
@@ -170,7 +166,6 @@ gadgets.util.registerOnLoadHandler(init);
     <div id="program_editor_tab" style="display:none">
       <h2>Enter program below.</h2>
       <textarea id="program-editor">define face_west:
-
   while not_facing_west:
     turnleft
 
@@ -261,7 +256,6 @@ turnoff</textarea>
     <div id="world_editor_tab" style="display:none">
       <h2>Enter world below.</h2>
       <textarea id="world-editor">Robot 1 1 N 8
-
 Wall 8 1 E 4
 
 # the first number (86)
