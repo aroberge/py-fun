@@ -1,0 +1,23 @@
+
+p
+  this is a paragraph.
+
+pre
+    || This is some preformated text.
+    || and this is some more.
+    ||    this is indented
+    || this is not.
+
+
+For singleton tags like input and br, just
+use raw HTML.
+
+> br
+<br />
+
+.main
+    form method="POST"
+        label for="id_description" | Comment:
+        > br
+        > input type="text" value="example only"
+        > input type="submit"
