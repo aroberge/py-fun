@@ -1,0 +1,53 @@
+Initial tests, 10x10 grid, 3 colours
+
+('nb_steps=', 10000, ' nb_rects=', 15, 'nb_changes=', 30)
+time elapsed= 1.98825597763
+('nb_steps=', 10000, ' nb_rects=', 14, 'nb_changes=', 34)
+time elapsed= 1.90380787849
+('nb_steps=', 10000, ' nb_rects=', 15, 'nb_changes=', 31)
+time elapsed= 1.93334102631
+('nb_steps=', 10000, ' nb_rects=', 14, 'nb_changes=', 31)
+time elapsed= 1.86890602112
+('nb_steps=', 10000, ' nb_rects=', 18, 'nb_changes=', 25)
+time elapsed= 1.96292996407
+
+=== profiling run ===
+
+('nb_steps=', 10000, ' nb_rects=', 16, 'nb_changes=', 18)
+Tue Dec 29 11:52:42 2009    Profile.prof
+
+         1833954 function calls in 2.833 CPU seconds
+
+   Ordered by: internal time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+    10002    1.529    0.000    2.472    0.000 grid.py:144(identify_intersect_points)
+   900270    0.494    0.000    0.494    0.000 grid.py:16(intersect_for_two_rows)
+   143303    0.166    0.000    0.282    0.000 grid.py:29(count_bits)
+   200075    0.121    0.000    0.121    0.000 {range}
+    30100    0.102    0.000    0.112    0.000 random.py:160(randrange)
+    10000    0.063    0.000    0.244    0.000 solver.py:141(pick_new_configuration)
+        1    0.061    0.061    2.831    2.831 solver.py:28(solve)
+   143303    0.060    0.000    0.060    0.000 {method 'count' of 'str' objects}
+   143303    0.056    0.000    0.056    0.000 {bin}
+   143303    0.041    0.000    0.041    0.000 {method 'append' of 'list' objects}
+    30100    0.037    0.000    0.149    0.000 random.py:224(randint)
+    10000    0.033    0.000    0.033    0.000 solver.py:70(change_dot_colour)
+    10000    0.025    0.000    2.515    0.000 solver.py:154(compare_new_with_old)
+     9982    0.020    0.000    0.020    0.000 solver.py:81(revert_change_dot_colour)
+    10001    0.010    0.000    0.010    0.000 solver.py:135(not_done)
+    30100    0.009    0.000    0.009    0.000 {method 'random' of '_random.Random' objects}
+    10002    0.005    0.000    0.005    0.000 {sum}
+        1    0.000    0.000    0.001    0.001 grid.py:65(initialize)
+      100    0.000    0.000    0.001    0.000 grid.py:208(colour_choice)
+        1    0.000    0.000    0.000    0.000 solver.py:167(report_status)
+        2    0.000    0.000    0.001    0.001 solver.py:42(init_solver)
+        1    0.000    0.000    0.001    0.001 grid.py:40(__init__)
+        1    0.000    0.000    0.001    0.001 solver.py:14(__init__)
+        1    0.000    0.000    2.833    2.833 <string>:1(<module>)
+        1    0.000    0.000    2.833    2.833 test_solver.py:12(main)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+
+==== added special cython import
+    saved grid as pyx file
+    included cython profiling information pragma
