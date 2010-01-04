@@ -27,19 +27,19 @@ class Viewer(object):
         self.canvas = tk.Canvas(parent, width=width, height=height)
         self.width = width
         self.height = height
+  
+        # the following "shift" variables are used to center the drawing
+        self.shift_x = 0.5*self.width
+        self.shift_y = 0.5*self.height
         self.scale = 0.01
+      
         self.canvas.pack()
         self.draw_fractal()
 
-    def x_screen_to_complex_plane(self, coordinate):
-        '''converts horizontal screen coordinate into real coordinate
+    def screen_to_complex_plane(self, coordinate, shift):
+        '''converts screen coordinate into coordinate
            in the complex plane.'''
-        return (coordinate - 0.5*self.width)*self.scale
-
-    def y_screen_to_complex_plane(self, coordinate):
-        '''converts vertical screen coordinate into imaginary coordinate
-           in the complex plane.'''
-        return (coordinate - 0.5*self.height)*self.scale
+        return (coordinate - shift)*self.scale
 
     def draw_pixel(self, x, y):
         '''Simulates drawing a given pixel in black by drawing a black line
@@ -52,9 +52,9 @@ class Viewer(object):
     def draw_fractal(self):
     	#begin = time.time()  # (a)
         for x in range(0, self.width):
-            real = self.x_screen_to_complex_plane(x)
+            real = self.screen_to_complex_plane(x, self.shift_x)
             for y in range(0, self.height):
-                imag = self.y_screen_to_complex_plane(y)
+                imag = self.screen_to_complex_plane(y, self.shift_y)
                 c = complex(real, imag)
                 if mandel(c):
                     self.draw_pixel(x, y)
