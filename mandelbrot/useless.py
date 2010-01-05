@@ -5,8 +5,8 @@ from Tkinter import Tk, Canvas
 import time
 
 n = 40
-width = 640
-height = 480
+width = 600
+height = 600
 start = -3 + 1.5j
 stop  = 1 - 1.5j
 step = abs(start.real - stop.real) / width
@@ -35,9 +35,10 @@ def mandelbrot():
 
 begin = time.time()
 mandelbrot()
-print("Time taken for calculating points = %s" % (time.time() - begin))
+time1 = time.time() - begin
+print("Time taken for calculating points = %s" % time1)
 
-root = Tk()                 
+root = Tk()
 root.title("The Mandelbrot set")
 cv = Canvas(root,width=width,height=height)
 
@@ -45,8 +46,11 @@ begin = time.time()
 for point in points:
     x, y = point
     cv.create_line(x, y, x+1, y+1)
-print("Time taken for drawing = %s" % (time.time() - begin))
-    
-    
+
+time2 = time.time() - begin
+print("Time taken for drawing = %s" % time2)
+
+print("Total time = %s" % (time1 + time2))
+
 cv.pack()
 root.mainloop()

@@ -51,10 +51,14 @@ class Viewer(object):
 
     def draw_fractal(self):
         begin = time.time()  # (a)
+        y_values = []
+        for y in range(0, self.height):
+            y_values.append(self.screen_to_complex_plane(y, self.shift_y))
+
         for x in range(0, self.width):
             real = self.screen_to_complex_plane(x, self.shift_x)
             for y in range(0, self.height):
-                imag = self.screen_to_complex_plane(y, self.shift_y)
+                imag = y_values[y]
                 c = complex(real, imag)
                 if mandel(c):
                     self.draw_pixel(x, y)
