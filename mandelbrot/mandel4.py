@@ -55,6 +55,7 @@ class Viewer(object):
         self.canvas.pack()
         self.status = tk.Label(self.parent, text="", bd=1, relief=tk.SUNKEN, anchor=tk.W)
         self.status.pack(side=tk.BOTTOM, fill=tk.X)
+        self.image = tk.PhotoImage(width=width, height=height)
 
         self.draw_fractal()
 
@@ -143,8 +144,7 @@ class Viewer(object):
 
     def clear(self):
         '''clears the canvas'''
-        self.canvas.create_rectangle(0, 0, self.canvas_width,
-                                    self.canvas_height, fill="white")
+        self.image.blank()
 
     def canvas_to_complex_plane_x(self, x):
         '''converts canvas coordinate into coordinate
@@ -164,30 +164,45 @@ class Viewer(object):
         '''converts complex plane coordinate into coordinate on the canvas.'''
         return int((y - self.min_y)/self.delta_y + self.canvas_height)
 
-    def draw_pixel(self, x, y):
+    def draw_pixel(self, color, x, y):
         '''Simulates drawing a given pixel in black by drawing a black line
            of length equal to one pixel.'''
         # The screen y coordinates run in opposite direction to that of the
         # complex plane.
         y = self.canvas_height - y
-        self.canvas.create_line(x, y, x+1, y, fill="black")
+        self.image.put(color, (x, y))
+
+    def create_fractal(self):
+        '''draw a fractal on a fake canvas'''
+        x_values = []
+        for x in range(0, self.canvas_width):
+            x_values.append(self.canvas_to_complex_plane_x(x))
+
+        cols = []
+        for y in range(self.canvas_height, 0, -1):
+            imag = self.canvas_to_complex_plane_y(y)
+            rows = []
+            for x in range(0, self.canvas_width):
+                real = x_values[x]
+                c = complex(real, imag)
+                if mandel(c):
+                    rows.append('#000000')
+                else:
+                    rows.append('#FFFFFF')
+            cols.append(tuple(rows))
+        return tuple(cols)
+
 
     def draw_fractal(self):
         '''draws a fractal on the canvas'''
         self.calculating = True
-        self.clear()
+        #self.image.blank()
         begin = time.time()  # (a)
-        y_values = []
-        for y in range(0, self.canvas_height):
-            y_values.append(self.canvas_to_complex_plane_y(y))
 
-        for x in range(0, self.canvas_width):
-            real = self.canvas_to_complex_plane_x(x)
-            for y in range(0, self.canvas_height):
-                imag = y_values[y]
-                c = complex(real, imag)
-                if mandel(c):
-                    self.draw_pixel(x, y)
+        cols = self.create_fractal()
+
+        self.image.put(cols)
+        self.canvas.create_image(0, 0, image = self.image, anchor=tk.NW)
         self.status.config(text="Time taken for calculating and drawing = %s" %
                                             (time.time() - begin))  # (a)
         self.calculating = False
