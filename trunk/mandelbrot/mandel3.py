@@ -36,14 +36,13 @@ class Viewer(object):
         self.max_x = max_x
         self.max_y = max_y
         self.adjust_aspect_ratio()
-        self.calculate_pixel_size()
 
         self.canvas.pack()
         self.draw_fractal()
 
     def adjust_aspect_ratio(self):
         '''ensures that min/max values in complex plane match aspect ratio
-        of drawing canvas'''
+        of drawing canvas and calculate pixel sizes.'''
         aspect_ratio = 1.0*self.canvas_width/self.canvas_height
         plane_width = self.max_x - self.min_x
         plane_height = self.max_y - self.min_y
@@ -53,9 +52,7 @@ class Viewer(object):
             self.max_y = self.min_y + plane_width/aspect_ratio
         else:
             pass
-
-    def calculate_pixel_size(self):
-        '''calculates the horizontal and vertical size of a pixel in
+        '''calculate the horizontal and vertical size of a pixel in
            complex plane coordinates'''
         self.delta_x = 1.*(self.max_x - self.min_x)/self.canvas_width
         self.delta_y = 1.*(self.max_y - self.min_y)/self.canvas_height
