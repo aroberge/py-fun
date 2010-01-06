@@ -5,7 +5,7 @@
 import pstats, cProfile
 
 import time
-from mandel1 import tk, Viewer
+from mandel3 import tk, Viewer
 
 def main():
     root = tk.Tk()
