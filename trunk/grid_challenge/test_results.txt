@@ -51,3 +51,41 @@ Tue Dec 29 11:52:42 2009    Profile.prof
 ==== added special cython import
     saved grid as pyx file
     included cython profiling information pragma
+
+('nb_steps=', 10000, ' nb_rects=', 14, 'nb_changes=', 25)
+Tue Dec 29 12:44:52 2009    Profile.prof
+
+         1815455 function calls in 2.846 CPU seconds
+
+   Ordered by: internal time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+    10002    1.543    0.000    2.473    0.000 grid.py:144(identify_intersect_points)
+   900270    0.486    0.000    0.486    0.000 grid.py:16(intersect_for_two_rows)
+   138680    0.166    0.000    0.282    0.000 grid.py:29(count_bits)
+   200075    0.118    0.000    0.118    0.000 {range}
+    30100    0.104    0.000    0.114    0.000 random.py:160(randrange)
+    10000    0.067    0.000    0.252    0.000 solver.py:141(pick_new_configuration)
+        1    0.062    0.062    2.844    2.844 solver.py:28(solve)
+   138680    0.058    0.000    0.058    0.000 {method 'count' of 'str' objects}
+   138680    0.057    0.000    0.057    0.000 {bin}
+   138680    0.039    0.000    0.039    0.000 {method 'append' of 'list' objects}
+    30100    0.038    0.000    0.153    0.000 random.py:224(randint)
+    10000    0.033    0.000    0.033    0.000 solver.py:70(change_dot_colour)
+    10000    0.025    0.000    2.517    0.000 solver.py:154(compare_new_with_old)
+     9975    0.019    0.000    0.019    0.000 solver.py:81(revert_change_dot_colour)
+    10001    0.012    0.000    0.012    0.000 solver.py:135(not_done)
+    30100    0.010    0.000    0.010    0.000 {method 'random' of '_random.Random' objects}
+    10002    0.006    0.000    0.006    0.000 {sum}
+        1    0.000    0.000    0.001    0.001 grid.py:65(initialize)
+      100    0.000    0.000    0.001    0.000 grid.py:208(colour_choice)
+        1    0.000    0.000    0.000    0.000 solver.py:167(report_status)
+        2    0.000    0.000    0.001    0.001 solver.py:42(init_solver)
+        1    0.000    0.000    2.846    2.846 test_solver.py:15(main)
+        1    0.000    0.000    0.001    0.001 grid.py:40(__init__)
+        1    0.000    0.000    2.846    2.846 <string>:1(<module>)
+        1    0.000    0.000    0.001    0.001 solver.py:14(__init__)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+ 
+ 
+====

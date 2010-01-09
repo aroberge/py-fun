@@ -2,21 +2,20 @@
 
 Mandelbrot set drawn in black and white.'''
 
-import time  # (a)
+import time
 
 import sys
 if sys.version_info > (3,):
     import tkinter as tk
 else:
     import Tkinter as tk
-    range = xrange  # (b)
 
 def mandel(c):
     '''determines if a point is in the Mandelbrot set based on deciding if,
-       after 20 iterations, the absolute value of the resulting number is
+       after 100 iterations, the absolute value of the resulting number is
        greater or equal to 2.'''
     z = 0
-    for iter in range(0, 20):
+    for iter in range(0, 100):
         z = z**2 + c
         if abs(z) >= 2:
             return False
@@ -36,29 +35,23 @@ class Viewer(object):
         self.canvas.pack()
         self.draw_fractal()
 
-    def screen_to_complex_plane(self, coordinate, shift):
-        '''converts screen coordinate into coordinate
-           in the complex plane.'''
-        return (coordinate - shift)*self.scale
-
     def draw_pixel(self, x, y):
         '''Simulates drawing a given pixel in black by drawing a black line
            of length equal to one pixel.'''
-        # technically, we should use "self.height - y" instead of "y" but,
-        # since there is symmetry about the x-axis, we can use the simpler
-        # expression.
         self.canvas.create_line(x, y, x+1, y, fill="black")
 
     def draw_fractal(self):
-        begin = time.time()  # (a)
+        '''draws a fractal picture'''
+        begin = time.time()
         for x in range(0, self.width):
-            real = self.screen_to_complex_plane(x, self.shift_x)
+            real = (x - self.shift_x)*self.scale
             for y in range(0, self.height):
-                imag = self.screen_to_complex_plane(y, self.shift_y)
+                imag = (y - self.shift_y)*self.scale
                 c = complex(real, imag)
                 if mandel(c):
-                    self.draw_pixel(x, y)
-        print("Time taken for calculating and drawing = %s" % (time.time() - begin))  # (a)
+                    self.draw_pixel(x, self.height - y)
+        print("Time taken for calculating and drawing = %s" %
+                                                (time.time() - begin))
 
 if __name__ == "__main__":
     root = tk.Tk()
