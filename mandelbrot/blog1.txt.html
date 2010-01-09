@@ -1,0 +1,40 @@
+<ol>
+   <li | introduction>
+       <ol>
+          <li>reddit post on mandelbrot</li>
+          <li>various existing programs  (include aptus, xaos, fractint)</li>
+          <li>mention useless python example and poor speed</li>
+          <li>compare with reddit post</li>
+          <li>introduce simple app and a preview of things to come.</li>
+       </ol>
+   </li>
+   <li>Simple app, intro to profiling and Black/white coloring scheme</li>
+   <li>improving the viewer (zoom/pan) and nicer coloring scheme</li>
+   <li>Using cython to improve the speed.</li>
+   <li>mention caveats when using cython</li>
+   <li>improving on coloring scheme (getting rid of bands)</li>
+   <li>Examining interior points</li>
+   <li>final coloring scheme</li>
+</ol>
+
+
+<ol>
+   <li>Sample run, making sure the program works</li>
+   <li>Simple timing example</li>
+   <li>timing with profiling</li>
+   <li>from range to xrange</li>
+   <li>attempting to improve on abs(z)</li>
+   <li>perhaps attempt to speed up by using z*z instead of z**2</li>
+   <li>speeding things up by using different drawing method</li>
+</ol>
+
+<p>
+   The absolute results obtained will of course vary greatly.  For example, when running
+   this program on a 5 year-old Lenovo Thinkpad running Python2.6, the total time
+   according to the profiler, varies between 11.4 and 12.4 seconds (with the time
+   taken by the range function varying between 0.69 and 0.76 seconds).
+   Note that this variation suggests that, when attempting to optimize a program,
+   it is probably a good idea to run a given test a few times to see if the
+   changes observed are truly the result of an optimization or simply some
+   fluctuations.
+</p>
