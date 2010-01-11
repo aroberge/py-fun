@@ -1,0 +1,382 @@
+h2
+    Tentative title: Profiling adventures and cython - Introducing cython.
+
+p
+    In the previous blog post, we made some attempts at speeding up our
+    function <code>mandel()</code> by making changes in the Python code.
+    While we had some success in doing so, it was clearly not enough
+    for our purpose.  As a result, we will now try to use cython.  Before
+    we do this, let us note again the result from the last profiling run,
+    limiting the information to the 5 longest-running functions.
+
+pre
+  ||        2921330 function calls in 40.432 CPU seconds
+  ||
+  ||  ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  || 2750000   30.980    0.000   30.980    0.000 mandel1c.py:7(mandel)
+  ||      11    8.505    0.773   39.693    3.608 viewer1.py:23(draw_fractal)
+  ||       1    0.726    0.726    0.726    0.726 {_tkinter.create}
+  ||      48    0.158    0.003    0.158    0.003 {built-in method call}
+  ||  170687    0.058    0.000    0.058    0.000 viewer1.py:17(draw_pixel)
+
+
+p
+    The goal of cython could be described as being an easy way to convert
+    a Python module into a C extension.  This is what we will
+    do.  [There are other ways to work with cython extensions than
+    what we use here; for more information, please
+    consult the cython web site.]
+
+p
+    We first start by taking our existing module and copying it into a new
+    file, with a ".pyx" extension instead of the traditional ".py".
+
+pre
+    || # mandel2_cy.pyx
+    || # cython: profile=True
+    ||
+    || #import sys
+    || #if sys.version_info < (3,):
+    || #    range = xrange
+    ||
+    || def mandel(real, imag):
+    ||     '''determines if a point is in the Mandelbrot set based on deciding if,
+    ||        after 100 iterations, the absolute value of the resulting number is
+    ||        greater or equal to 2.'''
+    ||     z_r = z_i = 0
+    ||     for iter in range(0, 100):
+    ||         z_r, z_i = z_r**2 - z_i**2 + real, 2*z_r*z_i + imag
+    ||         if (z_r**2 + z_i**2) >= 4:
+    ||             return False
+    ||     return (z_r**2 + z_i**2) < 4
+
+p
+    Note that we have commented out the equivalence between
+    <code>range</code> and <code>xrange</code>.  The reason we have done this
+    is because with <code>xrange</code> present like this in the file
+    results in a compilation
+    error when running cython with Python 3.1.  Furthermore, as we will
+    see later, it is not really needed even for Python 2.x when using
+    cython properly.
+
+p
+    We have also included a commented line stating that profile was equal
+    to True; this is a cython directive that will enable the Python profiler
+    to also include cython functions in its tally.
+
+p
+    In order to import this module, we also need to modify our viewer.
+    Here is the new version.
+
+pre
+    || # viewer2.py
+    ||
+    || import pyximport
+    || pyximport.install()
+    ||
+    || from mandel2_cy import mandel
+    || from viewer import Viewer
+    || import time
+    ||
+    || import sys
+    || if sys.version_info < (3,):
+    ||     import Tkinter as tk
+    ||     range = xrange
+    || else:
+    ||     import tkinter as tk
+    ||
+    || class FancyViewer(Viewer):
+    ||     '''Application to display fractals'''
+    ||
+    ||     def draw_pixel(self, x, y):
+    ||         '''Simulates drawing a given pixel in black by drawing a black line
+    ||            of length equal to one pixel.'''
+    ||         return
+    ||         self.canvas.create_line(x, y, x+1, y, fill="black")
+    ||
+    ||     def draw_fractal(self):
+    ||         '''draws a fractal on the canvas'''
+    ||         self.calculating = True
+    ||         begin = time.time()
+    ||         # clear the canvas
+    ||         self.canvas.create_rectangle(0, 0, self.canvas_width,
+    ||                                     self.canvas_height, fill="white")
+    ||         for x in range(0, self.canvas_width):
+    ||             real = self.min_x + x*self.delta_x
+    ||             for y in range(0, self.canvas_height):
+    ||                 imag = self.min_y + y*self.delta_y
+    ||                 if mandel(real, imag):
+    ||                     self.draw_pixel(x, self.canvas_height - y)
+    ||         self.status.config(text=
+    ||                            "Time taken for calculating and drawing = %s    %s" %
+    ||                                         ((time.time() - begin), self.zoom_info))
+    ||         self.status2.config(text=self.info())
+    ||         self.status2.update_idletasks()
+    ||         self.calculating = False
+    ||
+    || if __name__ == "__main__":
+    ||     root = tk.Tk()
+    ||     app = FancyViewer(root)
+    ||     root.mainloop()
+
+p
+    Other than the top few lines, nothing has changed.  Let us run
+    our profiler with this new version.
+
+pre
+  ||        5671330 function calls in 43.101 CPU seconds
+  ||
+  ||  ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  || 2750000   36.817    0.000   36.817    0.000 mandel2_cy.pyx:8(mandel)
+  ||      11    3.991    0.363   42.952    3.905 viewer2.py:26(draw_fractal)
+  || 2750000    1.959    0.000   38.776    0.000 {mandel2_cy.mandel}
+  ||       1    0.137    0.137    0.137    0.137 {_tkinter.create}
+  ||      48    0.135    0.003    0.135    0.003 {built-in method call}
+
+p
+    The result is actually worse!  However, this will not be the case for long.
+    What we need to remember is that cython is used to create C extensions.
+    Unlike Python, C uses variables with types that are specified by the user.
+    If a variable has an unspecified type, cython assumes that it is a
+    generic Python object; as a result, it often can not do much to improve
+    the speed.  Let us put in some type information.  [Note: if, like
+    me, you are not familiar with C, it might be useful to first take a quick
+    break and read a basic C tutorial.]
+
+p
+    Note that <code>mandel</code> appears twice: once (the longest running) as
+    the function defined on line 8 of mandel2_cy.pyx, and once as
+    a object belonging to the module mandel2_cy.
+
+p
+    The arguments of <code>mandel()</code> are floating point numbers.
+    Let's put this information in the code, after which we will run
+    the profiler.
+
+pre
+    || # mandel2a_cy.pyx
+    || # cython: profile=True
+    ||
+    || def mandel(double real, double imag):
+    ||     '''determines if a point is in the Mandelbrot set based on deciding if,
+    ||        after 100 iterations, the absolute value of the resulting number is
+    ||        greater or equal to 2.'''
+    ||     z_r = z_i = 0
+    ||     for iter in range(0, 100):
+    ||         z_r, z_i = z_r**2 - z_i**2 + real, 2*z_r*z_i + imag
+    ||         if (z_r**2 + z_i**2) >= 4:
+    ||             return False
+    ||     return (z_r**2 + z_i**2) < 4
+
+p
+    The result is only slightly better:
+
+pre
+  ||        5671330 function calls in 39.479 CPU seconds
+  ||
+  ||  ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  || 2750000   33.676    0.000   33.676    0.000 mandel2a_cy.pyx:4(mandel)
+  ||      11    3.672    0.334   39.323    3.575 viewer2.py:26(draw_fractal)
+  || 2750000    1.799    0.000   35.475    0.000 {mandel2a_cy.mandel}
+  ||       1    0.143    0.143    0.143    0.143 {_tkinter.create}
+  ||      48    0.134    0.003    0.134    0.003 {built-in method call}
+
+
+p
+    However, we should not get discouraged.  Let us define the type
+    of the other variables in this program.
+
+pre
+    || # mandel2b_cy.pyx
+    || # cython: profile=True
+    ||
+    || def mandel(double real, double imag):
+    ||     '''determines if a point is in the Mandelbrot set based on deciding if,
+    ||        after 100 iterations, the absolute value of the resulting number is
+    ||        greater or equal to 2.'''
+    ||
+    ||     cdef double z_r = 0, z_i = 0
+    ||     cdef int iter
+    ||
+    ||     z_r = z_i = 0
+    ||     for iter in range(0, 100):
+    ||         z_r, z_i = z_r**2 - z_i**2 + real, 2*z_r*z_i + imag
+    ||         if (z_r**2 + z_i**2) >= 4:
+    ||             return False
+    ||     return (z_r**2 + z_i**2) < 4
+
+p
+    The result is spectacular!
+
+pre
+  ||        5780296 function calls in 5.981 CPU seconds
+  ||
+  ||  ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  ||      11    3.080    0.280    5.431    0.494 viewer2.py:26(draw_fractal)
+  || 2750000    1.442    0.000    2.162    0.000 {mandel2b_cy.mandel}
+  || 2750000    0.721    0.000    0.721    0.000 mandel2b_cy.pyx:4(mandel)
+  ||       1    0.538    0.538    0.538    0.538 {_tkinter.create}
+  ||      48    0.132    0.003    0.132    0.003 {built-in method call}
+
+p
+    The execution time of the function <code>mandel()</code> (line 4 of
+    the module mandel2b_cy.pyx) has gone from 44.345 seconds down to
+    0.721 seconds!  What happens if we turn the profiling off inside
+    the cython module?  [We do so by changing the value from True to
+    False in the comment on the second line.]
+
+pre
+  ||        3030296 function calls in 4.231 CPU seconds
+  ||
+  ||  ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  ||      11    3.041    0.276    4.084    0.371 viewer2.py:26(draw_fractal)
+  || 2750000    0.859    0.000    0.859    0.000 {mandel2b_cy.mandel}
+  ||       1    0.135    0.135    0.135    0.135 {_tkinter.create}
+  ||      48    0.128    0.003    0.128    0.003 {built-in method call}
+  ||  279653    0.064    0.000    0.064    0.000 viewer2.py:20(draw_pixel)
+
+p
+    As we can see, the total execution time goes down by almost two seconds ...
+    and calls to the null function [draw_pixel - remember that we neutered
+    it] are now the fifth contributing factor to the execution time.  So,
+    cython is definitely helping!   Let us change back
+    <code>draw_pixel()</code> so that we see the actual effect of drawing
+    images.
+
+pre
+  ||        4628200 function calls in 33.217 CPU seconds
+  ||
+  ||  ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  ||      48   23.059    0.480   23.059    0.480 {built-in method call}
+  ||      11    3.323    0.302   33.004    3.000 viewer2.py:25(draw_fractal)
+  ||  170698    3.128    0.000    5.200    0.000 Tkinter.py:2135(_create)
+  || 2750000    0.752    0.000    0.752    0.000 {mandel2b_cy.mandel}
+  ||  170726    0.743    0.000    1.919    0.000 Tkinter.py:1046(_options)
+  ||  170751    0.642    0.000    1.019    0.000 Tkinter.py:77(_cnfmerge)
+  ||  170687    0.432    0.000    5.896    0.000 viewer2.py:20(draw_pixel)
+  ||  341428    0.287    0.000    0.287    0.000 {method 'update' of 'dict' objects}
+  ||  170687    0.265    0.000    5.463    0.000 Tkinter.py:2155(create_line)
+  ||  341445    0.244    0.000    0.244    0.000 {_tkinter._flatten}
+
+p
+    The result is a bit discouraging.  Let's increase the number of iterations
+    inside <code>mandel()</code> to 1000 to compare with what we had before,
+    when it took over 220 seconds to run.
+
+pre
+         4582704 function calls in 33.864 CPU seconds
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       48   22.285    0.464   22.285    0.464 {built-in method call}
+       11    3.175    0.289   33.338    3.031 viewer2.py:25(draw_fractal)
+   166562    3.097    0.000    5.086    0.000 Tkinter.py:2135(_create)
+  2750000    2.142    0.000    2.142    0.000 {mandel2c_cy.mandel}
+   166590    0.726    0.000    1.844    0.000 Tkinter.py:1046(_options)
+   166615    0.604    0.000    0.956    0.000 Tkinter.py:77(_cnfmerge)
+        1    0.515    0.515    0.515    0.515 {_tkinter.create}
+   166551    0.410    0.000    5.744    0.000 viewer2.py:20(draw_pixel)
+   333156    0.268    0.000    0.268    0.000 {method 'update' of 'dict' objects}
+   166551    0.248    0.000    5.333    0.000 Tkinter.py:2155(create_line)
+
+p
+    The difference is hardly noticeable.  We do notice fewer function calls
+    in total.  This is fairly easy to explain: when we ran "only" 100 iterations,
+    some points had not iterated enough to start diverging and were thus
+    included (and drawn) in the Mandelbrot set. By increasing the number
+    of iterations, we are more precise and fewer points are drawn.
+
+p
+    It is a bit disappointing that the largest contributor to the total time
+    is some unspecified "built-in method call".  This does not make it easy
+    to determine where we should focus our efforts in attempting to
+    speed up the code.  One thing we can do is comment out parts of the code
+    as follows:
+
+<pre>
+    def draw_fractal(self):
+        '''draws a fractal on the canvas'''
+        self.calculating = True
+        #begin = time.time()
+        # clear the canvas
+        self.canvas.create_rectangle(0, 0, self.canvas_width,
+                                    self.canvas_height, fill="white")
+        for x in range(0, self.canvas_width):
+            real = self.min_x + x*self.delta_x
+            for y in range(0, self.canvas_height):
+                imag = self.min_y + y*self.delta_y
+                if mandel(real, imag):
+                    self.draw_pixel(x, self.canvas_height - y)
+        #self.status.config(text=
+        #                   "Time taken for calculating and drawing = %s    %s" %
+        #                                ((time.time() - begin), self.zoom_info))
+        #self.status2.config(text=self.info())
+        #self.status2.update_idletasks()
+        self.calculating = False
+</pre>
+
+p
+    The result is fairly encouraging.
+
+pre
+  ||        4582407 function calls in 11.153 CPU seconds
+  ||
+  ||  ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  ||      11    3.135    0.285   10.706    0.973 viewer2.py:25(draw_fractal)
+  ||  166562    2.953    0.000    4.904    0.000 Tkinter.py:2135(_create)
+  || 2750000    2.027    0.000    2.027    0.000 {mandel2c_cy.mandel}
+  ||  166568    0.711    0.000    1.806    0.000 Tkinter.py:1046(_options)
+  ||  166571    0.609    0.000    0.949    0.000 Tkinter.py:77(_cnfmerge)
+  ||       1    0.430    0.430    0.430    0.430 {_tkinter.create}
+  ||  166551    0.392    0.000    5.543    0.000 viewer2.py:20(draw_pixel)
+  ||  333134    0.253    0.000    0.253    0.000 {method 'update' of 'dict' objects}
+  ||  166551    0.247    0.000    5.150    0.000 Tkinter.py:2155(create_line)
+  ||  333129    0.233    0.000    0.233    0.000 {_tkinter._flatten}
+
+p
+    Proceeding by trial and error, we find that the main culprit is
+    <code>self.status2.update_idletasks</code>; commenting out the
+    single line:
+
+<pre>
+    def draw_fractal(self):
+        '''draws a fractal on the canvas'''
+        self.calculating = True
+        begin = time.time()
+        # clear the canvas
+        self.canvas.create_rectangle(0, 0, self.canvas_width,
+                                    self.canvas_height, fill="white")
+        for x in range(0, self.canvas_width):
+            real = self.min_x + x*self.delta_x
+            for y in range(0, self.canvas_height):
+                imag = self.min_y + y*self.delta_y
+                if mandel(real, imag):
+                    self.draw_pixel(x, self.canvas_height - y)
+        self.status.config(text=
+                           "Time taken for calculating and drawing = %s    %s" %
+                                        ((time.time() - begin), self.zoom_info))
+        self.status2.config(text=self.info())
+        #self.status2.update_idletasks()
+        self.calculating = False
+</pre>
+
+p
+    yields the following profile result.
+
+pre
+  ||        4582682 function calls in 11.517 CPU seconds
+  ||
+  ||  ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  ||      11    3.297    0.300   11.042    1.004 viewer2.py:25(draw_fractal)
+  ||  166562    3.049    0.000    5.006    0.000 Tkinter.py:2135(_create)
+  || 2750000    2.098    0.000    2.098    0.000 {mandel2c_cy.mandel}
+  ||  166590    0.714    0.000    1.812    0.000 Tkinter.py:1046(_options)
+  ||  166615    0.611    0.000    0.956    0.000 Tkinter.py:77(_cnfmerge)
+  ||       1    0.464    0.464    0.464    0.464 {_tkinter.create}
+  ||  166551    0.402    0.000    5.644    0.000 viewer2.py:20(draw_pixel)
+  ||  333156    0.257    0.000    0.257    0.000 {method 'update' of 'dict' objects}
+  ||  166551    0.238    0.000    5.242    0.000 Tkinter.py:2155(create_line)
+  ||  333173    0.234    0.000    0.234    0.000 {_tkinter._flatten}
+
+p
+    Our next task will be to attempt to speed up the drawing.  This will
+    be the subject of the next post.

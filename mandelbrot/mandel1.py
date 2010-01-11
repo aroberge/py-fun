@@ -5,17 +5,17 @@ Mandelbrot set drawn in black and white.'''
 import time
 
 import sys
-if sys.version_info > (3,):
-    import tkinter as tk
-else:
+if sys.version_info < (3,):
     import Tkinter as tk
+else:
+    import tkinter as tk
 
 def mandel(c):
     '''determines if a point is in the Mandelbrot set based on deciding if,
-       after 100 iterations, the absolute value of the resulting number is
+       after 20 iterations, the absolute value of the resulting number is
        greater or equal to 2.'''
     z = 0
-    for iter in range(0, 100):
+    for iter in range(0, 20):
         z = z**2 + c
         if abs(z) >= 2:
             return False
@@ -43,6 +43,7 @@ class Viewer(object):
     def draw_fractal(self):
         '''draws a fractal picture'''
         begin = time.time()
+        print("Inside draw_fractal.")
         for x in range(0, self.width):
             real = (x - self.shift_x)*self.scale
             for y in range(0, self.height):
@@ -54,6 +55,7 @@ class Viewer(object):
                                                 (time.time() - begin))
 
 if __name__ == "__main__":
+    print("Starting...")
     root = tk.Tk()
     app = Viewer(root)
     root.mainloop()
