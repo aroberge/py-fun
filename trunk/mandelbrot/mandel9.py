@@ -29,7 +29,7 @@ class FancyViewer(Viewer):
                            "Time taken for calculating and drawing = %s    %s" %
                                         ((time.time() - begin), self.zoom_info))
         self.status2.config(text=self.info())
-        self.status2.update_idletasks()
+        #self.status2.update_idletasks()
         self.calculating = False
 
 

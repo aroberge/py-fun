@@ -3,13 +3,13 @@
 Base class viewer for fractals.'''
 
 import sys
-if sys.version_info > (3,):
-    import tkinter as tk
-else:
+if sys.version_info < (3,):
     import Tkinter as tk
+else:
+    import tkinter as tk
 
 class Viewer(object):
-    '''Window to display fractals'''
+    '''Base class viewer to display fractals'''
 
     def __init__(self, parent, width=500, height=500,
                  min_x=-2.5, min_y=-2.5, max_x=2.5, max_y=2.5):
@@ -150,8 +150,3 @@ class Viewer(object):
     def draw_fractal(self):
         '''draws a fractal on the canvas'''
         raise NotImplementedError
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = Viewer(root)
-    root.mainloop()
