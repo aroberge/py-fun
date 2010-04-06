@@ -5,14 +5,16 @@ Base class viewer for fractals.'''
 import sys
 if sys.version_info < (3,):
     import Tkinter as tk
+    import tkSimpleDialog as tk_dialog
 else:
     import tkinter as tk
+    from tkinter import simpledialog as tk_dialog
 
 class Viewer(object):
     '''Base class viewer to display fractals'''
 
-    def __init__(self, parent, width=500, height=500,
-                 min_x=-2.5, min_y=-2.5, max_x=2.5, max_y=2.5):
+    def __init__(self, parent, width=600, height=480,
+                 min_x=-2.5, min_y=-1.5, max_x=1.):
 
         self.parent = parent
         self.canvas_width = width
@@ -22,10 +24,11 @@ class Viewer(object):
         self.min_x = min_x
         self.min_y = min_y
         self.max_x = max_x
-        self.max_y = max_y
-
         self.calculate_pixel_size()
+        self.max_y = self.min_y + self.canvas_height*self.pixel_size
+
         self.calculating = False
+        self.nb_iterations = 20
         self.normal_zoom(None)
 
         self.canvas = tk.Canvas(parent, width=width, height=height)
@@ -36,13 +39,15 @@ class Viewer(object):
         self.status2 = tk.Label(self.parent, text=self.info(), bd=1,
                                 relief=tk.SUNKEN, anchor=tk.W)
         self.status2.pack(side=tk.BOTTOM, fill=tk.X)
-        self.image = tk.PhotoImage(width=width, height=height)
 
         # We change the size of the image using the keyboard.
         self.parent.bind("+", self.zoom_in)
         self.parent.bind("-", self.zoom_out)
         self.parent.bind("n", self.normal_zoom)
         self.parent.bind("b", self.bigger_zoom)
+
+        # Set the maximum number of iterations via a keyboard-triggered event
+        self.parent.bind("i", self.set_max_iter)
 
         # We move the canvas using the mouse.
         self.translation_line = None
@@ -58,10 +63,9 @@ class Viewer(object):
                                                   self.max_x, self.max_y)
 
     def calculate_pixel_size(self):
-        '''Calculates the horizontal and vertical size of a pixel in
-           complex plane coordinates'''
-        self.delta_x = 1.*(self.max_x - self.min_x)/self.canvas_width
-        self.delta_y = 1.*(self.max_y - self.min_y)/self.canvas_height
+        '''Calculates the size of a (square) pixel in complex plane
+        coordinates based on the canvas_width.'''
+        self.pixel_size = 1.*(self.max_x - self.min_x)/self.canvas_width
         return
 
     def mouse_down(self, event):
@@ -84,8 +88,8 @@ class Viewer(object):
 
     def mouse_up(self, event):
         '''Moves the canvas based on the mouse motion'''
-        dx = (self.start_x - event.x)*self.delta_x
-        dy = (self.start_y - event.y)*self.delta_y
+        dx = (self.start_x - event.x)*self.pixel_size
+        dy = (self.start_y - event.y)*self.pixel_size
         self.min_x += dx
         self.max_x += dx
         # y-coordinate in complex plane run in opposite direction from
@@ -102,9 +106,9 @@ class Viewer(object):
     def normal_zoom(self, event, scale=1):
         '''Sets the zooming in/out scale to its normal value'''
         if scale==1:
-            self.zoom_info = "[Normal zoom]"
+            self.zoom_info = "[normal zoom]"
         else:
-            self.zoom_info = "[Faster zoom]"
+            self.zoom_info = "[faster zoom]"
         if event is not None:
             self.status.config(text=self.zoom_info)
             self.status.update_idletasks()
@@ -146,6 +150,15 @@ class Viewer(object):
         self.max_y -= dy
         self.calculate_pixel_size()
         self.draw_fractal()
+
+    def set_max_iter(self, event):
+        '''set maximum number of iterations'''
+        i = tk_dialog.askinteger('', 'Number of iterations')
+        if i is not None:
+            self.nb_iterations = i
+            self.status.config(text="Redrawing.  Please wait.")
+            self.status.update_idletasks()
+            self.draw_fractal()
 
     def draw_fractal(self):
         '''draws a fractal on the canvas'''

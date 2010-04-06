@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>Blank windows</title>
+	<script type="text/javascript" src="../syntaxhighlighter_2.1/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_2.1/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_2.1/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_2.1/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="../syntaxhighlighter_2.1/scripts/shBrushXml.js"></script>
+	<link type="text/css" rel="stylesheet" href="../styles/game_tut.css"/>
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_2.1/styles/shCore.css"/>
+	<link type="text/css" rel="stylesheet" href="../syntaxhighlighter_2.1/styles/shThemeEmacs.css"/>
+	<script type="text/javascript">
+		SyntaxHighlighter.config.clipboardSwf = '../syntaxhighlighter_2.1/scripts/clipboard.swf';
+		SyntaxHighlighter.all();
+	</script>
+</head>
+
+<body >
+<h1>Blank windows</h1>
+<p>In this tutorial we show how to create blank windows in both Python,
+using pyglet, and javascript.</p>
+
+<h2>Blank windows with Python and pyglet</h2>
+<p>Using Python and pyglet, it is very easy to create a window: only
+three lines of code are needed.</p>
+
+<pre class="brush: python;">
+import pyglet
+game_window = pyglet.window.Window(caption="My game")
+pyglet.app.run()
+</pre>
+
+<p>Go ahead, and try it!</p>
+
+<h3>Blanking the window</h3>
+
+<p>You may have noticed that the window that was created had some weird
+content in it.  To truly blank the window, we need to call the clear()
+method already defined for us in pyglet.
+</p>
+
+
+<pre class="brush: python;">
+import pyglet
+
+game_window = pyglet.window.Window(width=800, height=600, caption="My game")
+
+@game_window.event
+def on_draw():
+    game_window.clear()
+
+pyglet.app.run()
+</pre>
+
+<p>Note the use of a decorator so that the on_draw() function will be called
+whenever an relevant window event occurs</p>
+
+<p>That's it!  Try it yourself!
+
+<h2>Blank window with html and javascript</h2>
+
+
+<pre class="brush: python;">
+def hello():
+    print "Hello world!"
+</pre>
+
+
+
+
+
+<script type="syntaxhighlighter" class="brush: js"><![CDATA[
+    /**
+     * SyntaxHighlighter
+     */
+    function foo()
+    {
+        if (counter <= 10)
+            return;
+        // it works!
+    }
+]]></script>
+
+
+</html>

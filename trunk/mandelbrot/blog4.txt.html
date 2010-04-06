@@ -1,0 +1,368 @@
+<h2>
+    Tentative title: Profiling adventures and cython - Faster drawing
+</h2>
+
+<p>
+    In the last blog post, I made use of cython to speed up some calculations
+    involving the iterative equation defining the Mandelbrot set.  From
+    the initial profiling run with 1000 iterations in the second post
+    to the last run in the previous post, the profiling time went from
+    575 seconds down to 21 seconds, which is a reduction by a factor of
+    27.  This is nothing to sneer at.  Yet, I can do better.
+</p>
+
+<p>
+    Let's start by having a sample profile run with 1000 iterations with the
+    program as it was last time, but keeping track of more function calls
+    in the profile.
+</p>
+
+<pre>
+      5441165 function calls in 20.484 CPU seconds
+
+ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+494604    8.461    0.000   14.218    0.000 Tkinter.py:2135(_create)
+    11    3.839    0.349   20.315    1.847 mandel2g_cy.pyx:27(create_fractal)
+494632    2.053    0.000    5.309    0.000 Tkinter.py:1046(_options)
+494657    1.809    0.000    2.811    0.000 Tkinter.py:77(_cnfmerge)
+494593    1.522    0.000   16.475    0.000 mandel2g_cy.pyx:21(draw_pixel)
+989240    0.752    0.000    0.752    0.000 {method 'update' of 'dict' objects}
+494593    0.736    0.000   14.953    0.000 Tkinter.py:2155(create_line)
+989257    0.698    0.000    0.698    0.000 {_tkinter._flatten}
+494632    0.315    0.000    0.315    0.000 {method 'items' of 'dict' objects}
+     1    0.158    0.158    0.158    0.158 {_tkinter.create}
+494641    0.131    0.000    0.131    0.000 {callable}
+    37    0.009    0.000    0.009    0.000 {built-in method call}
+    11    0.001    0.000   20.317    1.847 viewer2b.py:20(draw_fractal)
+    12    0.000    0.000    0.000    0.000 viewer.py:60(info)
+</pre>
+
+<p>
+    I notice that there are <b>many</b> function calls: over 5 millions of them.
+    While most of them appear to take very little time, they do add up
+    in the end.  It is time to adopt a smarter drawing strategy.
+</p>
+
+<p>
+    Currently, a "line" is potentially drawn for each pixel.  If I look at
+    a given fractal drawing, I can see that it could be drawn using
+    "longer lines", when
+    consecutive pixels are to be drawn with the same colour.  I can easily
+    implement this as follows.
+</p>
+
+<pre name="code" class="py">
+def create_fractal(int canvas_width, int canvas_height,
+                       double min_x, double min_y, double pixel_size,
+                       int nb_iterations, canvas):
+    cdef int x, y, start_y, end_y
+    cdef double real, imag
+    cdef bint start_line
+
+    for x in range(0, canvas_width):
+        real = min_x + x*pixel_size
+        start_line = False
+        for y in range(0, canvas_height):
+            imag = min_y + y*pixel_size
+            if mandel(real, imag, nb_iterations):
+                if not start_line:
+                    start_line = True
+                    start_y = canvas_height - y
+            else:
+                if start_line:
+                    start_line = False
+                    end_y = canvas_height - y
+                    canvas.create_line(x, start_y, x, end_y, fill="black")
+        if start_line:
+            end_y = canvas_height - y
+            canvas.create_line(x, start_y, x, end_y, fill="black")
+</pre>
+
+
+<p>
+    Note that I no longer need the function <code>draw_pixel()</code>.
+    The result is a reduction from 20 seconds down to 4 seconds:
+</p>
+
+<pre>
+      79092 function calls in 3.959 CPU seconds
+
+ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+    11    3.552    0.323    3.815    0.347 mandel2h_cy.pyx:21(create_fractal)
+  7856    0.150    0.000    0.250    0.000 Tkinter.py:2135(_create)
+     1    0.131    0.131    0.131    0.131 {_tkinter.create}
+  7884    0.037    0.000    0.091    0.000 Tkinter.py:1046(_options)
+  7909    0.030    0.000    0.047    0.000 Tkinter.py:77(_cnfmerge)
+  7845    0.014    0.000    0.263    0.000 Tkinter.py:2155(create_line)
+ 15761    0.014    0.000    0.014    0.000 {_tkinter._flatten}
+ 15744    0.013    0.000    0.013    0.000 {method 'update' of 'dict' objects}
+    37    0.009    0.000    0.009    0.000 {built-in method call}
+  7884    0.005    0.000    0.005    0.000 {method 'items' of 'dict' objects}
+  7893    0.002    0.000    0.002    0.000 {callable}
+    11    0.001    0.000    3.818    0.347 viewer2b.py:20(draw_fractal)
+    12    0.000    0.000    0.000    0.000 viewer.py:60(info)
+    22    0.000    0.000    0.001    0.000 Tkinter.py:1172(_configure)
+</pre>
+
+<p>
+    And it is now again my own code in <code>create_fractal()</code> that appears
+    to be the limiting factor.  Thinking back of when I increased the number
+    of iterations from 100 to 1000, thus only affecting the execution time
+    of <code>mandel()</code>, it seemed like this might be a good place
+    to look at for possible time improvements.  Let's recall what the code
+    looks like.
+</p>
+
+<pre name="code" class="py">
+cdef inline bint mandel(double real, double imag, int max_iterations=20):
+    '''determines if a point is in the Mandelbrot set based on deciding if,
+       after a maximum allowed number of iterations, the absolute value of
+       the resulting number is greater or equal to 2.'''
+    cdef double z_real = 0., z_imag = 0.
+    cdef int i
+
+    for i in range(0, max_iterations):
+        z_real, z_imag = ( z_real*z_real - z_imag*z_imag + real,
+                           2*z_real*z_imag + imag )
+        if (z_real*z_real + z_imag*z_imag) >= 4:
+            return False
+    return (z_real*z_real + z_imag*z_imag) < 4
+</pre>
+
+<p>
+    I used a Pythonic tuple assignement to avoid the use of temporary
+    variables.  However, in a typical iteration, there will be 4 multiplications
+    for the tuple re-assigment and two more for the "if" statement, for a total
+    of 6.  It is certainly possible to reduce the number of multiplications
+    by using temporary variables, as follows:
+</p>
+
+<pre name="code" class="py">
+cdef inline bint mandel(double real, double imag, int max_iterations=20):
+    '''determines if a point is in the Mandelbrot set based on deciding if,
+       after a maximum allowed number of iterations, the absolute value of
+       the resulting number is greater or equal to 2.'''
+    cdef double z_real = 0., z_imag = 0.
+    cdef int i
+    cdef double zr_sq, zi_sq, z_cross
+
+    for i in range(0, max_iterations):
+        zr_sq = z_real*z_real
+        zi_sq = z_imag*z_imag
+        z_cross = 2*z_real*z_imag
+
+        z_real = zr_sq - zi_sq + real
+        z_imag = z_cross + imag
+        if (zr_sq + zi_sq) >= 4:
+            return False
+    return (zr_sq + zi_sq) < 4
+</pre>
+
+<p>
+    So, there are now fewer multiplications to compute.  Surely, this will
+    speed up the code:
+</p>
+
+<pre>
+      78982 function calls in 4.888 CPU seconds
+
+ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+    11    4.478    0.407    4.748    0.432 mandel2i_cy.pyx:26(create_fractal)
+  7845    0.153    0.000    0.256    0.000 Tkinter.py:2135(_create)
+     1    0.128    0.128    0.128    0.128 {_tkinter.create}
+  7873    0.040    0.000    0.095    0.000 Tkinter.py:1046(_options)
+  7898    0.031    0.000    0.048    0.000 Tkinter.py:77(_cnfmerge)
+  7834    0.014    0.000    0.270    0.000 Tkinter.py:2155(create_line)
+ 15739    0.013    0.000    0.013    0.000 {_tkinter._flatten}
+ 15722    0.013    0.000    0.013    0.000 {method 'update' of 'dict' objects}
+    37    0.009    0.000    0.009    0.000 {built-in method call}
+  7873    0.005    0.000    0.005    0.000 {method 'items' of 'dict' objects}
+  7882    0.002    0.000    0.002    0.000 {callable}
+    11    0.001    0.000    4.750    0.432 viewer2b.py:20(draw_fractal)
+    12    0.000    0.000    0.000    0.000 viewer.py:60(info)
+     4    0.000    0.000    0.000    0.000 {posix.stat}
+</pre>
+
+<p>
+    Alas, that is not the case, as the previous profiling run was slightly
+    below 4 seconds. [Note that I did run each profiling test at least three
+    times to prevent any anomalous result.] Apparently my intuition is not a very good
+    guide when it comes to predicting how cython will be able to optimize
+    a given function.
+</p>
+
+<p>
+    So far, the pictures the program has been able to produce have only
+    been in black and white.  It is time to spruce things up and add colour.
+    To do this, we will need to make three general changes:
+</p>
+
+<ol>
+    <li>
+        We will modify <code>mandel()</code> so that it returns the number
+        of iterations required to evaluate that a given point does <b>not</b>
+        belong to the set; if it does belong, we will return -1.
+    </li>
+    <li>
+        We will create a colour palette as a Python list.  For a given number
+        of iterations required by <code>mandel()</code>, we will pick
+        a given colour, cycling through the colours from the palette.
+    </li>
+    <li>
+        We will need to change our line drawing method so that we keep track
+        of the colour (number of iteration) rather than simply whether or
+        not the point is in the set ("black") or not.
+    </li>
+</ol>
+
+<p>
+    The code is a bit trickier to set up than the previous version, but
+    it uses a similar logic.  To determine what colour to draw, we first
+    calculate the colour of the first pixel, and then loop through all
+    the others along a same line.  Each time we see a colour change, it signals
+    that we need to draw a line up to that point in the colour used up to that
+    point ("current_colour") and assign the new colour as the new "current" one.
+    When we reach the end of a line (column in the code...), we need to ensure
+    that we draw the last line segment.  Without further ado, here is the
+    complete code of the revised cython module.
+</p>
+
+<pre name="code" class="py">
+# mandel3cy.pyx
+# cython: profile=True
+
+import cython
+
+def make_palette():
+    '''sample coloring scheme for the fractal - feel free to experiment'''
+    colours = []
+
+    for i in range(0, 25):
+        colours.append('#%02x%02x%02x' % (i*10, i*8, 50 + i*8))
+    for i in range(25, 5, -1):
+        colours.append('#%02x%02x%02x' % (50 + i*8, 150+i*2,  i*10))
+    for i in range(10, 2, -1):
+        colours.append('#00%02x30' % (i*15))
+    return colours
+
+colours = make_palette()
+cdef int nb_colours = len(colours)
+
+@cython.profile(False)
+cdef inline int mandel(double real, double imag, int max_iterations=20):
+    '''determines if a point is in the Mandelbrot set based on deciding if,
+       after a maximum allowed number of iterations, the absolute value of
+       the resulting number is greater or equal to 2.'''
+    cdef double z_real = 0., z_imag = 0.
+    cdef int i
+
+    for i in range(0, max_iterations):
+        z_real, z_imag = ( z_real*z_real - z_imag*z_imag + real,
+                           2*z_real*z_imag + imag )
+        if (z_real*z_real + z_imag*z_imag) >= 4:
+            return i
+    return -1
+
+def create_fractal(int canvas_width, int canvas_height,
+                       double min_x, double min_y, double pixel_size,
+                       int nb_iterations, canvas):
+    global colours, nb_colours
+    cdef int x, y, start_y, end_y, current_colour, new_colour
+    cdef double real, imag
+
+    for x in range(0, canvas_width):
+        real = min_x + x*pixel_size
+        start_y = canvas_height
+        current_colour = mandel(real, min_y, nb_iterations)
+        for y in range(1, canvas_height):
+            imag = min_y + y*pixel_size
+            new_colour = mandel(real, imag, nb_iterations)
+
+            if new_colour != current_colour:
+                if current_colour == -1:
+                    canvas.create_line(x, start_y, x, canvas_height-y,
+                                        fill="black")
+                else:
+                    canvas.create_line(x, start_y, x, canvas_height-y,
+                                        fill=colours[current_colour%nb_colours])
+                current_colour = new_colour
+                start_y = canvas_height - y
+
+        if current_colour == -1:
+            canvas.create_line(x, start_y, x, 0, fill="black")
+        else:
+            canvas.create_line(x, start_y, x, 0,
+                                        fill=colours[current_colour%nb_colours])
+</pre>
+
+<p>
+    If we profile this code, we find out that it takes about three times as
+    long to generate a colour picture than it did to generate a black
+    and white one - at least, for the starting configuration...
+</p>
+
+<pre>
+      2370682 function calls in 12.638 CPU seconds
+
+ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+    11    4.682    0.426   12.184    1.108 mandel3_cy.pyx:36(create_fractal)
+237015    4.310    0.000    7.084    0.000 Tkinter.py:2135(_create)
+237043    1.019    0.000    2.575    0.000 Tkinter.py:1046(_options)
+237068    0.877    0.000    1.353    0.000 Tkinter.py:77(_cnfmerge)
+     1    0.443    0.443    0.443    0.443 {_tkinter.create}
+237004    0.418    0.000    7.502    0.000 Tkinter.py:2155(create_line)
+474062    0.361    0.000    0.361    0.000 {method 'update' of 'dict' objects}
+474079    0.313    0.000    0.313    0.000 {_tkinter._flatten}
+237043    0.143    0.000    0.143    0.000 {method 'items' of 'dict' objects}
+237052    0.061    0.000    0.061    0.000 {callable}
+    37    0.009    0.000    0.009    0.000 {built-in method call}
+    11    0.000    0.000   12.186    1.108 viewer3.py:20(draw_fractal)
+    12    0.000    0.000    0.000    0.000 viewer.py:60(info)
+     4    0.000    0.000    0.000    0.000 {posix.stat}
+</pre>
+
+<p>
+    We also generate some nice pictures!
+
+
+
+
+    Unfortunately, the profiling and the timing information displayed
+    does not tell the entire story.  In practice, I found that it would take
+    many more seconds (sometimes more than 10) for the canvas to be updated
+    than the timing information given.  Something is happening behind the scene
+    that is not being recorded.
+</p>
+
+<p>
+    For comparison, I had a look at
+    <a href="http://nedbatchelder.com/code/aptus/">Aptus</a>, a program
+    that uses a hand-coded C extension for speed.  Actually, I had tried
+    Aptus a few years ago, when Ned Batchelder first mentioned it, and
+    tried it again for fun as I was working on my own version.  Aptus can produce
+    really nice pictures, really fast.  Here's an example that was produced,
+    according to the timing given by Aptus itself in 0.25 seconds.
+</p>
+
+<p>
+    Note that the timing given by Aptus seems to be truly representative,
+    unlike the timing for my program.  I should mention that, in addition to using
+    a hand-crafted C extension, Aptus uses wxPython instead of Tkinter, and
+    it that it uses PIL and numpy, both of which are known for their speed.  It <i>might</i>
+    be possible that using PIL and numpy with my program would improve the
+    speed significantly.  However, all three libraries are not part of the
+    standard library so do not meet the constraints I had decided upon at
+    the beginning.
+</p>
+
+<p>
+    This concludes this profiling experiment ... at least for now.   I should
+    emphasize that the goal of these posts was to record a profiling experiment
+    using cython.  I do not pretend that this code was hand-crafted for
+    speed.  I may revisit this application at a later time, especially if someone more
+    experienced can point out ways to increase the speed significantly, preferably
+    while staying within the constraints I set up at the beginning: other than
+    cython, use only modules from the standard library.  However, I would
+    be interested if anyone adapts this code to use PIL and/or numpy in a straightforward
+    way and, in doing so, increases the speed significantly.
+</p>

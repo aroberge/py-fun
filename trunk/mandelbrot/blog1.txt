@@ -1,5 +1,21 @@
+<html>
+<body style="width:800px;">
 h2
-    Tentative title: Profiling adventures and cython - the preamble
+    Profiling adventures and cython - setting the stage
+
+p
+    <b>Summary</b>  This post is the first in a series dedicated to
+    examining the use of profiling and, eventually, using cython, as a
+    means to improve greatly the speed of an application.  The intended
+    audience is for programmers who have never done any profiling and/or
+    never used cython before. Note that we will not make use of cython
+    until the third post in this series.
+
+
+<img src="colored1.png" />
+
+h4
+    Preamble
 
 p
     Python is a great multi-purpose language which is really fun to use.
@@ -7,25 +23,27 @@ p
     program for fun,
     I had never really faced a situation where I found
     Python's speed to be truly a limiting factor - at least, not
-    until a few weeks ago when I did some explorations
-    of a four-colouring grid problem (citation needed).
+    until a few weeks ago when I did some exploration
+    of a <a href="http://aroberge.blogspot.com/2009/12/17x17-challenge.html">
+    four-colouring grid problem I talked about</a>.
     I started exploring ways to speed things up using only Python and trying
     to come up with different algorithms, but every one I tried was
     just too slow.  So, I decided it was time
     to take the plunge and do something different.  After considering
-    various alternatives, like using shedskin (link needed) or
+    various alternatives, like using
+    <a href="http://code.google.com/p/shedskin/">shedskin</a> or
     attempting to write a C extension (which I found too daunting
     since I don't know C), I decided to try to use
-    cython (link needed).
+    <a href="http://cython.org/">cython</a>.
 
 p
-    cython, for those that don't know it, is a Python look-alike language
-    that claims
+    <a href="http://cython.org/">cython</a>, for those that don't know it,
+    is a Python look-alike language that claims
     i
         to make writing C extensions for the Python language
         as easy as Python itself.
     After looking at a few examples on the web, I concluded that such a rather bold
-    statement might very well be close to being true and that it was
+    statement might very well be true and that it was
     worthwhile trying it out on a more complex example.  Furthermore, I thought
     it might be of interest to record
     what I've done in a series of blog posts, as a more detailed
@@ -33,28 +51,35 @@ p
     As I was wondering if an esoteric problem like the
     four-colouring grid challenge mentioned previously was a good candidate
     to use as an example, by sheer serendipity, I came accross
-    a link on reddit by a new programmer about his simple Mandelbrot viewer.
+    a <a href="http://www.reddit.com/r/Python/comments/ajeey/mandelbrot_set_in_python_tkinter/">link on reddit</a>
+    by a new programmer about his
+    <a href="http://prezjordan.tumblr.com/post/277984651/mandelbrot-set-in-python">simple Mandelbrot viewer</a>.
 
 p
     Who does not like fractals? ... Furthermore,
     I have never written a fractal viewer.   This seemed like a good
     time to write one.  So, my goal at the end of this series of posts, is
     to have a "nice" (for some definition of "nice") fractal viewer that is
-    fast enough for explorations of the Mandelbrot set.  In addition,
+    fast enough for explorations of the
+    <a href="http://en.wikipedia.org/wiki/Mandelbrot_set">Mandelbrot set</a>.
+    In addition,
     in order to make it easy for anyone having Python on their system to
     follow along and try their own variation, I decided to stick by the
     following constraints:
 
+<b>
 ul
     li
         With the exception of cython, I will only use modules found in the
         standard library.   This means using Tkinter for the GUI.
     li
         The program should work using Python 2.5+ (including Python 3).
+</b>
 
-So, without further ado, and based on the example found on the
-reddit link I mentioned, here's a very basic fractal viewer that can
-be used as a starting point.
+p
+    So, without further ado, and based on the example found on the
+    reddit link I mentioned, here's a very basic fractal viewer that can
+    be used as a starting point.
 
 pre
     || ''' mandel1.py
@@ -74,7 +99,7 @@ pre
     ||        after 20 iterations, the absolute value of the resulting number is
     ||        greater or equal to 2.'''
     ||     z = 0
-    ||     for iter in range(0, 20):
+    ||     for i in range(0, 20):
     ||         z = z**2 + c
     ||         if abs(z) >= 2:
     ||             return False
@@ -129,24 +154,26 @@ ol
         It should be remembered that this is just a starting point: first
         we make it work, then, if needed, we make it fast.
     li
+        The function <code>mandel()</code> is the simplest translation of
+        the Mandelbrot fractal iteration into Python code that I could
+        come up with.  The fact that Python has a built-in complex type
+        makes it very easy to implement the standard Mandelbrot set
+        algorithm.
+    li
         I have taken the maximum number of iterations
         inside <code>mandel()</code> to be 20, the same value used
         in the post I mentioned before.
         According to the very simple method used to time the application,
-        it takes between 2.1 and 2.2 seconds on my computer to draw a
+        it takes about 2 seconds on my computer to draw a
         simple picture.
-        This is annoying slow.  Furthermore, I know from later experimentation
-        that using 20 as the number of iterations in <code>mandel()</code>
-        is not enough to
-        give an accurate picture; this is even more the case when
-        exploring smaller regions of the complex plane. A more realistic value
-        might be to take 1000 iterations.  This takes more than 17 seconds
-        on my computer which is really too slow.
-    li
-        The function <code>mandel()</code> is the simplest translation of
-        the Mandelbrot fractal iteration into Python code that I could
-        come up with - thanks largely to Python having a built-in complex
-        type.
+        This is annoying slow.  Furthermore, by looking at the resulting
+        picture, and trying out with different number of iterations
+        in <code>mandel()</code>, it is clear that 20 iterations is not
+        sufficient to adaquately represent the Mandelbrot set; this is
+        especially noticeable when exploring smaller regions of the
+        complex plane. A more realistic value
+        might be to take 100 if not 1000 iterations which takes too long
+        to be practical.
     li
         Tkinter's canvas does not have a method to set the colour of
         individual pixels.  We can simulate such a method by drawing a line
@@ -164,36 +191,65 @@ p
     is fixed.  However, it is useful to start with something simple
     like this as a first prototype.  Once we know it is working
     we can move on to a better second version.  So, let's write a fancier
-    fractal viewer having the following features:
+    fractal viewer following the outline below:
 
-ol
+pre
+    || class Viewer(object):
+    ||     '''Base class viewer to display fractals'''
+    ||
+    ||         # The viewer should be able to enlarge ("zoom in") various regions
+    ||         # of the complex plane.  I will implement this
+    ||         # using keyboard shortcuts.
+    ||         #
+    ||         self.parent.bind("+", self.zoom_in)
+    ||         self.parent.bind("-", self.zoom_out)
+    ||     def zoom_in(self, event):
+    ||     def zoom_out(self, event):
+    ||     def change_scale(self, scale):
+    ||
+    ||         #  Since one might want to "zoom in" quickly in some regions,
+    ||         # and then be able to do finer scale adjustments,
+    ||         # I will use keyboard shortcuts to enable switching back
+    ||         # and forth between two possible zooming mode.
+    ||         # A better application might give the user more control
+    ||         # over the zooming scale.
+    ||         self.parent.bind("n", self.normal_zoom)
+    ||         self.parent.bind("b", self.bigger_zoom)
+    ||     def normal_zoom(self, event, scale=1):
+    ||     def bigger_zoom(self, event):
+    ||
+    ||         # Set the maximum number of iterations via a keyboard-triggered event
+    ||         self.parent.bind("i", self.set_max_iter)
+    ||     def set_max_iter(self, event):
+    ||
+    ||         # Like what is done with google maps and other
+    ||         # similar applications, we should be able to move the image
+    ||         # to look at various regions of interest in the complex plane.
+    ||         # I will implement this using mouse controls.
+    ||         self.parent.bind("<Button-1>", self.mouse_down)
+    ||         self.parent.bind("<Button1-Motion>", self.mouse_motion)
+    ||         self.parent.bind("<Button1-ButtonRelease>", self.mouse_up)
+    ||     def mouse_down(self, event):
+    ||     def mouse_motion(self, event):
+    ||     def mouse_up(self, event):
+    ||
+    ||         # Presuming that "nice pictures" will be eventually produced,
+    ||         # and that it might be desired to reproduce them,
+    ||         # I will include some information about the region of the
+    ||         # complex plane currently displayed.
+    ||     def info(self):
+    ||         '''information about fractal location'''
+    ||
+
+
+ul
     li
-        The viewer should be able to enlarge ("zoom in") various regions
-        of the complex plane.  I will implement this
-        using keyboard shortcuts.
-    li
-        Since one might want to "zoom in" quickly in some regions,
-        and then be able to do finer scale adjustments, I will use keyboard
-        shortcuts to enable switching back and forth between two possible zooming mode.
-        A better application might give the user more control over the zooming
-        scale - but I will not bother to do this here.
-    li
-        Like what is done with google maps and other similar applications,
-        we should be able to move the image to look at various regions
-        of interest in the complex plane.  I will implement this using
-        mouse controls.
-    li
-        While I plan to use proper profiling tools, I will nonetheless
+        Furthermore, while I plan to use proper profiling tools, I will nonetheless
         display some basic timing information as part of the GUI
         as a quick evaluation
         of the speed of the application.
     li
-        Presuming that "nice pictures" will be eventually produced,
-        and that it might be desired to reproduce them, I will include
-        some information about the region of the complex plane
-        currently displayed.
-    li
-        Since I expect that both the function <code>mandel()</code>
+        Finally, since I expect that both the function <code>mandel()</code>
         and the drawing method <code>draw_fractal</code> to be the
         speed-limiting factors, I will leave them out of the fractal viewer
         and work on them separately.  If it turns out that the profiling
@@ -212,14 +268,16 @@ pre
     || import sys
     || if sys.version_info < (3,):
     ||     import Tkinter as tk
+    ||     import tkSimpleDialog as tk_dialog
     || else:
     ||     import tkinter as tk
+    ||     from tkinter import simpledialog as tk_dialog
     ||
     || class Viewer(object):
     ||     '''Base class viewer to display fractals'''
     ||
-    ||     def __init__(self, parent, width=500, height=500,
-    ||                  min_x=-2.5, min_y=-2.5, max_x=2.5, max_y=2.5):
+    ||     def __init__(self, parent, width=600, height=480,
+    ||                  min_x=-2.5, min_y=-1.5, max_x=1.):
     ||
     ||         self.parent = parent
     ||         self.canvas_width = width
@@ -229,10 +287,11 @@ pre
     ||         self.min_x = min_x
     ||         self.min_y = min_y
     ||         self.max_x = max_x
-    ||         self.max_y = max_y
-    ||
     ||         self.calculate_pixel_size()
+    ||         self.max_y = self.min_y + self.canvas_height*self.pixel_size
+    ||
     ||         self.calculating = False
+    ||         self.nb_iterations = 20
     ||         self.normal_zoom(None)
     ||
     ||         self.canvas = tk.Canvas(parent, width=width, height=height)
@@ -243,13 +302,15 @@ pre
     ||         self.status2 = tk.Label(self.parent, text=self.info(), bd=1,
     ||                                 relief=tk.SUNKEN, anchor=tk.W)
     ||         self.status2.pack(side=tk.BOTTOM, fill=tk.X)
-    ||         self.image = tk.PhotoImage(width=width, height=height)
     ||
     ||         # We change the size of the image using the keyboard.
     ||         self.parent.bind("+", self.zoom_in)
     ||         self.parent.bind("-", self.zoom_out)
     ||         self.parent.bind("n", self.normal_zoom)
     ||         self.parent.bind("b", self.bigger_zoom)
+    ||
+    ||         # Set the maximum number of iterations via a keyboard-triggered event
+    ||         self.parent.bind("i", self.set_max_iter)
     ||
     ||         # We move the canvas using the mouse.
     ||         self.translation_line = None
@@ -265,10 +326,9 @@ pre
     ||                                                   self.max_x, self.max_y)
     ||
     ||     def calculate_pixel_size(self):
-    ||         '''Calculates the horizontal and vertical size of a pixel in
-    ||            complex plane coordinates'''
-    ||         self.delta_x = 1.*(self.max_x - self.min_x)/self.canvas_width
-    ||         self.delta_y = 1.*(self.max_y - self.min_y)/self.canvas_height
+    ||         '''Calculates the size of a (square) pixel in complex plane
+    ||         coordinates based on the canvas_width.'''
+    ||         self.pixel_size = 1.*(self.max_x - self.min_x)/self.canvas_width
     ||         return
     ||
     ||     def mouse_down(self, event):
@@ -291,8 +351,8 @@ pre
     ||
     ||     def mouse_up(self, event):
     ||         '''Moves the canvas based on the mouse motion'''
-    ||         dx = (self.start_x - event.x)*self.delta_x
-    ||         dy = (self.start_y - event.y)*self.delta_y
+    ||         dx = (self.start_x - event.x)*self.pixel_size
+    ||         dy = (self.start_y - event.y)*self.pixel_size
     ||         self.min_x += dx
     ||         self.max_x += dx
     ||         # y-coordinate in complex plane run in opposite direction from
@@ -309,9 +369,9 @@ pre
     ||     def normal_zoom(self, event, scale=1):
     ||         '''Sets the zooming in/out scale to its normal value'''
     ||         if scale==1:
-    ||             self.zoom_info = "[Normal zoom]"
+    ||             self.zoom_info = "[normal zoom]"
     ||         else:
-    ||             self.zoom_info = "[Faster zoom]"
+    ||             self.zoom_info = "[faster zoom]"
     ||         if event is not None:
     ||             self.status.config(text=self.zoom_info)
     ||             self.status.update_idletasks()
@@ -354,22 +414,30 @@ pre
     ||         self.calculate_pixel_size()
     ||         self.draw_fractal()
     ||
+    ||     def set_max_iter(self, event):
+    ||         '''set maximum number of iterations'''
+    ||         i = tk_dialog.askinteger('', 'Number of iterations:')
+    ||         if i is not None:
+    ||             self.nb_iterations = i
+    ||             self.status.config(text="Redrawing.  Please wait.")
+    ||             self.status.update_idletasks()
+    ||             self.draw_fractal()
+    ||
     ||     def draw_fractal(self):
     ||         '''draws a fractal on the canvas'''
     ||         raise NotImplementedError
-
 p
     We move the Mandelbrot set calculation in a separate file.
 
 pre
     || # mandel1a.py
     ||
-    || def mandel(c):
+    || def mandel(c, max_iterations=20):
     ||     '''determines if a point is in the Mandelbrot set based on deciding if,
-    ||        after 20 iterations, the absolute value of the resulting number is
-    ||        greater or equal to 2.'''
+    ||        after a maximum allowed number of iterations, the absolute value of
+    ||        the resulting number is greater or equal to 2.'''
     ||     z = 0
-    ||     for iter in range(0, 20):
+    ||     for i in range(0, max_iterations):
     ||         z = z**2 + c
     ||         if abs(z) >= 2:
     ||             return False
@@ -408,20 +476,37 @@ pre
     ||         self.canvas.create_rectangle(0, 0, self.canvas_width,
     ||                                     self.canvas_height, fill="white")
     ||         for x in range(0, self.canvas_width):
-    ||             real = self.min_x + x*self.delta_x
+    ||             real = self.min_x + x*self.pixel_size
     ||             for y in range(0, self.canvas_height):
-    ||                 imag = self.min_y + y*self.delta_y
+    ||                 imag = self.min_y + y*self.pixel_size
     ||                 c = complex(real, imag)
-    ||                 if mandel(c):
+    ||                 if mandel(c, self.nb_iterations):
     ||                     self.draw_pixel(x, self.canvas_height - y)
-    ||         self.status.config(text=
-    ||                            "Time taken for calculating and drawing = %s    %s" %
-    ||                                         ((time.time() - begin), self.zoom_info))
+    ||         self.status.config(text="Time required = %.2f s  [%s iterations]  %s" %(
+    ||                                 (time.time() - begin), self.nb_iterations,
+    ||                                                                 self.zoom_info))
     ||         self.status2.config(text=self.info())
-    ||         self.status2.update_idletasks()
     ||         self.calculating = False
     ||
     || if __name__ == "__main__":
     ||     root = tk.Tk()
     ||     app = FancyViewer(root)
     ||     root.mainloop()
+
+p
+    Let me conclude with few black and white pictures obtained using
+    this program, which, if you look at the time, highlight the need for
+    something faster. First for 20 iterations, drawn in 4 seconds.
+
+<img src="bw_20.png" />
+
+p
+    Then, for 100 interations - better image, but 7 seconds to draw...
+
+<img src="bw_100.png" />
+
+p
+    Next post, we'll start profiling the application and make it faster.
+
+</body>
+</html>

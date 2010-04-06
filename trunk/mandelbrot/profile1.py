@@ -8,6 +8,7 @@ from viewer3 import tk, FancyViewer
 def main():
     root = tk.Tk()
     app = FancyViewer(root)
+    app.nb_iterations = 1000
     for i in range(10):
         app.draw_fractal()
 
