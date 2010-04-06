@@ -3,7 +3,7 @@
 import pyximport
 pyximport.install()
 
-from mandel2c_cy import mandel
+from mandel2b_cy import mandel
 from viewer import Viewer
 import time
 
@@ -20,7 +20,8 @@ class FancyViewer(Viewer):
     def draw_pixel(self, x, y):
         '''Simulates drawing a given pixel in black by drawing a black line
            of length equal to one pixel.'''
-        self.canvas.create_line(x, y, x+1, y, fill="black")
+        return
+        #self.canvas.create_line(x, y, x+1, y, fill="black")
 
     def draw_fractal(self):
         '''draws a fractal on the canvas'''
@@ -30,16 +31,16 @@ class FancyViewer(Viewer):
         self.canvas.create_rectangle(0, 0, self.canvas_width,
                                     self.canvas_height, fill="white")
         for x in range(0, self.canvas_width):
-            real = self.min_x + x*self.delta_x
+            real = self.min_x + x*self.pixel_size
             for y in range(0, self.canvas_height):
-                imag = self.min_y + y*self.delta_y
-                if mandel(real, imag):
+                imag = self.min_y + y*self.pixel_size
+                c = complex(real, imag)
+                if mandel(c, self.nb_iterations):
                     self.draw_pixel(x, self.canvas_height - y)
-        self.status.config(text=
-                           "Time taken for calculating and drawing = %s    %s" %
-                                        ((time.time() - begin), self.zoom_info))
+        self.status.config(text="Time required = %.2f s  [%s iterations]  %s" %(
+                                (time.time() - begin), self.nb_iterations,
+                                                                self.zoom_info))
         self.status2.config(text=self.info())
-        #self.status2.update_idletasks()
         self.calculating = False
 
 if __name__ == "__main__":

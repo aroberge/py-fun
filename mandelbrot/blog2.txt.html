@@ -1,0 +1,306 @@
+<html>
+<body style="width:800px;">
+
+<h2>
+    Tentative title: Profiling adventures (and cython) - basic profiling
+</h2>
+
+<p>
+    <i>In the previous blog post, I introduced a simple Tkinter-based viewer for the
+    Mandelbrot set.  As I mentioned at that time, the viewer was really
+    too slow to be usable.  In this post, I will start do some basic profiling
+    and start looking for some strategies designed to make it faster.</i>
+</p>
+
+<p>
+    The first rule for making an application faster is to do a proper profile
+    rather than guessing.  I make use of the
+    <a href="http://docs.python.org/library/profile.html">profiler module</a>,
+    focusing on the main method (<code>draw_fractal()</code>) which I wish to
+    make faster, and paying a closer look only at the most time-consuming
+    functions/methods.
+</p>
+
+<pre name="code" class="py">
+# profile1.py
+
+import pstats
+import cProfile
+
+from viewer1 import tk, FancyViewer
+
+def main():
+    root = tk.Tk()
+    app = FancyViewer(root)
+    app.nb_iterations = 100
+    for i in range(10):
+        app.draw_fractal()
+
+if __name__ == "__main__":
+    cProfile.run("main()", "Profile.prof")
+    s = pstats.Stats("Profile.prof")
+    s.strip_dirs().sort_stats("time").print_stats(10)
+</pre>
+
+<p>
+    The profile run will call <code>draw_fractal()</code> once, when
+    <code>app</code> is created, with the
+    number of iterations for <code>mendel()</code>
+    set at 20 (the default) and then call it again
+    10 times with a larger number of iterations.
+    Running the profiler adds some overhead.  Based on the previous run with
+    no profiles, I would have expected a profiler run to take approximately
+    65 seconds: a little over 4 seconds for the initial set up and
+    slightly more than 6 seconds for each of the subsequent runs.
+    Instead, what I observe is that
+</p>
+
+<pre>
+        69802205 function calls in 115.015 CPU seconds
+
+  Ordered by: internal time
+  List reduced from 60 to 10 due to restriction <10>
+
+  ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+ 3168000   59.908    0.000   81.192    0.000 mandel1a.py:3(mandel)
+57908682   14.005    0.000   14.005    0.000 {abs}
+      11   13.387    1.217  114.484   10.408 viewer1.py:23(draw_fractal)
+  505184   10.950    0.000   17.672    0.000 Tkinter.py:2135(_create)
+ 3168001    7.279    0.000    7.279    0.000 {range}
+  505212    2.359    0.000    6.220    0.000 Tkinter.py:1046(_options)
+  505237    2.169    0.000    3.389    0.000 Tkinter.py:77(_cnfmerge)
+  505173    1.457    0.000   19.902    0.000 viewer1.py:17(draw_pixel)
+ 1010400    0.906    0.000    0.906    0.000 {method 'update' of 'dict' objects}
+ 1010417    0.817    0.000    0.817    0.000 {_tkinter._flatten}
+</pre>
+
+<p>
+    Clearly, running the profiler adds some overhead.  I should also add that
+    there are variations from run to run done with the profiler, caused by
+    background activities.  As a consequence, I normally run the profiler
+    3 times and focus on the fastest
+    of the three runs; however I will not bother to do this here: I simply want
+    to start by establishing some rough baseline to identify the main
+    contributors to the relative lack of speed of this program.
+</p>
+
+<p>
+    It appears clear that the largest contributor to the overall execution time
+    is <code>mandel()</code>. Going down the lists of functions that contribute
+    significantly to the overall time, I notice quite a few calls to
+    Tkinter function/methods.  So as to reduce the time to take a given profile,
+    and to focus on <code>mandel()</code>, I will temporarily eliminate
+    some Tkinter calls by changing <code>draw_pixel()</code> as follows.
+</p>
+
+<pre name="code" class="py">
+def draw_pixel(self, x, y):
+    '''Simulates drawing a given pixel in black by drawing a black line
+       of length equal to one pixel.'''
+    return
+    #self.canvas.create_line(x, y, x+1, y, fill="black")
+</pre>
+
+
+<p>
+    Also, since I want to establish a rough baseline, I should probably see what
+    happens when I increase the number of iterations from 100 to 1000 for
+    <code>mandel()</code>, which is what I expect to have to use in many cases
+    to get accurate pictures.  I do this first using Python 2.5
+</p>
+
+<pre>
+         465659765 function calls in 574.947 CPU seconds
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  3168000  419.296    0.000  561.467    0.000 mandel1a.py:3(mandel)
+458828552  100.464    0.000  100.464    0.000 {abs}
+  3168001   41.707    0.000   41.707    0.000 {range}
+       11   12.731    1.157  574.341   52.213 viewer1.py:23(draw_fractal)
+        1    0.596    0.596    0.596    0.596 {_tkinter.create}
+   494593    0.140    0.000    0.140    0.000 viewer1.py:17(draw_pixel)
+       37    0.010    0.000    0.010    0.000 {built-in method call}
+       11    0.000    0.000    0.001    0.000 Tkinter.py:2135(_create)
+       54    0.000    0.000    0.000    0.000 {method 'update' of 'dict' objects}
+       39    0.000    0.000    0.000    0.000 Tkinter.py:1046(_options)
+</pre>
+
+<p>
+    Ouch!  Close to 10 minutes of running time. However, it is clear that we
+    have accomplished our goal of reducing the importance of Tkinter calls so
+    that we can focus on our own code.   Let's repeat this profiling
+    test using Python 3.1.
+</p>
+
+<pre>
+ 462491974 function calls (462491973 primitive calls) in 506.148 CPU seconds
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  3168000  386.169    0.000  493.823    0.000 mandel1a.py:3(mandel)
+458828552  107.654    0.000  107.654    0.000 {built-in method abs}
+       11   11.474    1.043  505.439   45.949 viewer1.py:23(draw_fractal)
+        1    0.694    0.694    0.694    0.694 {built-in method create}
+   494593    0.140    0.000    0.140    0.000 viewer1.py:17(draw_pixel)
+       48    0.014    0.000    0.014    0.000 {method 'call' of 'tkapp' objects}
+       39    0.000    0.000    0.001    0.000 __init__.py:1032(_options)
+       64    0.000    0.000    0.001    0.000 __init__.py:66(_cnfmerge)
+      206    0.000    0.000    0.000    0.000 {built-in method isinstance}
+      2/1    0.000    0.000  506.148  506.148 {built-in method exec}
+</pre>
+
+<p>
+    We note that the total time taken is significantly less.  Doing a
+    comparison function by function, two significant differences appear:
+    The built-in function <code>abs</code> is 7% slower with Python 3.1,
+    which is a bit disappointing.  On the other hand, <code>range</code>
+    no longer appears as a function in Python 3.1; this appears to be the
+    main contributor to the significant decrease in time when using
+    Python 3.1 as compared with Python 2.5.  This is
+    easily understood: <code>range</code> in Python 3.1 does not create a
+    list like it did in Python 2.x; it is rather like the old <code>xrange</code>.
+    This suggest that we modify mandel1a.py to be as follows:
+</p>
+
+<pre name="code" class="py">
+# mandel1b.py
+
+import sys
+if sys.version_info < (3,):
+    range = xrange
+
+def mandel(c):
+    '''determines if a point is in the Mandelbrot set based on deciding if,
+       after 20 iterations, the absolute value of the resulting number is
+       greater or equal to 2.'''
+    z = 0
+    for iter in range(0, 20):
+        z = z**2 + c
+        if abs(z) >= 2:
+            return False
+    return abs(z) < 2
+</pre>
+
+<p>
+    We do a similar change to viewer1.py.  From now on, except where otherwise
+    noted, I will focus on using only Python 2.5.  So, after doing this change,
+    we can run the profiler one more time with the same number of iterations.
+    The result is as follows:
+</p>
+
+<pre>
+         462491765 function calls in 503.926 CPU seconds
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  3168000  391.297    0.000  491.642    0.000 mandel1b.py:7(mandel)
+458828552  100.345    0.000  100.345    0.000 {abs}
+       11   11.409    1.037  503.189   45.744 viewer1.py:23(draw_fractal)
+        1    0.726    0.726    0.726    0.726 {_tkinter.create}
+   494593    0.136    0.000    0.136    0.000 viewer1.py:17(draw_pixel)
+       37    0.009    0.000    0.009    0.000 {built-in method call}
+       11    0.000    0.000    0.001    0.000 Tkinter.py:2135(_create)
+       54    0.000    0.000    0.000    0.000 {method 'update' of 'dict' objects}
+       39    0.000    0.000    0.000    0.000 Tkinter.py:1046(_options)
+       64    0.000    0.000    0.001    0.000 Tkinter.py:77(_cnfmerge)
+</pre>
+
+<p>
+    This is now approximately the same as what we had for Python 3.1 as
+    expected.
+</p>
+
+<p>
+    Moving down on the list of time-consuming functions, we note that
+    <code>abs</code> appears to be another function we should look at.
+    Let's first reduce the number of iterations inside <code>mandel</code>
+    to 100, so that a profiling run does not take as long but that proper
+    attention is still focuses on <code>mandel</code> as well as
+    <code>abs</code>.  Here's the result from a typical run to use as
+    a new baseline:
+</p>
+
+<pre>
+        61582475 function calls in 81.998 CPU seconds
+
+  ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+ 3168000   55.347    0.000   69.054    0.000 mandel1b.py:7(mandel)
+57908682   13.706    0.000   13.706    0.000 {abs}
+      11   11.591    1.054   80.773    7.343 viewer1.py:23(draw_fractal)
+       1    1.213    1.213    1.213    1.213 {_tkinter.create}
+  505173    0.125    0.000    0.125    0.000 viewer1.py:17(draw_pixel)
+      37    0.011    0.000    0.011    0.000 {built-in method call}
+      11    0.000    0.000    0.001    0.000 Tkinter.py:2135(_create)
+       4    0.000    0.000    0.000    0.000 {posix.stat}
+       3    0.000    0.000    0.000    0.000 Tkinter.py:1892(_setup)
+      39    0.000    0.000    0.000    0.000 Tkinter.py:1046(_options)
+</pre>
+
+<p>
+    Since a fair bit of time is spent inside <code>abs()</code>, perhaps
+    we could speed things up by using another method.  The way that we
+    approximate the Mandlebrot set is by iterating over a number of time
+    and checking if the absolute value of the complex number is greater than
+    2; if it is, then it can be proven that subsequent iterations will yield
+    larger and larger values which means that the number we are considering
+    is <b>not</b> in the Mandelbrot set.  Since taking an absolute value of a
+    complex number involves taking a square root, perhaps we can speed things
+    up by not taking the square root.  Let's implement this and try it out.
+</p>
+
+<pre name="code" class="py">
+# mandel1c.py
+
+import sys
+if sys.version_info < (3,):
+    range = xrange
+
+def mandel(c, max_iterations=20):
+    '''determines if a point is in the Mandelbrot set based on deciding if,
+       after a maximum allowed number of iterations, the absolute value of
+       the resulting number is greater or equal to 2.'''
+    z = 0
+    for iter in range(0, max_iterations):
+        z = z**2 + c
+        z_sq = z.real**2 + z.imag**2
+        if z_sq >= 4:
+            return False
+    return z_sq < 2
+</pre>
+
+<pre>
+       3673150 function calls in 84.807 CPU seconds
+
+ ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+3168000   73.210    0.000   73.210    0.000 mandel1c.py:7(mandel)
+     11   10.855    0.987   84.204    7.655 viewer1.py:23(draw_fractal)
+      1    0.593    0.593    0.593    0.593 {_tkinter.create}
+ 504530    0.137    0.000    0.137    0.000 viewer1.py:17(draw_pixel)
+     37    0.009    0.000    0.009    0.000 {built-in method call}
+     11    0.000    0.000    0.001    0.000 Tkinter.py:2135(_create)
+     54    0.000    0.000    0.000    0.000 {method 'update' of 'dict' objects}
+     39    0.000    0.000    0.000    0.000 Tkinter.py:1046(_options)
+     64    0.000    0.000    0.001    0.000 Tkinter.py:77(_cnfmerge)
+     22    0.000    0.000    0.001    0.000 Tkinter.py:1172(_configure)
+</pre>
+
+<p>
+    The result is worse than before, even though the total number of function calls
+    has almost been cut in half!  Actually, this should not come as a total
+    surprise: <code>abs</code> is a Python built-in function, which has
+    been already optimized in C.  Extracting the real and imaginary parts explictly
+    like we have done is bound to be a time-consuming operation when performed
+    in pure Python as opposed to C.  At this point, we might be tempted
+    to convert complex numbers everywhere into pairs of real numbers so as to
+    reduce the overhead of dealing with complex numbers ... but this would
+    not have any significant effect on the overall time.  <small>[Those curious
+    may want to try ... I've done it and it's not worth reporting in details.]
+    </small>
+</p>
+
+<p>
+    Clearly, we need a different strategy if we are to reduce significantly
+    the execution time.  It is time to introduce cython.
+    However, this will have to wait until the next blog post!
+</p>
+
+</body>
+</html>

@@ -1,11 +1,11 @@
 # mandel1a.py
 
-def mandel(c):
+def mandel(c, max_iterations=20):
     '''determines if a point is in the Mandelbrot set based on deciding if,
-       after 20 iterations, the absolute value of the resulting number is
-       greater or equal to 2.'''
+       after a maximum allowed number of iterations, the absolute value of
+       the resulting number is greater or equal to 2.'''
     z = 0
-    for iter in range(0, 20):
+    for i in range(0, max_iterations):
         z = z**2 + c
         if abs(z) >= 2:
             return False
