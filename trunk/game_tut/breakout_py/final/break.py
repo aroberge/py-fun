@@ -47,6 +47,12 @@ def on_key_press(symbol, modifiers):
         paddle.move('left')
     elif symbol == key.RIGHT:
         paddle.move('right')
+    elif symbol == key.F:
+        # todo: need to reset screen size and scale everything
+        if game_window.fullscreen:
+            game_window.set_fullscreen(False)
+        else:
+            game_window.set_fullscreen(True)
 
 # capturing auto-repeat
 @game_window.event
