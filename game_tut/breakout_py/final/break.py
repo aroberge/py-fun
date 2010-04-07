@@ -60,6 +60,8 @@ game_window.set_mouse_visible(False)
 @game_window.event
 def on_mouse_motion(x, y, dx, dy):
     paddle.x = x
+    if (paddle.x + paddle.width) > game_window.width:
+        paddle.x = game_window.width - paddle.width
 
 
 @game_window.event
