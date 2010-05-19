@@ -38,6 +38,10 @@ _conditions = {
     "False": false
 };
 
+var remove_spaces = function (text) {
+    return text.replace(/\s+/g, '');
+};
+
 function LineOfCode(raw_content, line_number) {
     this.line_number = line_number;
     var pattern = /( *)(.*)/;
@@ -46,7 +50,7 @@ function LineOfCode(raw_content, line_number) {
     var match = raw_content.match(pattern);
     this.indentation = match[1].length;
     this.content = match[2];
-    this.stripped_content = this.content.replace(/\s+/g, '');
+    this.stripped_content = remove_spaces(this.content);
 }
 
 function UserProgram(program, language) {
@@ -82,7 +86,7 @@ function UserProgram(program, language) {
     };
 
     this.abort_parsing = function (msg) {
-        this.syntax_error = [this.index-1, msg];
+        this.syntax_error = [this.index - 1, msg];
     };
 
 }
@@ -182,11 +186,27 @@ function Block(program, min_indentation, inside_loop) {
         return true;
     };
 
+    this.normalize_condition = function(condition) {
+        if (_conditions[condition] !== undefined) {
+            return condition;
+        }
+
+        var stripped_condition = remove_spaces(condition);
+        if (_conditions[stripped_condition] !== undefined) {
+            return stripped_condition;
+        }
+
+        this.program.abort_parsing(_messages[this.program.language]["Invalid test condition"] + condition);
+        return null;
+    };
+
     this.parse_if = function () {
         this.current_line.type = "if block";
-        var matches = /^if \s*(\S+)\s*:\s*$/.exec(this.current_line.content);
-        var condition = matches[1];
-        this.parse_if_elif(condition);
+        var matches = /^if (.*):\s*$/.exec(this.current_line.content);
+        var condition = this.normalize_condition(matches[1]);
+        if (condition !== null){
+            this.parse_if_elif(condition);
+        }
     };
 
     this.parse_elif = function () {
@@ -196,8 +216,10 @@ function Block(program, min_indentation, inside_loop) {
            ) {
             this.current_line.type = "elif block";
             var matches = /^elif \s*(\S+)\s*:\s*$/.exec(this.current_line.content);
-            var condition = matches[1];
-            this.parse_if_elif(condition);
+            var condition = this.normalize_condition(matches[1]);
+            if (condition !== null){
+                this.parse_if_elif(condition);
+            }
         }
         else {
             this.program.abort_parsing(_messages[this.program.language]["Missing if"]);
@@ -205,14 +227,9 @@ function Block(program, min_indentation, inside_loop) {
     };
 
     this.parse_if_elif = function (condition) {
-        if (_conditions[condition] === undefined) {
-            this.program.abort_parsing(_messages[this.program.language]["Invalid test condition"] + condition);
-        }
-        else {
-            this.current_line.condition = _conditions[condition];
-            this.current_line.block = new Block(this.program, this.current_line.indentation,
-                                           this.inside_loop);
-        }
+        this.current_line.condition = _conditions[condition];
+        this.current_line.block = new Block(this.program, this.current_line.indentation,
+                                       this.inside_loop);
     };
 
     this.parse_else = function () {
@@ -277,7 +294,7 @@ function Block(program, min_indentation, inside_loop) {
             else if (this.current_line.content.match(/^elif /)) {
                 this.parse_elif();
             }
-            else if (this.current_line.content.match(/^else\s*:\s*$/)) {
+            else if (this.current_line.stripped_content === "else:") {
                 this.parse_else();
             }
             else if (this.current_line.content.match(/^while /)) {

@@ -1,6 +1,7 @@
 // QUnit tests of reeborg.js
 
 module("Line of Code");
+
 test('single line', function(){
     var line = new LineOfCode('a', 0);
     strictEqual(line.line_number, 0, 'line_number');
@@ -35,8 +36,10 @@ test('remove comment', function(){
     strictEqual(line.content, 'says("# aren\'t #") ', 'content');
 });
 
+/* ====================================*/
 
 module("UserProgram");
+
 test('testing next_line', function(){
     var program = new UserProgram("a");
     var line = new LineOfCode("a", 0);
@@ -50,7 +53,10 @@ test('testing next_line', function(){
     strictEqual(line.content, next_line.content, "same content in both lines");
 });
 
+/* ====================================*/
+
 module("Block");
+
 test('test single line', function(){
     var program = new UserProgram("move()");
     var block = new Block(program);
@@ -70,14 +76,6 @@ test('test allow spaces with command parentheses', function(){
     strictEqual(block.lines[0].type, "command", "type");
     strictEqual(program.syntax_error, null, "syntax error");
 });
-/*
-     def test_allow_spaces_with_command_parentheses(self):
-        program = reeborg.UserProgram("move (  \t)  ")
-        block = reeborg.Block(program)
-        self.assertEqual(block.lines[0].name, "move")
-        self.assertEqual(block.lines[0].type, "command")
-        self.assertEqual(program.syntax_error, None)*/
-
 
 test('test single line French', function(){
     var program = new UserProgram("avance()", "fr");
@@ -240,6 +238,14 @@ test('test if on_beeper', function(){
     strictEqual(block.lines[0].condition, "on_beeper()", "condition");
 });
 
+test('test if on_beeper with spaces', function(){
+    var program = new UserProgram("if on_beeper ( \t ) :\n  move()");
+    var block = new Block(program);
+    strictEqual(program.syntax_error, null, "syntax error");
+    strictEqual(block.lines[0].type, "if block", "type");
+    strictEqual(block.lines[0].condition, "on_beeper()", "condition");
+});
+
 test('test if on_beeper', function(){
     var program = new UserProgram("if invalid:\n  move()");
     var block = new Block(program);
@@ -296,7 +302,6 @@ test('test if else syntax error', function(){
     deepEqual(program.syntax_error, [2, "Unknown command: else: move()" ], "syntax error");
 });
 
-
 test('test while if break', function(){
     var program = new UserProgram("while True:\n  if True:\n     break");
     var block = new Block(program);
@@ -331,14 +336,7 @@ test('test pass', function(){
     strictEqual(program.syntax_error, null, "syntax error");
 });
 
-/*
-     def test_pass(self):
-        program = reeborg.UserProgram("pass")
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-
-*/
-
+/* ====================================*/
 
 module("MockBlockRunner");
 
@@ -443,8 +441,8 @@ test('test if False', function(){
     deepEqual(runner.lines_executed, [0], 'lines executed');
 });
 
-test('test if on_beeper() True', function(){
-    var program = new UserProgram("if on_beeper():\n  move()");
+test('test if on_beeper  (   ) True', function(){
+    var program = new UserProgram("if on_beeper (\t ) \t :\n  move(\t )");
     var block = new Block(program);
     strictEqual(program.syntax_error, null, "syntax error");
     var runner = new MockBlockRunner(block, [true]);
@@ -637,12 +635,3 @@ test('test max instructions', function(){
     deepEqual(runner.output, ['move()', 'move()', 'move()', 'Too many instructions.'], 'reaching instruction limit');
     deepEqual(runner.lines_executed, [0, 0, 1, 0, 1, 0, 1, 0], 'lines executed');
 });
-
-/*
-    def test_max_instructions(self):
-        program = reeborg.UserProgram("while True:\n  move()")
-        block = reeborg.Block(program)
-        runner = mock.MockBlockRunner(block, [], 7)
-        self.assertEqual(runner.output, ['move()', 'move()', 'move()', 'Too many instructions.'])
-        self.assertEqual(runner.lines_executed, [0, 0, 1, 0, 1, 0, 1, 0])
-*/

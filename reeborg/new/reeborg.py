@@ -46,6 +46,13 @@ if_pattern = re.compile("if (.*):\s*")
 indentation_pattern = re.compile("( *)(.*)")
 while_pattern = re.compile("while (.*):\s*")
 
+def remove_spaces(text):
+    ''' removes all spurious spaces in text so that something like
+       "move  (  \t  )  "   can be correctly interpreted as
+       "move()"
+    '''
+    return text.replace(" ", '').replace("\t",'')
+
 # A program can be thought as a series of blocks; each block is composed
 # of one or more lines that have the same indentation.
 # Each line has a line number, an indentation, and it may have a meaningful
@@ -61,7 +68,7 @@ class LineOfCode(object):
         match = indentation_pattern.search(raw_content)
         self.indentation = len(match.group(1))
         self.content = match.group(2)
-        self.stripped_content = self.content.replace(" ", '').replace("\t", '')
+        self.stripped_content = remove_spaces(self.content)
         # The following will be initialized by the parser
         self.name = None
         self.block = None
@@ -137,11 +144,11 @@ class Block(object):
                 self.parse_if()
             elif self.current_line.content.startswith("elif "):
                 self.parse_elif()
-            elif self.current_line.content.startswith("else"):
+            elif self.current_line.stripped_content == "else:":
                 self.parse_else()
             elif self.current_line.content.startswith("while"):
                 self.parse_while()
-            elif self.current_line.content == "break":
+            elif self.current_line.stripped_content == "break":
                 if self.inside_loop:
                     self.current_line.type = "break"
                 else:
@@ -201,11 +208,26 @@ class Block(object):
         self.current_line.block = Block(self.program,
                                          min_indentation=self.current_line.indentation)
 
+    def normalize_condition(self, condition):
+        '''ensures that the test condition is a valid one'''
+        if condition in _conditions:
+            return condition
+
+        stripped_condition = remove_spaces(condition)
+        if stripped_condition in _conditions:
+            return stripped_condition
+
+        self.program.abort_parsing(_messages[self.program.language][
+                                          "Invalid test condition"]% condition)
+        return None
+
     def parse_if(self):
         self.current_line.type = "if block"
         match = if_pattern.search(self.current_line.content)
         condition = match.group(1).strip()
-        self.parse_if_elif(condition)
+        condition = self.normalize_condition(condition)
+        if condition is not None:
+            self.parse_if_elif(condition)
 
     def parse_elif(self):
         if not (self.previous_line_content is not None and
@@ -217,7 +239,9 @@ class Block(object):
         self.current_line.type = "elif block"
         match = elif_pattern.search(self.current_line.content)
         condition = match.group(1).strip()
-        self.parse_if_elif(condition)
+        condition = self.normalize_condition(condition)
+        if condition is not None:
+            self.parse_if_elif(condition)
 
     def parse_else(self):
         if not (self.previous_line_content.startswith("if ") or
@@ -227,22 +251,12 @@ class Block(object):
             return
         self.current_line.type = "else block"
         content = self.current_line.content.replace(" ", "")
-        if content != "else:":
-            self.program.abort_parsing(_messages[self.program.language
-                                                 ]["Syntax error"
-                                                   ]%self.current_line.content)
-        else:
-            self.current_line.block = Block(self.program,
+        self.current_line.block = Block(self.program,
                                     min_indentation=self.current_line.indentation,
                                     inside_loop=self.inside_loop)
 
     def parse_if_elif(self, condition):
-        if condition not in _conditions:
-            self.program.abort_parsing(
-                        _messages[self.program.language][
-                                          "Invalid test condition"]% condition)
-        else:
-            self.current_line.condition = _conditions[condition]
+        self.current_line.condition = _conditions[condition]
         self.current_line.block = Block(self.program,
                                     min_indentation=self.current_line.indentation,
                                     inside_loop=self.inside_loop)
