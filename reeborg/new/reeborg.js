@@ -248,15 +248,12 @@ function Block(program, min_indentation, inside_loop) {
 
     this.parse_while = function () {
         this.current_line.type = "while block";
-        var matches = /^while \s*(\S+)\s*:\s*$/.exec(this.current_line.content);
-        var condition = matches[1];
+        var matches = /^while (.*):\s*$/.exec(this.current_line.content);
+        var condition = this.normalize_condition(matches[1]);
         if (_conditions[condition] !== undefined) {
             this.current_line.condition = _conditions[condition];
+            this.current_line.block = new Block(this.program, this.current_line.indentation, true);
         }
-        else {
-            this.program.abort_parsing(_messages[this.program.language]["Invalid test condition"] + condition);
-        }
-        this.current_line.block = new Block(this.program, this.current_line.indentation, true);
     };
 
     this.parse = function () {

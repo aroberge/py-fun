@@ -266,13 +266,10 @@ class Block(object):
         match = while_pattern.search(self.current_line.content)
         condition = match.group(1).strip()
 
-        if condition in _conditions:
+        condition = self.normalize_condition(condition)
+        if condition is not None:
             self.current_line.condition = _conditions[condition]
-        else:
-            self.program.abort_parsing(
-                        _messages[self.program.language][
-                                          "Invalid test condition"]% condition)
-        self.current_line.block = Block(self.program,
+            self.current_line.block = Block(self.program,
                                     min_indentation=self.current_line.indentation,
                                     inside_loop=True)
 
