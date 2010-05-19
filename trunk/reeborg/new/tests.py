@@ -288,6 +288,11 @@ else: move()
         block = reeborg.Block(program)
         self.assertEqual(program.syntax_error, None)
 
+    def test_while_on_beeper_with_spaces(self):
+        program = reeborg.UserProgram("while on_beeper ( ) :\n  move()")
+        block = reeborg.Block(program)
+        self.assertEqual(program.syntax_error, None)
+
     def test_while_invalid(self):
         program = reeborg.UserProgram("while invalid:\n  move()")
         block = reeborg.Block(program)
@@ -304,7 +309,7 @@ else: move()
         block = reeborg.Block(program)
         self.assertEqual(program.syntax_error, None)
 
-    def test_while(self):
+    def test_break_outside_while(self):
         program = reeborg.UserProgram("if True:\n  break")
         block = reeborg.Block(program)
         self.assertEqual(program.syntax_error, [1, "SyntaxError: 'break' outside loop"])
@@ -573,6 +578,14 @@ else:
 
     def test_while_on_beeper(self):
         program = reeborg.UserProgram("while on_beeper():\n  move()")
+        block = reeborg.Block(program)
+        self.assertEqual(program.syntax_error, None)
+        runner = mock.MockBlockRunner(block, fake_tests=[True, True, False])
+        self.assertEqual(runner.output, ["move()", "move()"])
+        self.assertEqual(runner.lines_executed, [0, 0, 1, 0, 1, 0])
+
+    def test_while_on_beeper_with_spaces(self):
+        program = reeborg.UserProgram("while on_beeper ( )  :\n  move(\t)")
         block = reeborg.Block(program)
         self.assertEqual(program.syntax_error, None)
         runner = mock.MockBlockRunner(block, fake_tests=[True, True, False])

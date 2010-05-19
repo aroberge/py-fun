@@ -549,6 +549,16 @@ test('test while on_beeper()', function(){
     deepEqual(runner.lines_executed, [0, 0, 1, 0, 1, 0], 'lines executed');
 });
 
+test('test while on_beeper (  ) with extra spaces', function(){
+    var program = new UserProgram("while on_beeper  (\t ):\n  move (  )");
+    var block = new Block(program);
+    strictEqual(program.syntax_error, null, "syntax error");
+    var runner = new MockBlockRunner(block, [true, true, false]);
+    deepEqual(runner.output, ["move()", "move()"], 'output');
+    deepEqual(runner.lines_executed, [0, 0, 1, 0, 1, 0], 'lines executed');
+});
+
+
 test('test while break', function(){
     var program = new UserProgram("while True:\n move()\n move()\n break\n turn_left()");
     var block = new Block(program);
