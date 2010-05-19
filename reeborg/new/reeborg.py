@@ -129,6 +129,8 @@ class Block(object):
                 method_def_line = self.program.user_methods[self.current_line.content]
                 self.current_line.name = method_def_line.method_name
                 self.current_line.block = method_def_line.block
+            elif self.current_line.stripped_content == "pass":
+                self.current_line.type = "pass"
             elif self.current_line.content.startswith("def "):
                 self.parse_def()
             elif self.current_line.content.startswith("if "):

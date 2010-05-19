@@ -265,6 +265,9 @@ function Block(program, min_indentation, inside_loop) {
                 this.current_line.name = method_def_line.method_name;
                 this.current_line.block = method_def_line.block;
             }
+            else if (this.current_line.stripped_content == "pass"){
+                this.current_line.type = "pass";
+            }
             else if (this.current_line.content.match(/^def /)) {
                 this.parse_def();
             }

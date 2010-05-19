@@ -331,6 +331,11 @@ while True:
         block = reeborg.Block(program)
         self.assertEqual(program.syntax_error, None)
 
+    def test_pass(self):
+        program = reeborg.UserProgram("pass")
+        block = reeborg.Block(program)
+        self.assertEqual(program.syntax_error, None)
+
 class TestMockBlockRunner(unittest.TestCase):
 
     def test_move(self):
@@ -339,6 +344,14 @@ class TestMockBlockRunner(unittest.TestCase):
         self.assertEqual(program.syntax_error, None)
         runner = mock.MockBlockRunner(block)
         self.assertEqual(runner.output, ["move()"])
+        self.assertEqual(runner.lines_executed, [0])
+
+    def test_pass(self):
+        program = reeborg.UserProgram("pass")
+        block = reeborg.Block(program)
+        self.assertEqual(program.syntax_error, None)
+        runner = mock.MockBlockRunner(block)
+        self.assertEqual(runner.output, [])
         self.assertEqual(runner.lines_executed, [0])
 
     def test_method(self):
