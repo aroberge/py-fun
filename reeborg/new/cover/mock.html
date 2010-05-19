@@ -1,0 +1,113 @@
+<html>
+<head>
+<title>mock</title>
+</head>
+<body>
+mock
+<style>
+.coverage pre {float: left; margin: 0px 1em; border: none;
+               padding: 0px; }
+.num pre { margin: 0px }
+.nocov, .nocov pre {background-color: #faa}
+.cov, .cov pre {background-color: #cfc}
+div.coverage div { clear: both; height: 1.1em}
+</style>
+<div class="stats">
+Covered: 71 lines<br/>
+Missed: 2 lines<br/>
+Skipped 15 lines<br/>
+Percent: 97 %<br/>
+
+</div>
+<div class="coverage">
+<div class="cov"><span class="num"><pre> 1</pre></span><pre>def on_beeper(tests=[]):</pre></div>
+<div class="cov"><span class="num"><pre> 2</pre></span><pre>    return tests.pop()</pre></div>
+<div class="skip"><span class="num"><pre> 3</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre> 4</pre></span><pre>class MockBlockRunner(object):</pre></div>
+<div class="cov"><span class="num"><pre> 5</pre></span><pre>    def __init__(self, block, fake_tests=None):</pre></div>
+<div class="cov"><span class="num"><pre> 6</pre></span><pre>        self.block = block</pre></div>
+<div class="cov"><span class="num"><pre> 7</pre></span><pre>        self.if_branches = False</pre></div>
+<div class="cov"><span class="num"><pre> 8</pre></span><pre>        self.break_loop = None</pre></div>
+<div class="skip"><span class="num"><pre> 9</pre></span><pre>        # fake tests to simulate going through a loop a few times</pre></div>
+<div class="cov"><span class="num"><pre>10</pre></span><pre>        if fake_tests is None:</pre></div>
+<div class="cov"><span class="num"><pre>11</pre></span><pre>            self.fake_tests = []</pre></div>
+<div class="cov"><span class="num"><pre>12</pre></span><pre>        else:</pre></div>
+<div class="cov"><span class="num"><pre>13</pre></span><pre>            fake_tests.reverse()</pre></div>
+<div class="cov"><span class="num"><pre>14</pre></span><pre>            self.fake_tests = fake_tests</pre></div>
+<div class="skip"><span class="num"><pre>15</pre></span><pre>        # fake output stuff</pre></div>
+<div class="cov"><span class="num"><pre>16</pre></span><pre>        self.output = []</pre></div>
+<div class="cov"><span class="num"><pre>17</pre></span><pre>        self.lines_executed = []</pre></div>
+<div class="skip"><span class="num"><pre>18</pre></span><pre>        #</pre></div>
+<div class="cov"><span class="num"><pre>19</pre></span><pre>        self.execute_block(block)</pre></div>
+<div class="skip"><span class="num"><pre>20</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>21</pre></span><pre>    def execute_block(self, block, parent=None):</pre></div>
+<div class="cov"><span class="num"><pre>22</pre></span><pre>        for line in block.lines:</pre></div>
+<div class="cov"><span class="num"><pre>23</pre></span><pre>            if self.break_loop:    # pop levels until find a loop to break</pre></div>
+<div class="cov"><span class="num"><pre>24</pre></span><pre>                if parent is not None:</pre></div>
+<div class="cov"><span class="num"><pre>25</pre></span><pre>                    parent.break_loop = True</pre></div>
+<div class="cov"><span class="num"><pre>26</pre></span><pre>                break</pre></div>
+<div class="skip"><span class="num"><pre>27</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>28</pre></span><pre>            if line.type == &quot;empty line&quot;:</pre></div>
+<div class="cov"><span class="num"><pre>29</pre></span><pre>                continue</pre></div>
+<div class="skip"><span class="num"><pre>30</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>31</pre></span><pre>            self.highlight(line.line_number)</pre></div>
+<div class="cov"><span class="num"><pre>32</pre></span><pre>            if line.type in [ &quot;def block&quot;, &quot;assignment&quot;]:</pre></div>
+<div class="cov"><span class="num"><pre>33</pre></span><pre>                pass</pre></div>
+<div class="cov"><span class="num"><pre>34</pre></span><pre>            elif line.type == &quot;command&quot;:</pre></div>
+<div class="cov"><span class="num"><pre>35</pre></span><pre>                self.execute_command(line.name)</pre></div>
+<div class="cov"><span class="num"><pre>36</pre></span><pre>            elif line.type == &quot;user method&quot;:</pre></div>
+<div class="cov"><span class="num"><pre>37</pre></span><pre>                self.execute_block(line.block, parent=self)</pre></div>
+<div class="cov"><span class="num"><pre>38</pre></span><pre>            elif line.type == &quot;if block&quot;:</pre></div>
+<div class="cov"><span class="num"><pre>39</pre></span><pre>                self.handle_if(line)</pre></div>
+<div class="cov"><span class="num"><pre>40</pre></span><pre>            elif line.type == &quot;elif block&quot;:</pre></div>
+<div class="cov"><span class="num"><pre>41</pre></span><pre>                self.handle_if_elif(line)</pre></div>
+<div class="cov"><span class="num"><pre>42</pre></span><pre>            elif line.type == &quot;else block&quot;:</pre></div>
+<div class="cov"><span class="num"><pre>43</pre></span><pre>                if self.if_branches != &quot;done&quot;:</pre></div>
+<div class="cov"><span class="num"><pre>44</pre></span><pre>                    self.execute_block(line.block, parent=self)</pre></div>
+<div class="cov"><span class="num"><pre>45</pre></span><pre>                    self.if_branches = &quot;done&quot;</pre></div>
+<div class="cov"><span class="num"><pre>46</pre></span><pre>            elif line.type == &quot;break&quot;:</pre></div>
+<div class="cov"><span class="num"><pre>47</pre></span><pre>                parent.break_loop = True</pre></div>
+<div class="cov"><span class="num"><pre>48</pre></span><pre>                break</pre></div>
+<div class="cov"><span class="num"><pre>49</pre></span><pre>            elif line.type == &quot;while block&quot;:</pre></div>
+<div class="cov"><span class="num"><pre>50</pre></span><pre>                self.handle_while(line)</pre></div>
+<div class="nocov"><span class="num"><pre>51</pre></span><pre>            else:</pre></div>
+<div class="nocov"><span class="num"><pre>52</pre></span><pre>                self.output.append(&quot;ERROR:&quot; + line.content)</pre></div>
+<div class="skip"><span class="num"><pre>53</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>54</pre></span><pre>            if line.type not in [&quot;elif block&quot;, &quot;if block&quot;, &quot;else block&quot;]:</pre></div>
+<div class="cov"><span class="num"><pre>55</pre></span><pre>                self.if_branches = False</pre></div>
+<div class="skip"><span class="num"><pre>56</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>57</pre></span><pre>    def handle_if(self, line):</pre></div>
+<div class="cov"><span class="num"><pre>58</pre></span><pre>        self.if_branches = &quot;started&quot;</pre></div>
+<div class="cov"><span class="num"><pre>59</pre></span><pre>        self.handle_if_elif(line)</pre></div>
+<div class="skip"><span class="num"><pre>60</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>61</pre></span><pre>    def handle_if_elif(self, line):</pre></div>
+<div class="cov"><span class="num"><pre>62</pre></span><pre>        test_result = self.evaluate_condition(line.condition)</pre></div>
+<div class="cov"><span class="num"><pre>63</pre></span><pre>        if test_result and self.if_branches != &quot;done&quot;:</pre></div>
+<div class="cov"><span class="num"><pre>64</pre></span><pre>            self.execute_block(line.block, parent=self)</pre></div>
+<div class="cov"><span class="num"><pre>65</pre></span><pre>            self.if_branches = &quot;done&quot;</pre></div>
+<div class="skip"><span class="num"><pre>66</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>67</pre></span><pre>    def handle_while(self, line):</pre></div>
+<div class="cov"><span class="num"><pre>68</pre></span><pre>        while True:</pre></div>
+<div class="cov"><span class="num"><pre>69</pre></span><pre>            test_result = self.evaluate_condition(line.condition)</pre></div>
+<div class="cov"><span class="num"><pre>70</pre></span><pre>            if test_result:</pre></div>
+<div class="cov"><span class="num"><pre>71</pre></span><pre>                self.execute_block(line.block, parent=self)</pre></div>
+<div class="cov"><span class="num"><pre>72</pre></span><pre>            else:</pre></div>
+<div class="cov"><span class="num"><pre>73</pre></span><pre>                break</pre></div>
+<div class="cov"><span class="num"><pre>74</pre></span><pre>            if self.break_loop:</pre></div>
+<div class="cov"><span class="num"><pre>75</pre></span><pre>                break</pre></div>
+<div class="skip"><span class="num"><pre>76</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>77</pre></span><pre>    def evaluate_condition(self, condition):</pre></div>
+<div class="cov"><span class="num"><pre>78</pre></span><pre>        if condition == &quot;on_beeper()&quot;:</pre></div>
+<div class="cov"><span class="num"><pre>79</pre></span><pre>            return on_beeper(self.fake_tests)</pre></div>
+<div class="cov"><span class="num"><pre>80</pre></span><pre>        else:</pre></div>
+<div class="cov"><span class="num"><pre>81</pre></span><pre>            return condition</pre></div>
+<div class="skip"><span class="num"><pre>82</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>83</pre></span><pre>    def execute_command(self, cmd):</pre></div>
+<div class="cov"><span class="num"><pre>84</pre></span><pre>        self.output.append(cmd+&quot;()&quot;)</pre></div>
+<div class="skip"><span class="num"><pre>85</pre></span><pre></pre></div>
+<div class="cov"><span class="num"><pre>86</pre></span><pre>    def highlight(self, line_number):</pre></div>
+<div class="cov"><span class="num"><pre>87</pre></span><pre>        self.lines_executed.append(line_number)</pre></div>
+<div class="skip"><span class="num"><pre>88</pre></span><pre></pre></div>
+</div>
+</body>
+</html>
