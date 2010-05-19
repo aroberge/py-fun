@@ -96,6 +96,9 @@ function MockBlockRunner(block, fake_tests, max_nb_instructions){
             if ((line.type == "def block") || (line.type == "assignment")){
                continue;
             }
+            else if (line.type == "pass"){
+                continue;
+            }
             else if (line.type == "user method"){
                 this.execute_block(line.block);
             }

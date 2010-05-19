@@ -38,6 +38,8 @@ class MockBlockRunner(object):
                 continue
             elif line.type == "command":
                 self.execute_command(line.name)
+            elif line.type == "pass":
+                pass
             elif line.type == "user method":
                 self.execute_block(line.block, parent=self)
             elif line.type == "if block":

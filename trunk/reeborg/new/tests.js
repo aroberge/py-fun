@@ -325,14 +325,38 @@ test('test while if else break', function(){
     strictEqual(program.syntax_error, null, "syntax error");
 });
 
+test('test pass', function(){
+    var program = new UserProgram("pass");
+    var block = new Block(program);
+    strictEqual(program.syntax_error, null, "syntax error");
+});
+
+/*
+     def test_pass(self):
+        program = reeborg.UserProgram("pass")
+        block = reeborg.Block(program)
+        self.assertEqual(program.syntax_error, None)
+
+*/
+
 
 module("MockBlockRunner");
+
 test('test move', function(){
     var program = new UserProgram("move()");
     var block = new Block(program);
     strictEqual(program.syntax_error, null, "syntax error");
     var runner = new MockBlockRunner(block);
     deepEqual(runner.output, ["move()"], 'output');
+    deepEqual(runner.lines_executed, [0], 'lines executed');
+});
+
+test('test pass', function(){
+    var program = new UserProgram("pass");
+    var block = new Block(program);
+    strictEqual(program.syntax_error, null, "syntax error");
+    var runner = new MockBlockRunner(block);
+    deepEqual(runner.output, [], 'output');
     deepEqual(runner.lines_executed, [0], 'lines executed');
 });
 
