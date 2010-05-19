@@ -215,6 +215,13 @@ class TestBlock(unittest.TestCase):
         self.assertEqual(block.lines[0].type, "if block")
         self.assertEqual(block.lines[0].condition, "on_beeper()")
 
+    def test_if_on_beeper_with_spaces(self):
+        program = reeborg.UserProgram("if on_beeper ( \t ) : \n  move()")
+        block = reeborg.Block(program)
+        self.assertEqual(program.syntax_error, None)
+        self.assertEqual(block.lines[0].type, "if block")
+        self.assertEqual(block.lines[0].condition, "on_beeper()")
+
     def test_if_invalid(self):
         program = reeborg.UserProgram("if invalid:\n  move()")
         block = reeborg.Block(program)
@@ -269,7 +276,7 @@ else: move()
 """
         program = reeborg.UserProgram(p)
         block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, [2, "Syntax error: 'else: move()'"])
+        self.assertEqual(program.syntax_error, [2, 'Unknown command: else: move()'])
 
     def test_while(self):
         program = reeborg.UserProgram("while True:\n  move()")
@@ -430,6 +437,14 @@ class TestMockBlockRunner(unittest.TestCase):
 
     def test_if_on_beeper_true(self):
         program = reeborg.UserProgram("if on_beeper():\n  move()")
+        block = reeborg.Block(program)
+        self.assertEqual(program.syntax_error, None)
+        runner = mock.MockBlockRunner(block, [True])
+        self.assertEqual(runner.output, ["move()"])
+        self.assertEqual(runner.lines_executed, [0, 1])
+
+    def test_if_on_beeper_with_spaces_true(self):
+        program = reeborg.UserProgram("if on_beeper (\t ) \t :\n  move(\t  )")
         block = reeborg.Block(program)
         self.assertEqual(program.syntax_error, None)
         runner = mock.MockBlockRunner(block, [True])
