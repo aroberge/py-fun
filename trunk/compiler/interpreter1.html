@@ -1,0 +1,195 @@
+<html>
+    <head>
+        <style>
+        body{max-width: 900px}
+        </style>
+    </head>
+<body>
+<p>
+We are going to implement a simulated interpreter for a very low level language
+akin to a typical <em>assembly language</em>.
+As explained in
+<a title="external_link" href="http://en.wikipedia.org/wiki/Assembly_language">Wikipedia</a>.
+</p>
+
+<em>
+<blockquote>
+Assembly languages are a type of low-level languages for programming computers,
+microprocessors, microcontrollers, and other (usually) integrated circuits.
+They implement a symbolic representation of the numeric machine codes and other
+constants needed to program a particular CPU  architecture.
+This representation is usually defined by the hardware manufacturer,
+and is based on abbreviations (called mnemonics) that help the programmer
+remember individual instructions, registers, etc.
+An assembly language family is thus specific to a certain physical (or virtual)
+computer architecture. This is in contrast to most high-level languages,
+which are (ideally) portable.
+</blockquote>
+</em>
+<p>Single instruction for high-level languages are usually translated into a
+large number of basic assembly language instructions, specific to the
+target computer.  For many languages, the
+next step is to do one more transformation into <em>object code</em> (e.g.
+creating an executable ".exe" file on Windows computer) which are then
+ready for (fast) execution on the computer.  </p>
+<p>Python uses a different approach than most other computer languages.
+Python source code is compiled into bytecode,
+the internal representation of a Python program in the interpreter.
+This “intermediate language” is said to run on a virtual machine that
+executes the machine code corresponding to each bytecode.
+</p>
+<p>Computer processors incorporate usually different memory storage features,
+including <a title="external_link" href="http://en.wikipedia.org/wiki/Processor_register">registrers</a>,
+which allow for very fast access, cache, which allow relatively fast access,
+and random access area.  (For more details, please consult
+<a title="external_link" href="http://en.wikipedia.org/wiki/Memory_hierarchy">
+    Memory hierarchy</a>.)
+Typically, programs written in or translated into
+assembly language will try to move data into memory areas that can be
+accessed the fastest.
+</p>
+<p>However, for a portable low-level language (like Python bytecode),
+one can not rely
+on the presence of specific memory areas.  Instead, one assumes a general
+memory structure in which data is located.  This is what we will do and
+assume that our simulated computer memory structure is a stack.
+We will also defines some assembly language instructions that will bear some
+resemblance with Python's
+<a title="external_link" href="http://docs.python.org/library/dis.html">bytecodes</a>.
+Python has two addition bytecode operations: BINARY_ADD and INPLACE_ADD.
+Binary operations remove the top of the stack (TOS) and the second top-most
+stack item (TOS1) from the stack. They perform the operation,
+and put the result back on the stack.  This is essentially the same thing
+we will do.  Our addition operation will be as follows:
+</p>
+<dl>
+    <dt>ADD</dt>
+    <dd>Implements TOS = TOS1 + TOS.</dd>
+</dl>
+<p>This could be written as the following python function:</p>
+<pre title="python">
+def ADD():
+    '''removes top two items from stack, adds them and leaves the
+    results as the new top item on the stack'''
+    tos = stack.pop()
+    tos1 = stack.pop()
+    stack.push(tos1 + tos)
+</pre>
+<p>Now, suppose we wish to write a program that will add two numbers,
+n1 and n2, which makes use of that binary addition.
+We first need to put the numbers on the stack and then call the
+ADD instruction.  So, the program would look something like the following:
+</p>
+<pre title="text">
+PUSH n1
+PUSH n2
+ADD
+</pre>
+<p>(Note that we will pass these instructions to the interpreter
+as a Python list of lists, as we shall see shortly.)
+The above sequence of instruction
+is to be interpreted as follows:
+</p>
+<ol>
+    <li> push n1 onto the stack</li>
+    <li> push n2 onto the stack</li>
+    <li> call the binary operation "ADD" (which adds the top two numbers on the
+    stack).</li>
+</ol>
+<p>In slightly more concrete term, here would be a sample Interpreter
+"session" which would do the above.</p>
+<pre title="python">
+interp = Interpreter()
+program = [['PUSH', 1], ['PUSH', 2], ['ADD']]
+interp.run(program)
+</pre>
+<p>The following is an actual implementation of the Interpreter, including
+a stack, which you can try.  Note that we use a Python dict inside the
+method run() to select which method to call; if you are not familiar
+with that Python idiom, you may want to read
+<a title="external_link" href="http://tartley.com/?p=805">this</a>
+or
+<a title="external_link" href="http://stackoverflow.com/questions/374239/why-doesnt-python-have-a-switch-statement">this</a>
+</p>
+
+<pre title="editor">
+class Stack(object):
+    def __init__(self, verbose=True):
+        self.items = []
+        self.verbose = verbose
+
+    def push(self, item):
+        self.items.append(item)
+
+    def pop(self):
+        try:
+            return self.items.pop()
+        except IndexError:
+            if self.verbose:
+                print("Attempted to pop element from empty stack.")
+            raise
+
+class Interpreter(object):
+    def __init__(self):
+        self.opcodes = {'ADD': self.add,
+                        'PUSH': self.push}
+        self.aborted = True
+
+    def add(self):
+        '''removes top two items from stack, adds them and leaves the
+        results as new top item on stack'''
+        tos = self.stack.pop()
+        tos1 = self.stack.pop()
+        self.stack.push(tos1 + tos)
+
+    def push(self, item):
+        '''pushes an item onto the stack'''
+        self.stack.push(item)
+
+    def run(self, program):
+        self.stack = Stack()
+        self.aborted = False
+        try:
+            for line in program:
+                instruction = line[0]
+                if line[1:]:   # the instruction has an argument (e.g. a number)
+                    arg = line[1]
+                    self.opcodes[instruction](arg)
+                else:
+                    self.opcodes[instruction]()
+        except IndexError:
+            self.abort("Program terminated due to problem with stack.")
+        except KeyError:
+            self.abort("Program terminated due to invalid "+
+                       "program instruction: %s." % instruction)
+
+    def abort(self, message):
+        print(message)
+        self.aborted = True
+
+    def final_output(self):
+        '''displays the result of the final calculation'''
+        if self.aborted:
+            return
+        try:
+            print("Result from program: %s" % self.stack.pop())
+        except IndexError, TypeError:
+            print("Program has no output value.")
+
+#===============
+# Time to test it
+#
+program = [['PUSH', 1], ['PUSH', 2], ['ADD']]
+interp = Interpreter()
+interp.run(program)
+interp.final_output()
+</pre>
+<h3>Suggestions</h3>
+<ul><li>Try it out with various test programs, including some that should not
+work.</li>
+    <li>Try implementing a binary subtraction and other binary
+    operations such as a binary multiplication or a binary division.</li>
+    <li>Try implementing a similar program in another language.</li>
+</ul>
+</body>
+</html>

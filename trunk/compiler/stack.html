@@ -1,0 +1,76 @@
+<html>
+    <head>
+        <style>
+        body{max-width: 900px}
+        </style>
+    </head>
+<body>
+    <p>This post is best viewed using <a title="external_link"
+    href="http://code.google.com/p/crunchy">Crunchy</a>.
+<h3>Stacks</h3>
+<p>
+A stack is a simple but very useful data structure.  As explained in
+<a title="external_link" href="http://en.wikipedia.org/wiki/Stack_%28data_structure%29">Wikipedia</a>.
+</p>
+
+<em>
+<blockquote>
+In computer science, a stack is a <b>last in, first out</b> (LIFO) abstract data
+type and data structure. A stack can have any abstract data type as an
+element, but is characterized by only two fundamental operations:
+<b>push</b> and <b>pop</b>.
+The push operation adds to the top of the list, hiding any items already on the
+stack, or initializing the stack if it is empty.
+The pop operation removes an item from the top of the list,
+and returns this value to the caller.
+A pop either reveals previously concealed items, or results in an empty list.
+</blockquote>
+<blockquote>
+    A stack is a restricted data structure, because only a small number of
+operations are performed on it. The nature of the pop and push operations also
+means that stack elements have a natural order.
+Elements are removed from the stack in the reverse order to the order of their
+addition: therefore, the lower elements are typically those that have been
+in the list the longest.
+</blockquote>
+</em>
+<p>A stack is like a Python list, except that it has much fewer methods.
+We can easily simulate a stack in Python as follows.
+</p>
+
+<pre title="editor">
+class Stack(object):
+    def __init__(self, verbose=True):
+        self.items = []
+        self.verbose = verbose
+
+    def push(self, item):
+        self.items.append(item)
+
+    def pop(self):
+        try:
+            return self.items.pop()
+        except IndexError:
+            if self.verbose:
+                print("Attempted to pop element from empty stack.")
+            raise
+
+
+stack = Stack()     # stack = []
+stack.push(1)       # stack = [1]
+stack.push(2)       # stack = [1, 2]
+print stack.pop()   # prints 2; stack = [1]
+stack.push(3)       # stack = [1, 3]
+print stack.pop()   # prints 3; stack = [1]
+print stack.pop()   # prints 1; stack = []
+print stack.pop()   # raises IndexError
+</pre>
+<h3>Suggestions</h3>
+<ul><li>Try it out with various test cases.</li>
+    <li>Try implementing a similar Stack class in another language.</li>
+    <li>Read the
+    <a title="external_link" href="http://en.wikipedia.org/wiki/Stack_%28data_structure%29">Wikipedia</a>
+    article.</li>
+</ul>
+</body>
+</html>

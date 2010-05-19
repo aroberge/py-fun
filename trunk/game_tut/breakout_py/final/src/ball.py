@@ -36,3 +36,63 @@ class Ball(object):
             self.dx = - self.dx
         if (self.y + self.r > self.game._window.height):
             self.dy = - self.dy
+        if self.collide_with_rectangle(self.game.paddle):
+            self.dy = - self.dy
+
+
+    def collide_with_rectangle(self, rect):
+        '''determines if a collision (overlap) occurs with a rectangular
+        object.'''
+
+        # Cases where the ball is clearly outside the rectangle
+        if (self.x + self.r) < rect.x:
+            return False
+        elif (self.x - self.r) > rect.x + rect.width:
+            return False
+        elif (self.y + self.r) < rect.y:
+            return False
+        elif (self.y - self.r) > self.y + rect.height:
+            return False
+
+        # Cases where the ball is clearly inside the rectangle
+        if (rect.x < self.x < (rect.x + rect.width)  and
+            rect.y < self.y < (rect.y + rect.height)):
+            return True
+
+        ## Cases where one of the edges of the ball is clearly inside the rect.
+        #if rect.x < self.x < (rect.x + rect.width):
+        #    if ((self.y + self.r > rect.y)
+        #        (self.y - self.r < rect.y + rect.height)):
+        #        return True
+        #elif rect.y < self.y < (rect.y + rect.height):
+        #    if ((self.x + self.r > rect.x) or
+        #        (self.x - self.r < rect.x + rect.width)):
+        #        return True
+
+        # we are left with edge cases
+        r2 = self.r**2
+
+        if self.x < rect.x:
+            x2 = (rect.x - self.x)**2
+            if self.y < rect.y:
+                if x2 + (rect.y - self.y)**2 < r2:
+                    return True
+                else:
+                    return False
+            elif self.y > rect.y + rect.height:
+                if x2 + (rect.y + rect.height - self.y)**2 < r2:
+                    return True
+                else:
+                    return False
+        else:   # self.x >= rect.x + rect.width
+            x2 = (self.x - rect.x - rect.width)**2
+            if self.y < rect.y:
+                if x2 + (rect.y - self.y)**2 < r2:
+                    return True
+                else:
+                    return False
+            elif self.y > rect.y + rect.height:
+                if x2 + (rect.y + rect.height - self.y)**2 < r2:
+                    return True
+                else:
+                    return False

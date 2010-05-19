@@ -1,0 +1,24 @@
+
+class Stack(object):
+    def __init__(self):
+        self.items = []
+
+    def push(self, item):
+        self.items.append(item)
+
+    def pop(self):
+        try:
+            return self.items.pop()
+        except IndexError:
+            print("Attempted to pop element from empty stack.")
+            raise MemoryError
+
+
+stack = Stack()     # stack = []
+stack.push(1)       # stack = [1]
+stack.push(2)       # stack = [1, 2]
+print stack.pop()   # prints 2; stack = [1]
+stack.push(3)       # stack = [1, 3]
+print stack.pop()   # prints 3; stack = [1]
+print stack.pop()   # prints 1; stack = []
+print stack.pop()   # raises MemoryError
