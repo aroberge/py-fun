@@ -93,7 +93,7 @@ class UserProgram(object):
         self.builtins = _builtins[language]
         #
         self.syntax_error = None
-        self.user_methods = {}
+        self.user_defined = {}
 
     def next_line(self):
         if self.index >= self.nb_lines:
@@ -131,9 +131,9 @@ class Block(object):
             if self.current_line.stripped_content in self.program.builtins:
                 self.current_line.name = self.program.builtins[self.current_line.stripped_content]
                 self.current_line.type = "command"
-            elif self.current_line.content in self.program.user_methods:
+            elif self.current_line.content in self.program.user_defined:
                 self.current_line.type = "user method"
-                method_def_line = self.program.user_methods[self.current_line.content]
+                method_def_line = self.program.user_defined[self.current_line.content]
                 self.current_line.name = method_def_line.method_name
                 self.current_line.block = method_def_line.block
             elif self.current_line.stripped_content == "pass":
@@ -200,11 +200,11 @@ class Block(object):
                                                  ]["def syntax error"])
             return
         if (name+"()" in self.program.builtins or
-            name+"()" in self.program.user_methods):
+            name+"()" in self.program.user_defined):
             self.program.abort_parsing(_messages[self.program.language
                                                  ]["Attempt to redefine"]% name)
         self.current_line.method_name = name
-        self.program.user_methods[name+"()"] = self.current_line
+        self.program.user_defined[name+"()"] = self.current_line
         self.current_line.block = Block(self.program,
                                          min_indentation=self.current_line.indentation)
 
@@ -290,13 +290,19 @@ class Block(object):
         right = match.group(2)
         self.current_line.type = "assignment"
         if (left+"()" in self.program.builtins  or
-            left+"()" in self.program.user_methods):
+            left+"()" in self.program.user_defined):
             self.program.abort_parsing(_messages[self.program.language
                                                  ]["Attempt to redefine"]% left)
         elif right+"()" in self.program.builtins:
             self.program.builtins[left+"()"] = self.program.builtins[right+"()"]
-        elif right+"()" in self.program.user_methods:
-            self.program.user_methods[left+"()"] = self.program.user_methods[right+"()"]
+        elif right+"()" in self.program.user_defined:
+            self.program.user_defined[left+"()"] = self.program.user_defined[right+"()"]
+        elif right == "True":
+            self.program.user_defined[left] = True
+        elif right == "False":
+            self.program.user_defined[left] = False
+        elif right+"()" in _conditions:
+            self.program.user_defined[left+"()"] = _conditions[right+"()"]
         else:
             self.program.abort_parsing(_messages[self.program.language
                                                      ]["Unknown command"
