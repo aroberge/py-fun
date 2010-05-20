@@ -210,11 +210,19 @@ class Block(object):
 
     def normalize_condition(self, condition):
         '''ensures that the test condition is a valid one'''
+        if condition.startswith("not "):
+            self.current_line.negate_condition = True
+            condition = condition[4:]
+        else:
+            self.current_line.negate_condition = False
+
         if condition in _conditions:
+            self.current_line.condition = _conditions[condition]
             return condition
 
         stripped_condition = remove_spaces(condition)
         if stripped_condition in _conditions:
+            self.current_line.condition = _conditions[stripped_condition]
             return stripped_condition
 
         self.program.abort_parsing(_messages[self.program.language][
@@ -227,7 +235,9 @@ class Block(object):
         condition = match.group(1).strip()
         condition = self.normalize_condition(condition)
         if condition is not None:
-            self.parse_if_elif(condition)
+            self.current_line.block = Block(self.program,
+                                    min_indentation=self.current_line.indentation,
+                                    inside_loop=self.inside_loop)
 
     def parse_elif(self):
         if not (self.previous_line_content is not None and
@@ -241,7 +251,9 @@ class Block(object):
         condition = match.group(1).strip()
         condition = self.normalize_condition(condition)
         if condition is not None:
-            self.parse_if_elif(condition)
+            self.current_line.block = Block(self.program,
+                                    min_indentation=self.current_line.indentation,
+                                    inside_loop=self.inside_loop)
 
     def parse_else(self):
         if not (self.previous_line_content.startswith("if ") or
@@ -255,12 +267,6 @@ class Block(object):
                                     min_indentation=self.current_line.indentation,
                                     inside_loop=self.inside_loop)
 
-    def parse_if_elif(self, condition):
-        self.current_line.condition = _conditions[condition]
-        self.current_line.block = Block(self.program,
-                                    min_indentation=self.current_line.indentation,
-                                    inside_loop=self.inside_loop)
-
     def parse_while(self):
         self.current_line.type = "while block"
         match = while_pattern.search(self.current_line.content)
@@ -268,7 +274,6 @@ class Block(object):
 
         condition = self.normalize_condition(condition)
         if condition is not None:
-            self.current_line.condition = _conditions[condition]
             self.current_line.block = Block(self.program,
                                     min_indentation=self.current_line.indentation,
                                     inside_loop=True)

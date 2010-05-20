@@ -186,13 +186,21 @@ function Block(program, min_indentation, inside_loop) {
         return true;
     };
 
-    this.normalize_condition = function(condition) {
+    this.normalize_condition = function (condition) {
+        this.current_line.negate_condition = false;
+        if (condition.match(/^not /)) {
+            this.current_line.negate_condition = true;
+            condition = condition.slice(4);
+            }
+
         if (_conditions[condition] !== undefined) {
+            this.current_line.condition = _conditions[condition];
             return condition;
         }
 
         var stripped_condition = remove_spaces(condition);
         if (_conditions[stripped_condition] !== undefined) {
+            this.current_line.condition = _conditions[stripped_condition];
             return stripped_condition;
         }
 
@@ -204,8 +212,10 @@ function Block(program, min_indentation, inside_loop) {
         this.current_line.type = "if block";
         var matches = /^if (.*):\s*$/.exec(this.current_line.content);
         var condition = this.normalize_condition(matches[1]);
-        if (condition !== null){
-            this.parse_if_elif(condition);
+        if (condition !== null) {
+            this.current_line.block = new Block(this.program,
+                                                this.current_line.indentation,
+                                                this.inside_loop);
         }
     };
 
@@ -217,19 +227,15 @@ function Block(program, min_indentation, inside_loop) {
             this.current_line.type = "elif block";
             var matches = /^elif \s*(\S+)\s*:\s*$/.exec(this.current_line.content);
             var condition = this.normalize_condition(matches[1]);
-            if (condition !== null){
-                this.parse_if_elif(condition);
+            if (condition !== null) {
+                this.current_line.block = new Block(this.program,
+                                                this.current_line.indentation,
+                                                this.inside_loop);
             }
         }
         else {
             this.program.abort_parsing(_messages[this.program.language]["Missing if"]);
         }
-    };
-
-    this.parse_if_elif = function (condition) {
-        this.current_line.condition = _conditions[condition];
-        this.current_line.block = new Block(this.program, this.current_line.indentation,
-                                       this.inside_loop);
     };
 
     this.parse_else = function () {
@@ -250,8 +256,7 @@ function Block(program, min_indentation, inside_loop) {
         this.current_line.type = "while block";
         var matches = /^while (.*):\s*$/.exec(this.current_line.content);
         var condition = this.normalize_condition(matches[1]);
-        if (_conditions[condition] !== undefined) {
-            this.current_line.condition = _conditions[condition];
+        if (condition !== null) {
             this.current_line.block = new Block(this.program, this.current_line.indentation, true);
         }
     };
@@ -279,7 +284,7 @@ function Block(program, min_indentation, inside_loop) {
                 this.current_line.name = method_def_line.method_name;
                 this.current_line.block = method_def_line.block;
             }
-            else if (this.current_line.stripped_content == "pass"){
+            else if (this.current_line.stripped_content === "pass") {
                 this.current_line.type = "pass";
             }
             else if (this.current_line.content.match(/^def /)) {

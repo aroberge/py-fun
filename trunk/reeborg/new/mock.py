@@ -64,7 +64,7 @@ class MockBlockRunner(object):
         self.handle_if_elif(line)
 
     def handle_if_elif(self, line):
-        test_result = self.evaluate_condition(line.condition)
+        test_result = self.evaluate_condition(line)
         if test_result and self.if_branches != "done":
             self.execute_block(line.block, parent=self)
             self.if_branches = "done"
@@ -72,7 +72,7 @@ class MockBlockRunner(object):
     def handle_while(self, line):
         while True:
             self.highlight(line.line_number)
-            test_result = self.evaluate_condition(line.condition)
+            test_result = self.evaluate_condition(line)
             if test_result:
                 self.execute_block(line.block, parent=self)
             else:
@@ -81,7 +81,10 @@ class MockBlockRunner(object):
                 self.break_loop = None
                 break
 
-    def evaluate_condition(self, condition):
+    def evaluate_condition(self, line):
+        condition = line.condition
+        if line.negate_condition:
+            condition = not condition
         if condition == "on_beeper()":
             return on_beeper(self.fake_tests)
         else:

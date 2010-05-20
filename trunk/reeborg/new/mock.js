@@ -37,7 +37,7 @@ function MockBlockRunner(block, fake_tests, max_nb_instructions){
     }
 
     this.handle_if_elif = function(line){
-        var test_result = this.evaluate_condition(line.condition);
+        var test_result = this.evaluate_condition(line);
         if (test_result && this.if_branches != "done"){
             this.execute_block(line.block);
             this.if_branches = "done";
@@ -47,7 +47,7 @@ function MockBlockRunner(block, fake_tests, max_nb_instructions){
     this.handle_while = function(line){
         while (true){
             this.highlight(line.line_number);
-            test_result = this.evaluate_condition(line.condition);
+            test_result = this.evaluate_condition(line);
             if (test_result){
                 this.execute_block(line.block);
             }
@@ -61,18 +61,12 @@ function MockBlockRunner(block, fake_tests, max_nb_instructions){
             }
         }
     }
-/*    def handle_while(self, line):
-        while True:
-            test_result = self.evaluate_condition(line.condition)
-            if test_result:
-                self.execute_block(line.block, parent=self)
-            else:
-                break
-            if self.break_loop:
-                break*/
 
-
-    this.evaluate_condition = function(condition){
+    this.evaluate_condition = function(line){
+        condition = line.condition;
+        if (line.negate_condition){
+            condition = !condition;
+        }
         if (condition == "on_beeper()") {
             return this.on_beeper();
         }
