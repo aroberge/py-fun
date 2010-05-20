@@ -205,6 +205,11 @@ function Block(program, min_indentation, inside_loop) {
             return condition;
         }
 
+        if (this.program.user_defined[condition] !== undefined) {
+            this.current_line.condition = program.user_defined[condition];
+            return condition;
+        }
+
         var stripped_condition = remove_spaces(condition);
         if (_conditions[stripped_condition] !== undefined) {
             this.current_line.condition = _conditions[stripped_condition];

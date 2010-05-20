@@ -214,6 +214,15 @@ test('test assignment True', function(){
     strictEqual(program.syntax_error, null, "syntax error");
 });
 
+test('test assignment True if with not', function(){
+    var program = new UserProgram("vrai = True\nif vrai:\n  move()");
+    var block = new Block(program);
+    strictEqual(program.syntax_error, null, "syntax error");
+    strictEqual(block.lines[1].type, "if block", "type");
+    strictEqual(block.lines[1].condition, true, "condition");
+
+});
+
 test('test assignment False', function(){
     var program = new UserProgram("f = False");
     var block = new Block(program);
@@ -224,6 +233,15 @@ test('test assignment condition', function(){
     var program = new UserProgram("t = on_beeper");
     var block = new Block(program);
     strictEqual(program.syntax_error, null, "syntax error");
+});
+
+test('test assignment condition', function(){
+    var program = new UserProgram("t=on_beeper\nif not t():\n  move()");
+    var block = new Block(program);
+    strictEqual(program.syntax_error, null, "syntax error");
+    strictEqual(block.lines[1].type, "if block");
+    strictEqual(block.lines[1].condition, "on_beeper()");
+    strictEqual(block.lines[1].negate_condition, true);
 });
 
 test('test if true', function(){
