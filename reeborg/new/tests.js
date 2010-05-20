@@ -236,6 +236,16 @@ test('test if on_beeper', function(){
     strictEqual(program.syntax_error, null, "syntax error");
     strictEqual(block.lines[0].type, "if block", "type");
     strictEqual(block.lines[0].condition, "on_beeper()", "condition");
+    strictEqual(block.lines[0].negate_condition, false, "negate condition");
+});
+
+test('test if not on_beeper', function(){
+    var program = new UserProgram("if not on_beeper():\n  move()");
+    var block = new Block(program);
+    strictEqual(program.syntax_error, null, "syntax error");
+    strictEqual(block.lines[0].type, "if block", "type");
+    strictEqual(block.lines[0].condition, "on_beeper()", "condition");
+    strictEqual(block.lines[0].negate_condition, true, "negate condition");
 });
 
 test('test if on_beeper with spaces', function(){
@@ -414,6 +424,15 @@ test('test if True', function(){
     deepEqual(runner.lines_executed, [0, 1], 'lines executed');
 });
 
+test('test if not True', function(){
+    var program = new UserProgram("if not True:\n  move()");
+    var block = new Block(program);
+    strictEqual(program.syntax_error, null, "syntax error");
+    var runner = new MockBlockRunner(block);
+    deepEqual(runner.output, [], 'output');
+    deepEqual(runner.lines_executed, [0], 'lines executed');
+});
+
 test('test if True twice', function(){
     var program = new UserProgram("if True:\n  move()\nif True:\n  move()\n");
     var block = new Block(program);
@@ -439,6 +458,15 @@ test('test if False', function(){
     var runner = new MockBlockRunner(block);
     deepEqual(runner.output, [], 'output');
     deepEqual(runner.lines_executed, [0], 'lines executed');
+});
+
+test('test if not False', function(){
+    var program = new UserProgram("if not False:\n  move()");
+    var block = new Block(program);
+    strictEqual(program.syntax_error, null, "syntax error");
+    var runner = new MockBlockRunner(block);
+    deepEqual(runner.output, ["move()"], 'output');
+    deepEqual(runner.lines_executed, [0, 1], 'lines executed');
 });
 
 test('test if on_beeper  (   ) True', function(){

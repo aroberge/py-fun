@@ -221,6 +221,15 @@ class TestBlock(unittest.TestCase):
         self.assertEqual(program.syntax_error, None)
         self.assertEqual(block.lines[0].type, "if block")
         self.assertEqual(block.lines[0].condition, "on_beeper()")
+        self.assertEqual(block.lines[0].negate_condition, False)
+
+    def test_if_not_on_beeper(self):
+        program = reeborg.UserProgram("if not on_beeper():\n  move()")
+        block = reeborg.Block(program)
+        self.assertEqual(program.syntax_error, None)
+        self.assertEqual(block.lines[0].type, "if block")
+        self.assertEqual(block.lines[0].condition, "on_beeper()")
+        self.assertEqual(block.lines[0].negate_condition, True)
 
     def test_if_invalid(self):
         program = reeborg.UserProgram("if invalid:\n  move()")
@@ -416,6 +425,14 @@ class TestMockBlockRunner(unittest.TestCase):
         self.assertEqual(runner.output, ["move()"])
         self.assertEqual(runner.lines_executed, [0, 1])
 
+    def test_if_not_true(self):
+        program = reeborg.UserProgram("if not True:\n  move()")
+        block = reeborg.Block(program)
+        self.assertEqual(program.syntax_error, None)
+        runner = mock.MockBlockRunner(block)
+        self.assertEqual(runner.output, [])
+        self.assertEqual(runner.lines_executed, [0])
+
     def test_if_true_twice(self):
         program = reeborg.UserProgram("if True:\n  move()\nif True:\n  move()")
         block = reeborg.Block(program)
@@ -439,6 +456,14 @@ class TestMockBlockRunner(unittest.TestCase):
         runner = mock.MockBlockRunner(block)
         self.assertEqual(runner.output, [])
         self.assertEqual(runner.lines_executed, [0])
+
+    def test_if_not_false(self):
+        program = reeborg.UserProgram("if not False:\n  move()")
+        block = reeborg.Block(program)
+        self.assertEqual(program.syntax_error, None)
+        runner = mock.MockBlockRunner(block)
+        self.assertEqual(runner.output, ["move()"])
+        self.assertEqual(runner.lines_executed, [0, 1])
 
     def test_if_on_beeper_true(self):
         program = reeborg.UserProgram("if on_beeper():\n  move()")
