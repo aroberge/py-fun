@@ -220,6 +220,10 @@ class Block(object):
             self.current_line.condition = _conditions[condition]
             return condition
 
+        if condition in self.program.user_defined:
+            self.current_line.condition = self.program.user_defined[condition]
+            return condition
+
         stripped_condition = remove_spaces(condition)
         if stripped_condition in _conditions:
             self.current_line.condition = _conditions[stripped_condition]

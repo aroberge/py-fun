@@ -193,6 +193,13 @@ class TestBlock(unittest.TestCase):
         block = reeborg.Block(program)
         self.assertEqual(program.syntax_error, None)
 
+    def test_assignment_true_if_with_not(self):
+        program = reeborg.UserProgram("vrai = True\nif not vrai:\n  move()")
+        block = reeborg.Block(program)
+        self.assertEqual(program.syntax_error, None)
+        self.assertEqual(block.lines[1].type, "if block")
+        self.assertEqual(block.lines[1].condition, True)
+
     def test_assignment_false(self):
         program = reeborg.UserProgram("t = False")
         block = reeborg.Block(program)
@@ -202,6 +209,14 @@ class TestBlock(unittest.TestCase):
         program = reeborg.UserProgram("t = on_beeper")
         block = reeborg.Block(program)
         self.assertEqual(program.syntax_error, None)
+
+    def test_assignment_condition_if_with_not(self):
+        program = reeborg.UserProgram("t=on_beeper\nif not t():\n  move()")
+        block = reeborg.Block(program)
+        self.assertEqual(program.syntax_error, None)
+        self.assertEqual(block.lines[1].type, "if block")
+        self.assertEqual(block.lines[1].condition, "on_beeper()")
+        self.assertEqual(block.lines[1].negate_condition, True)
 
     def test_if_true(self):
         program = reeborg.UserProgram("if True:\n  move()")
