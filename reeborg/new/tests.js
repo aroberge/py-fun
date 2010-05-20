@@ -208,6 +208,24 @@ test('test assignment method', function(){
     deepEqual(program.syntax_error, [3, "Attempt to redefine 'm2'"], "syntax error");
 });
 
+test('test assignment True', function(){
+    var program = new UserProgram("t = True");
+    var block = new Block(program);
+    strictEqual(program.syntax_error, null, "syntax error");
+});
+
+test('test assignment False', function(){
+    var program = new UserProgram("f = False");
+    var block = new Block(program);
+    strictEqual(program.syntax_error, null, "syntax error");
+});
+
+test('test assignment condition', function(){
+    var program = new UserProgram("t = on_beeper");
+    var block = new Block(program);
+    strictEqual(program.syntax_error, null, "syntax error");
+});
+
 test('test if true', function(){
     var program = new UserProgram("if True:\n  move()");
     var block = new Block(program);
@@ -397,7 +415,7 @@ test('test assignment builtin', function(){
     deepEqual(runner.lines_executed, [0, 1], 'lines executed');
 });
 
-test('test assignment user_method', function(){
+test('test assignment user_defined', function(){
     var program = new UserProgram("def m2():\n move()\n move()\nmm=m2\nmm()");
     var block = new Block(program);
     strictEqual(program.syntax_error, null, "syntax error");

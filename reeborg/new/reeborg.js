@@ -67,7 +67,7 @@ function UserProgram(program, language) {
     this.nb_lines = lines.length;
     this.index = 0;
     this.syntax_error = null;
-    this.user_methods = {};
+    this.user_defined = {};
     for (var i = 0; i < this.nb_lines; i++) {
         this.lines.push(new LineOfCode(lines[i], i));
     }
@@ -140,18 +140,25 @@ function Block(program, min_indentation, inside_loop) {
             right = matches[2];
             this.current_line.type = "assignment";
             if (this.program.builtins[left + "()"] !== undefined ||
-                this.program.user_methods[left + "()"] !== undefined) {
+                this.program.user_defined[left + "()"] !== undefined) {
                 this.program.abort_parsing(_messages[this.program.language]["Attempt to redefine"] +
                                             left + "'");
             }
             else if (this.program.builtins[right + "()"] !== undefined) {
                 this.program.builtins[left + "()"] = this.program.builtins[right + "()"];
-
             }
-            else if (this.program.user_methods[right + "()"] !== undefined) {
-                this.program.user_methods[left + "()"] = this.program.user_methods[right + "()"];
+            else if (this.program.user_defined[right + "()"] !== undefined) {
+                this.program.user_defined[left + "()"] = this.program.user_defined[right + "()"];
             }
-
+            else if (right === "True") {
+                this.program.user_defined[left] = true;
+            }
+            else if (right === "False") {
+                this.program.user_defined[left] = false;
+            }
+            else if (_conditions[right + "()"] !== undefined) {
+                this.program.user_defined[left + "()"] = _conditions[right + "()"];
+            }
             else {
                 this.program.abort_parsing(_messages[this.program.language]["Unknown command"] + right);
             }
@@ -175,12 +182,12 @@ function Block(program, min_indentation, inside_loop) {
         }
 
         if (this.program.builtins[name + "()"] !== undefined ||
-           this.program.user_methods[name + "()"] !== undefined) {
+           this.program.user_defined[name + "()"] !== undefined) {
             this.program.abort_parsing(_messages[this.program.language]["Attempt to redefine"] + name + "'");
             return false;
         }
         this.current_line.method_name = name;
-        this.program.user_methods[name + "()"] = this.current_line;
+        this.program.user_defined[name + "()"] = this.current_line;
         this.current_line.block = new Block(this.program, this.current_line.indentation,
                                        this.current_line.type);
         return true;
@@ -191,7 +198,7 @@ function Block(program, min_indentation, inside_loop) {
         if (condition.match(/^not /)) {
             this.current_line.negate_condition = true;
             condition = condition.slice(4);
-            }
+        }
 
         if (_conditions[condition] !== undefined) {
             this.current_line.condition = _conditions[condition];
@@ -278,9 +285,9 @@ function Block(program, min_indentation, inside_loop) {
                 this.current_line.name = this.program.builtins[this.current_line.stripped_content];
                 this.current_line.type = "command";
             }
-            else if (this.program.user_methods[this.current_line.content] !== undefined) {
+            else if (this.program.user_defined[this.current_line.content] !== undefined) {
                 this.current_line.type = "user method";
-                var method_def_line = this.program.user_methods[this.current_line.content];
+                var method_def_line = this.program.user_defined[this.current_line.content];
                 this.current_line.name = method_def_line.method_name;
                 this.current_line.block = method_def_line.block;
             }

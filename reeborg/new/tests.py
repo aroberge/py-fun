@@ -188,6 +188,21 @@ class TestBlock(unittest.TestCase):
         block = reeborg.Block(program)
         self.assertEqual(program.syntax_error, [3, "Attempt to redefine 'm2'"])
 
+    def test_assignment_true(self):
+        program = reeborg.UserProgram("t = True")
+        block = reeborg.Block(program)
+        self.assertEqual(program.syntax_error, None)
+
+    def test_assignment_false(self):
+        program = reeborg.UserProgram("t = False")
+        block = reeborg.Block(program)
+        self.assertEqual(program.syntax_error, None)
+
+    def test_assignment_condition(self):
+        program = reeborg.UserProgram("t = on_beeper")
+        block = reeborg.Block(program)
+        self.assertEqual(program.syntax_error, None)
+
     def test_if_true(self):
         program = reeborg.UserProgram("if True:\n  move()")
         block = reeborg.Block(program)
