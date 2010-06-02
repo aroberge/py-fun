@@ -22,6 +22,10 @@ class MockBlockRunner(object):
             self.execute_block(block)
         except RuntimeError:
             self.output.append("Too many instructions.")
+        except AttributeError:
+            print(self.output)
+            print(self.lines_executed)
+            raise
 
     def execute_block(self, block, parent=None):
         for line in block.lines:
