@@ -41,6 +41,7 @@ class TestUserProgram(unittest.TestCase):
         program.previous_line()
         self.assertEqual(program.next_line(), line)
 
+    def test_next_line_with_comment(self):
         program = reeborg.UserProgram("b\na #ignore\nc")
         line = reeborg.LineOfCode("a ", 1)
         program.next_line()
@@ -56,6 +57,7 @@ class TestBlock(unittest.TestCase):
         self.assertEqual(block.lines[0].type, "command")
         self.assertEqual(program.syntax_error, None)
 
+    def test_single_line_with_error(self):
         program = reeborg.UserProgram("wrong")
         block = reeborg.Block(program)
         self.assertEqual(program.syntax_error, [0, "Unknown command: wrong"])
@@ -66,6 +68,7 @@ class TestBlock(unittest.TestCase):
         self.assertEqual(block.lines[0].name, "move")
         self.assertEqual(program.syntax_error, None)
 
+    def test_single_line_french_with_error(self):
         program = reeborg.UserProgram("wrong", language="fr")
         block = reeborg.Block(program)
         self.assertEqual(program.syntax_error, [0, "Commande inconnue: wrong"])
@@ -79,6 +82,7 @@ class TestBlock(unittest.TestCase):
         self.assertEqual(block.lines[1].type, "command")
         self.assertEqual(program.syntax_error, None)
 
+    def test_two_lines_with_error(self):
         program = reeborg.UserProgram("move()\nwrong")
         block = reeborg.Block(program)
         self.assertEqual(program.syntax_error, [1, "Unknown command: wrong"])
@@ -119,8 +123,6 @@ class TestBlock(unittest.TestCase):
         block = reeborg.Block(program)
         self.assertEqual(program.syntax_error, None)
 
-### TODO  add test with space between parentheses for method def i.e. def m(  )
-
     def test_def(self):
         p = "def turn_around():\n  turn_left()\n  turn_left()\nturn_around()"
         program = reeborg.UserProgram(p)
@@ -143,11 +145,11 @@ class TestBlock(unittest.TestCase):
 
         program = reeborg.UserProgram("def :\n  move()")
         block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, [0, 'Syntax error: bad method name or missing colon.'])
+        self.assertEqual(program.syntax_error, [0, 'Syntax Error: bad method name or missing colon.'])
 
         program = reeborg.UserProgram("def m()\n  move()")
         block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, [0, 'Syntax error: bad method name or missing colon.'])
+        self.assertEqual(program.syntax_error, [0, 'Syntax Error: bad method name or missing colon.'])
 
     def test_def_not_allowed(self):
         program = reeborg.UserProgram("def move():\n  turn_left()")
@@ -160,6 +162,10 @@ class TestBlock(unittest.TestCase):
 
     def test_assignment_builtin(self):
         program = reeborg.UserProgram("mo = move\nmo()")
+        block = reeborg.Block(program)
+        self.assertEqual(program.syntax_error, None)
+
+        program = reeborg.UserProgram("mo = move\nm=mo\nm()")
         block = reeborg.Block(program)
         self.assertEqual(program.syntax_error, None)
 
@@ -341,7 +347,7 @@ else: move()
     def test_break(self):
         program = reeborg.UserProgram("break")
         block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, [0, "SyntaxError: 'break' outside loop"] )
+        self.assertEqual(program.syntax_error, [0, "Syntax Error: 'break' outside loop"] )
 
     def test_while_break(self):
         program = reeborg.UserProgram("while True:\n  break")
@@ -351,7 +357,7 @@ else: move()
     def test_break_outside_while(self):
         program = reeborg.UserProgram("if True:\n  break")
         block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, [1, "SyntaxError: 'break' outside loop"])
+        self.assertEqual(program.syntax_error, [1, "Syntax Error: 'break' outside loop"])
 
     def test_while_if_break(self):
         program = reeborg.UserProgram("while True:\n  if True:\n     break")
@@ -387,127 +393,113 @@ while True:
         block = reeborg.Block(program)
         self.assertEqual(program.syntax_error, None)
 
-class TestMockBlockRunner(unittest.TestCase):
+    def test_del_builtin(self):
+        program = reeborg.UserProgram("del move")
+        block = reeborg.Block(program)
+        self.assertEqual(program.syntax_error, [0, "Syntax Error: attempt to delete builtin method"])
 
-    def test_move(self):
-        program = reeborg.UserProgram("move()")
+    def test_del_assign(self):
+        program = reeborg.UserProgram("m = move\ndel m\nm=move")
         block = reeborg.Block(program)
         self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+
+    def test_keyword_assignment(self):
+        program = reeborg.UserProgram("True = move")
+        block = reeborg.Block(program)
+        self.assertEqual(program.syntax_error, [0, "Syntax Error: attempting to redefine Python keyword"])
+
+    def test_invalid_name_assignment(self):
+        program = reeborg.UserProgram("2m = move")
+        block = reeborg.Block(program)
+        self.assertEqual(program.syntax_error, [0,
+            "Syntax Error: names must start with a letter or underscore character"])
+
+#####==================================================
+
+class TestMockBlockRunner(unittest.TestCase):
+
+    def compile_runner(self, program, fake_tests=None, max_nb_instructions=1000):
+        program = reeborg.UserProgram(program)
+        block = reeborg.Block(program)
+        self.assertEqual(program.syntax_error, None)
+        return mock.MockBlockRunner(block, fake_tests=fake_tests,
+                                    max_nb_instructions=max_nb_instructions)
+
+    def test_move(self):
+        runner = self.compile_runner("move()")
         self.assertEqual(runner.output, ["move()"])
         self.assertEqual(runner.lines_executed, [0])
 
     def test_pass(self):
-        program = reeborg.UserProgram("pass")
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        runner = self.compile_runner("pass")
         self.assertEqual(runner.output, [])
         self.assertEqual(runner.lines_executed, [0])
 
     def test_method(self):
         p = "def turn_around():\n  turn_left()\n  turn_left()\nturn_around()"
-        program = reeborg.UserProgram(p)
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        runner = self.compile_runner(p)
         self.assertEqual(runner.output, ["turn_left()", "turn_left()"])
         self.assertEqual(runner.lines_executed, [0, 3, 1, 2])
 
+    def test_method2(self):
         p = "def t2():\n  turn_left()\n  turn_left()\nt2()\nt2()"
-        program = reeborg.UserProgram(p)
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        runner = self.compile_runner(p)
         self.assertEqual(runner.output, ["turn_left()", "turn_left()",
                                          "turn_left()", "turn_left()"])
         self.assertEqual(runner.lines_executed, [0, 3, 1, 2, 4, 1, 2])
 
     def test_assignment_builtin(self):
-        program = reeborg.UserProgram("m=move\nm()")
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        runner = self.compile_runner("m=move\nm()")
         self.assertEqual(runner.output, ["move()"])
         self.assertEqual(runner.lines_executed, [0, 1])
 
     def test_assignment_method(self):
-        program = reeborg.UserProgram("def m2():\n move()\n move()\nmm=m2\nmm()")
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        runner = self.compile_runner("def m2():\n move()\n move()\nmm=m2\nmm()")
         self.assertEqual(runner.output, ["move()", "move()"])
         self.assertEqual(runner.lines_executed, [0, 3, 4, 1, 2])
 
     def test_blank_line(self):
-        program = reeborg.UserProgram("move()\n\nmove()")
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        runner = self.compile_runner("move()\n\nmove()")
         self.assertEqual(runner.output, ["move()", "move()"])
         self.assertEqual(runner.lines_executed, [0, 2])
 
     def test_if_true(self):
-        program = reeborg.UserProgram("if True:\n  move()")
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        runner = self.compile_runner("if True:\n  move()")
         self.assertEqual(runner.output, ["move()"])
         self.assertEqual(runner.lines_executed, [0, 1])
 
     def test_if_not_true(self):
-        program = reeborg.UserProgram("if not True:\n  move()")
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        runner = self.compile_runner("if not True:\n  move()")
         self.assertEqual(runner.output, [])
         self.assertEqual(runner.lines_executed, [0])
 
     def test_if_true_twice(self):
-        program = reeborg.UserProgram("if True:\n  move()\nif True:\n  move()")
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        runner = self.compile_runner("if True:\n  move()\nif True:\n  move()")
         self.assertEqual(runner.output, ["move()", "move()"])
         self.assertEqual(runner.lines_executed, [0, 1, 2, 3])
 
     def test_if_true_if_false(self):
-        program = reeborg.UserProgram("if True:\n  move()\nif False:\n  turn_left()")
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        runner = self.compile_runner("if True:\n  move()\nif False:\n  turn_left()")
         self.assertEqual(runner.output, ["move()"])
         self.assertEqual(runner.lines_executed, [0, 1, 2])
 
     def test_if_false(self):
-        program = reeborg.UserProgram("if False:\n  move()")
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        runner = self.compile_runner("if False:\n  move()")
         self.assertEqual(runner.output, [])
         self.assertEqual(runner.lines_executed, [0])
 
     def test_if_not_false(self):
-        program = reeborg.UserProgram("if not False:\n  move()")
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        runner = self.compile_runner("if not False:\n  move()")
         self.assertEqual(runner.output, ["move()"])
         self.assertEqual(runner.lines_executed, [0, 1])
 
     def test_if_on_beeper_true(self):
-        program = reeborg.UserProgram("if on_beeper():\n  move()")
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block, [True])
+        runner = self.compile_runner("if on_beeper():\n  move()", [True])
         self.assertEqual(runner.output, ["move()"])
         self.assertEqual(runner.lines_executed, [0, 1])
 
     def test_if_on_beeper_with_spaces_true(self):
-        program = reeborg.UserProgram("if on_beeper (\t ) \t :\n  move(\t  )")
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block, [True])
+        runner = self.compile_runner("if on_beeper (\t ) \t :\n  move(\t  )", [True])
         self.assertEqual(runner.output, ["move()"])
         self.assertEqual(runner.lines_executed, [0, 1])
 
@@ -518,58 +510,43 @@ if on_beeper():
 if on_beeper():
     turn_left()
 """
-        program = reeborg.UserProgram(p)
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block, [True, False])
+        runner = self.compile_runner(p, [True, False])
         self.assertEqual(runner.output, ["move()"])
         self.assertEqual(runner.lines_executed, [0, 1, 2])
 
     def test_if_on_beeper_false(self):
-        program = reeborg.UserProgram("if on_beeper():\n  move()")
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block, [False])
+        p = "if on_beeper():\n  move()"
+        runner = self.compile_runner(p, [False])
         self.assertEqual(runner.output, [])
         self.assertEqual(runner.lines_executed, [0])
 
     def test_if_false_elif_true(self):
-        program = reeborg.UserProgram("if False:\n  move()\nelif True:\n turn_left()")
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        p = "if False:\n  move()\nelif True:\n turn_left()"
+        runner = self.compile_runner(p)
         self.assertEqual(runner.output, ["turn_left()"])
         self.assertEqual(runner.lines_executed, [0, 2, 3])
 
     def test_if_false_elif_on_beeper_true(self):
-        program = reeborg.UserProgram("if False:\n  move()\nelif on_beeper():\n turn_left()")
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block, [True])
+        p = "if False:\n  move()\nelif on_beeper():\n turn_left()"
+        runner = self.compile_runner(p, [True])
         self.assertEqual(runner.output, ["turn_left()"])
         self.assertEqual(runner.lines_executed, [0, 2, 3])
 
     def test_if_false_elif_on_beeper_false(self):
-        program = reeborg.UserProgram("if False:\n  move()\nelif on_beeper():\n turn_left()")
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block, [False])
+        p = "if False:\n  move()\nelif on_beeper():\n turn_left()"
+        runner = self.compile_runner(p, [False])
         self.assertEqual(runner.output, [])
         self.assertEqual(runner.lines_executed, [0, 2])
 
     def test_if_false_elif_false(self):
-        program = reeborg.UserProgram("if False:\n  move()\nelif False:\n turn_left()")
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        p = "if False:\n  move()\nelif False:\n turn_left()"
+        runner = self.compile_runner(p)
         self.assertEqual(runner.output, [])
         self.assertEqual(runner.lines_executed, [0, 2])
 
     def test_if_true_elif_true(self):
-        program = reeborg.UserProgram("if True:\n  move()\nelif True:\n turn_left()")
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        p = "if True:\n  move()\nelif True:\n turn_left()"
+        runner = self.compile_runner(p)
         self.assertEqual(runner.output, ["move()"])
         self.assertEqual(runner.lines_executed, [0, 1, 2])
 
@@ -581,10 +558,7 @@ elif False:
     turn_left()
 elif True:
     move()"""
-        program = reeborg.UserProgram(p)
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        runner = self.compile_runner(p)
         self.assertEqual(runner.lines_executed, [0, 2, 4, 5])
         self.assertEqual(runner.output, ["move()"])
 
@@ -595,10 +569,7 @@ if True:
 else:
     turn_left()
 """
-        program = reeborg.UserProgram(p)
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        runner = self.compile_runner(p)
         self.assertEqual(runner.lines_executed, [0, 1, 2])
         self.assertEqual(runner.output, ["move()"])
 
@@ -609,10 +580,7 @@ if False:
 else:
     turn_left()
 """
-        program = reeborg.UserProgram(p)
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        runner = self.compile_runner(p)
         self.assertEqual(runner.lines_executed, [0, 2, 3])
         self.assertEqual(runner.output, ["turn_left()"])
 
@@ -624,26 +592,19 @@ elif False:
     turn_left()
 else:
     move()"""
-        program = reeborg.UserProgram(p)
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        runner = self.compile_runner(p)
         self.assertEqual(runner.lines_executed, [0, 2, 4, 5])
         self.assertEqual(runner.output, ["move()"])
 
     def test_while_on_beeper(self):
-        program = reeborg.UserProgram("while on_beeper():\n  move()")
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block, fake_tests=[True, True, False])
+        p = "while on_beeper():\n  move()"
+        runner = self.compile_runner(p, [True, True, False])
         self.assertEqual(runner.output, ["move()", "move()"])
         self.assertEqual(runner.lines_executed, [0, 0, 1, 0, 1, 0])
 
     def test_while_on_beeper_with_spaces(self):
-        program = reeborg.UserProgram("while on_beeper ( )  :\n  move(\t)")
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block, fake_tests=[True, True, False])
+        p = "while on_beeper ( )  :\n  move(\t)"
+        runner = self.compile_runner(p, [True, True, False])
         self.assertEqual(runner.output, ["move()", "move()"])
         self.assertEqual(runner.lines_executed, [0, 0, 1, 0, 1, 0])
 
@@ -655,10 +616,7 @@ while True:
     break
     turn_left()
 """
-        program = reeborg.UserProgram(p)
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        runner = self.compile_runner(p)
         self.assertEqual(runner.lines_executed, [0, 0, 1, 2, 3])
         self.assertEqual(runner.output, ["move()", "move()"])
 
@@ -672,10 +630,7 @@ while True:
     turn_left()
     move()
 """
-        program = reeborg.UserProgram(p)
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        runner = self.compile_runner(p)
         self.assertEqual(runner.lines_executed, [0, 0, 1, 2, 3, 4])
         self.assertEqual(runner.output, ["move()", "move()"])
 
@@ -690,10 +645,7 @@ while True:
             break
     turn_left()
 """
-        program = reeborg.UserProgram(p)
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        runner = self.compile_runner(p)
         self.assertEqual(runner.output, ["move()", "move()", "move()"])
         self.assertEqual(runner.lines_executed, [0, 0, 1, 2, 3, 4, 5, 6])
 
@@ -709,10 +661,7 @@ while True:
                 break
     turn_left()
 """
-        program = reeborg.UserProgram(p)
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        runner = self.compile_runner(p)
         self.assertEqual(runner.output, ["move()", "move()", "move()"])
         self.assertEqual(runner.lines_executed, [0, 0, 1, 2, 3, 4, 5, 6, 7])
 
@@ -728,20 +677,26 @@ while True:
     break
     turn_left()
 """
-        program = reeborg.UserProgram(p)
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block)
+        runner = self.compile_runner(p)
         self.assertEqual(runner.output, ["move()", "move()", "move()"])
         self.assertEqual(runner.lines_executed, [0, 0, 1, 2, 2, 3, 4, 6, 7])
 
     def test_max_instructions(self):
-        program = reeborg.UserProgram("while True:\n  move()")
-        block = reeborg.Block(program)
-        self.assertEqual(program.syntax_error, None)
-        runner = mock.MockBlockRunner(block, [], 7)
+        p = "while True:\n  move()"
+        runner = self.compile_runner(p, [], 7)
         self.assertEqual(runner.output, ['move()', 'move()', 'move()', 'Too many instructions.'])
         self.assertEqual(runner.lines_executed, [0, 0, 1, 0, 1, 0, 1, 0])
+
+    def test_recursion(self):
+        p = """\
+def repeat():
+    move()
+    repeat()
+repeat()
+"""
+        runner = self.compile_runner(p, [], 6)
+        self.assertEqual(runner.output, ['move()', 'move()', 'Too many instructions.'])
+        self.assertEqual(runner.lines_executed, [0, 3, 1, 2, 1, 2, 1])
 
 if __name__ == '__main__':
     unittest.main()

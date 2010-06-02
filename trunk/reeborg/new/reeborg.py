@@ -2,6 +2,12 @@
 
 import re
 
+_keywords = ["False", "None", "True", "and", "as", "assert", "break",
+             "class", "continue", "def", "del", "elif", "else", "except",
+             "finally", "from", "global", "if", "import", "in",
+             "is", "lambda", "nonlocal", "not", "or", "pass", "raise",
+             "return", "try", "while", "with", "yield"]
+
 _builtins = {
     "en": {"move()": "move",
            "turn_left()": "turn_left",
@@ -24,8 +30,11 @@ _messages = {
            "Syntax error": "Syntax error: '%s'",
            "Invalid test condition": "Invalid test condition: '%s'",
            "Missing if": "'elif' or 'else' without matching 'if'",
-           "break outside loop": "SyntaxError: 'break' outside loop",
-           "def syntax error": "Syntax error: bad method name or missing colon."
+           "break outside loop": "Syntax Error: 'break' outside loop",
+           "def syntax error": "Syntax Error: bad method name or missing colon.",
+           "attempt to delete builtin method": "Syntax Error: attempt to delete builtin method",
+           "keyword assignment": "Syntax Error: attempting to redefine Python keyword",
+           "bad identifier": "Syntax Error: names must start with a letter or underscore character"
            },
     "fr": {"Unknown command": "Commande inconnue: %s",
            "Indentation error": "Erreur d'indentation",
@@ -34,17 +43,22 @@ _messages = {
            "Invalid test condition": "Condition non valide: '%s'",
            "Missing if": "'elif' ou 'else' sans le 'if' correspondant",
            "break outside loop": "Erreur de syntaxe: 'break' à l'extérieur d'une boucle",
-           "def syntax error": "Erreur de syntaxe: mauvais nom de méthode ou 'deux points'."
+           "def syntax error": "Erreur de syntaxe: mauvais nom de méthode ou 'deux points'.",
+           "attempt to delete builtin method": "Erreur de syntaxe: tentative d'éliminer une commande",
+           "keyword assignment": "Erreur de syntaxe: tentative de redéfinir un mot réservé par Python",
+           "bad identifier": "Erreur de syntaxe: les noms doivent débuter par une lettre ou un caractère de soulignement"
            },
 }
 
-assignment_pattern = re.compile("^(\w*)\s*=\s*(\w*)\s*$")
+assignment_pattern = re.compile("^([a-zA-Z_]\w*)\s*=\s*(\w*)\s*$")
+bad_identifier_assignment_pattern = re.compile("^(\w*)\s*=\s*(\w*)\s*$")
 comment_pattern = re.compile("(?!(\'|\")*#.*(\'|\")\s*)#.*")
 def_pattern = re.compile("def \s*(.*)\(\s*\)\s*:\s*")
+del_pattern = re.compile("del \s*(.*)")
 elif_pattern = re.compile("elif (.*):\s*")
-if_pattern = re.compile("if (.*):\s*")
-indentation_pattern = re.compile("( *)(.*)")
-while_pattern = re.compile("while (.*):\s*")
+if_pattern = re.compile("if \s*(.*)\s*:\s*")
+indentation_pattern = re.compile("( *)(.*)")  ## NOTE: only spaces - no tabs
+while_pattern = re.compile("while \s*(.*)\s*:\s*")
 
 def remove_spaces(text):
     ''' removes all spurious spaces in text so that something like
@@ -94,6 +108,7 @@ class UserProgram(object):
         #
         self.syntax_error = None
         self.user_defined = {}
+        self.recursive_calls = []
 
     def next_line(self):
         if self.index >= self.nb_lines:
@@ -109,6 +124,15 @@ class UserProgram(object):
         self.syntax_error = [self.index-1, msg]
 
 
+########
+#######
+#######
+########     Try to first create Block then call parse()
+########
+
+
+
+
 class Block(object):
     def __init__(self, program, min_indentation=-1, inside_loop=False):
         self.lines = []
@@ -117,6 +141,7 @@ class Block(object):
         self.block_indentation = None
         self.inside_loop = inside_loop
         self.parse()
+        self.resolve_recursive_calls()
 
     def parse(self):
         self.previous_line_content = None
@@ -134,8 +159,14 @@ class Block(object):
             elif self.current_line.content in self.program.user_defined:
                 self.current_line.type = "user method"
                 method_def_line = self.program.user_defined[self.current_line.content]
-                self.current_line.name = method_def_line.method_name
-                self.current_line.block = method_def_line.block
+                try:
+                    self.current_line.name = method_def_line.method_name
+                    self.current_line.block = method_def_line.block
+                    if self.current_line.block == None:
+                        self.program.recursive_calls.append(self.current_line.line_number)
+                except AttributeError:   # not a user method, but a builtin...
+                    self.current_line.name = self.program.builtins[method_def_line + "()"]
+                    self.current_line.type = "command"
             elif self.current_line.stripped_content == "pass":
                 self.current_line.type = "pass"
             elif self.current_line.content.startswith("def "):
@@ -146,8 +177,10 @@ class Block(object):
                 self.parse_elif()
             elif self.current_line.stripped_content == "else:":
                 self.parse_else()
-            elif self.current_line.content.startswith("while"):
+            elif self.current_line.content.startswith("while "):
                 self.parse_while()
+            elif self.current_line.content.startswith("del "):
+                self.parse_del()
             elif self.current_line.stripped_content == "break":
                 if self.inside_loop:
                     self.current_line.type = "break"
@@ -165,6 +198,22 @@ class Block(object):
                 break
             self.lines.append(self.current_line)
             self.previous_line_content = self.current_line.content
+
+    def resolve_recursive_calls(self):
+        '''attempts to resolve what have been identified as
+        recursive calls'''
+        if not self.program.recursive_calls:
+            return
+        lines = self.program.lines
+        for line_number in self.program.recursive_calls:
+            name = lines[line_number].name
+            for line in lines:
+                if line.name == name:
+                    if line.block is not None:
+                        lines[line_number].block = line.block
+                        break
+
+
 
     def handle_indentation(self):
         if self.block_indentation is None:   # begin new block
@@ -208,6 +257,25 @@ class Block(object):
         self.current_line.block = Block(self.program,
                                          min_indentation=self.current_line.indentation)
 
+    def parse_del(self):
+        match = del_pattern.search(self.current_line.content)
+        try:
+            name = match.group(1)
+        except AttributeError:
+            self.program.abort_parsing(_messages[self.program.language
+                                                 ]["del syntax error"])
+            return
+        if name+"()" in self.program.builtins:
+            self.program.abort_parsing(_messages[self.program.language
+                                                 ]["attempt to delete builtin method"])
+        elif name+"()" in self.program.user_defined:
+            del self.program.user_defined[name+"()"]
+        else:
+            self.program.abort_parsing(_messages[self.program.language
+                                                     ]["Unknown command"
+                                                       ] % name+"()")
+
+
     def normalize_condition(self, condition):
         '''ensures that the test condition is a valid one'''
         if condition.startswith("not "):
@@ -236,7 +304,7 @@ class Block(object):
     def parse_if(self):
         self.current_line.type = "if block"
         match = if_pattern.search(self.current_line.content)
-        condition = match.group(1).strip()
+        condition = match.group(1)
         condition = self.normalize_condition(condition)
         if condition is not None:
             self.current_line.block = Block(self.program,
@@ -252,7 +320,7 @@ class Block(object):
             return
         self.current_line.type = "elif block"
         match = elif_pattern.search(self.current_line.content)
-        condition = match.group(1).strip()
+        condition = match.group(1)
         condition = self.normalize_condition(condition)
         if condition is not None:
             self.current_line.block = Block(self.program,
@@ -266,7 +334,7 @@ class Block(object):
                                             ]["Missing if"])
             return
         self.current_line.type = "else block"
-        content = self.current_line.content.replace(" ", "")
+        content = self.current_line.content
         self.current_line.block = Block(self.program,
                                     min_indentation=self.current_line.indentation,
                                     inside_loop=self.inside_loop)
@@ -274,7 +342,7 @@ class Block(object):
     def parse_while(self):
         self.current_line.type = "while block"
         match = while_pattern.search(self.current_line.content)
-        condition = match.group(1).strip()
+        condition = match.group(1)
 
         condition = self.normalize_condition(condition)
         if condition is not None:
@@ -286,9 +354,14 @@ class Block(object):
         '''parses a statement like "a = b" '''
         match = assignment_pattern.search(self.current_line.content)
         if match is None:
-            self.program.abort_parsing(_messages[self.program.language
+            match2 = bad_identifier_assignment_pattern.search(self.current_line.content)
+            if match2 is None:
+                self.program.abort_parsing(_messages[self.program.language
                                                  ]["Syntax error"
                                                    ]%self.current_line.content)
+            else:
+                self.program.abort_parsing(_messages[self.program.language
+                                                 ]["bad identifier"])
             return
         left = match.group(1)
         right = match.group(2)
@@ -297,8 +370,11 @@ class Block(object):
             left+"()" in self.program.user_defined):
             self.program.abort_parsing(_messages[self.program.language
                                                  ]["Attempt to redefine"]% left)
+        elif left in _keywords:
+            self.program.abort_parsing(_messages[self.program.language
+                                                 ]["keyword assignment"])
         elif right+"()" in self.program.builtins:
-            self.program.builtins[left+"()"] = self.program.builtins[right+"()"]
+            self.program.user_defined[left+"()"] = self.program.builtins[right+"()"]
         elif right+"()" in self.program.user_defined:
             self.program.user_defined[left+"()"] = self.program.user_defined[right+"()"]
         elif right == "True":
