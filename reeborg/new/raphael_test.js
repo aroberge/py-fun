@@ -176,5 +176,9 @@ $(window).load(function () {
                                world.columns*dimensions.tile_size + dimensions.narrow,
                                dimensions.narrow).attr({fill:colours.active});
 
+    var robot_e = R.image("../images/robot_e.png", 185, 190, 22, 30);
+    var robot_w = R.image("../images/robot_w.png", 225, 190, 22, 30);
+    var robot_n = R.image("../images/robot_n.png", 265, 190, 22, 30);
+    var robot_s = R.image("../images/robot_s.png", 305, 190, 22, 30);
 
 });
