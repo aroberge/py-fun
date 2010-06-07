@@ -169,7 +169,7 @@ function VisibleWorld() {
     this.colours = {inactive: "white",
                     inactive_edit: "#eef",
                     active: "brown",
-                    active_hover: "black",
+                    active_hover: "brown",  // with different opacity below
                     inactive_hover: "grey",
                     border_active: "black",
                     border_inactive: "white",
@@ -250,7 +250,7 @@ function VisibleWorld() {
             function (event) {
                 if(that.controls.edit_button.edit) {
                     if(this.active) {
-                        this.attr({fill: that.colours.active_hover});
+                        this.attr({fill: that.colours.active_hover, opacity: 0.5});
                     }
                     else{
                         this.toFront();
@@ -261,7 +261,7 @@ function VisibleWorld() {
             function (event) {
                 if(that.controls.edit_button.edit) {
                     if(this.active) {
-                        this.attr({fill: that.colours.active});
+                        this.attr({fill: that.colours.active, opacity: 1});
                     }
                     else{
                         this.attr({fill: that.colours.inactive_edit});
