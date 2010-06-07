@@ -367,14 +367,32 @@ function VisibleWorld() {
     };
 
     this.save = function () {
-        var saved_world, j;
+        var saved_world, j, popup, active_east_walls, active_north_walls, row, col;
+        active_east_walls = [];
+        active_north_walls = [];
+        for(row = 0; row < this.rows; row++) {
+            for(col=0; col < this.columns; col++){
+                if(this.north_walls[row][col].active){
+                    active_north_walls.push([col, row]);
+                }
+                if(this.east_walls[row][col].active){
+                    active_east_walls.push([col, row]);
+                }
+            }
+        }
+
         saved_world = {
             "rows": this.rows,
             "columns": this.columns,
-            "robot": [this.robot.column, this.robot.row]
+            "robot": [this.robot.column, this.robot.row, this.robot.current_orientation, this.robot.style],
+            "walls": this.active_walls,
+            "east_walls": active_east_walls,
+            "north_walls": active_north_walls
         };
-        j = JSON.stringify(saved_world);
-        alert(j);
+        j = JSON.stringify(saved_world, "\n");
+        popup = window.open("");
+        popup.document.write(j);
+        popup.document.close()
     };
 
 }
