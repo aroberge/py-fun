@@ -19,8 +19,8 @@ function Controls(world) {
         var row, col;
         if(!this.edit) {
             this.edit = true;
-            for(row=0; row < world.rows; row++) {
-                for(col=0; col < world.columns; col++) {
+            for(row=1; row <= world.rows; row++) {
+                for(col=1; col <= world.columns; col++) {
                     if(!world.east_walls[row][col].active) {
                         world.east_walls[row][col].attr({fill: world.colours.inactive_edit});
                     }
@@ -32,8 +32,8 @@ function Controls(world) {
         }
         else{
             this.edit = false;
-            for(row=0; row < world.rows; row++) {
-                for(col=0; col < world.columns; col++) {
+            for(row=1; row <= world.rows; row++) {
+                for(col=1; col <= world.columns; col++) {
                     if(!world.east_walls[row][col].active) {
                         world.east_walls[row][col].attr({fill: world.colours.inactive});
                     }
@@ -167,7 +167,7 @@ function VisibleWorld() {
     this.tile_size = this.narrow + this.wide;
 
     this.colours = {inactive: "white",
-                    inactive_edit: "#eef",
+                    inactive_edit: "#dcf",
                     active: "brown",
                     active_hover: "brown",  // with different opacity below
                     inactive_hover: "grey",
@@ -193,22 +193,22 @@ function VisibleWorld() {
         this.world_width = this.columns * this.tile_size + this.margin_left + this.margin_right + this.narrow;
         this.world_height = this.rows * this.tile_size + this.margin_bottom + this.margin_top;
 
-        this.east_walls = new Array(this.rows);
-        for(row = 0; row < this.rows; row++) {
-            this.east_walls[row] = new Array(this.columns);
+        this.east_walls = new Array(this.rows+1);
+        for(row = 1; row <= this.rows; row++) {
+            this.east_walls[row] = new Array(this.columns+1);
         }
 
-        this.north_walls = new Array(this.rows);
-        for(row = 0; row < this.rows; row++) {
-            this.north_walls[row] = new Array(this.columns);
+        this.north_walls = new Array(this.rows+1);
+        for(row = 1; row <= this.rows; row++) {
+            this.north_walls[row] = new Array(this.columns+1);
         }
     };
 
 
     this.create_east_wall = function (col, row) {
         var x, y, width, height;
-        x = (col+1)*this.tile_size + this.margin_left;
-        y = (this.flip_rows(row)-1)*this.tile_size + this.margin_top;
+        x = col*this.tile_size + this.margin_left;
+        y = this.flip_rows(row)*this.tile_size + this.margin_top;
         width = this.narrow;
         height = this.wide + 2*this.narrow;
         return this.paper.wall(x, y, width, height).attr({fill:this.colours.inactive, stroke:this.colours.border_inactive});
@@ -216,8 +216,8 @@ function VisibleWorld() {
 
     this.create_north_wall = function (col, row) {
         var x, y, width, height;
-        x = col*this.tile_size + this.margin_left;
-        y = (this.flip_rows(row)-1)*this.tile_size + this.margin_top;
+        x = (col-1)*this.tile_size + this.margin_left;
+        y = this.flip_rows(row)*this.tile_size + this.margin_top;
         width = this.wide + 2*this.narrow;
         height = this.narrow;
         return this.paper.wall(x, y, width, height).attr({fill:this.colours.inactive, stroke:this.colours.border_inactive});
@@ -234,7 +234,7 @@ function VisibleWorld() {
         this._wall.click( function () {
             if(that.controls.edit_button.edit) {
                 if(this.active) {
-                    this.attr({fill: that.colours.inactive_hover, stroke: that.colours.border_inactive});
+                    this.attr({fill: that.colours.inactive_hover});
                     this.active = false;
                     this.toBack();
                     that.background.toBack();
@@ -264,7 +264,7 @@ function VisibleWorld() {
                         this.attr({fill: that.colours.active, opacity: 1});
                     }
                     else{
-                        this.attr({fill: that.colours.inactive_edit});
+                        this.attr({fill: that.colours.inactive_edit, stroke: that.colours.border_inactive});
                         this.toBack();
                         that.background.toBack();
                     }
@@ -323,8 +323,8 @@ function VisibleWorld() {
         if(this.controls === undefined) {
             this.controls = new Controls(this);
         }
-        for(row=0; row < this.rows; row++) {
-            for(col=0; col < this.columns; col++) {
+        for(row=1; row <= this.rows; row++) {
+            for(col=1; col <= this.columns; col++) {
                 this.east_walls[row][col] = this.create_wall(col, row, "east");
                 this.north_walls[row][col] = this.create_wall(col, row, "north");
             }
@@ -360,8 +360,8 @@ function VisibleWorld() {
         }
         new_row = this.robot.row + del_row;
         new_col = this.robot.column + del_col;
-        if( new_row > 0 && new_row <= this.rows &&
-           new_col > 0 && new_col <= this.columns) {
+        if( new_row > 1 && new_row <= this.rows+1 &&
+           new_col > 1 && new_col <= this.columns+1) {
             this.robot.move(del_col, del_row);
         }
     };
@@ -370,8 +370,8 @@ function VisibleWorld() {
         var saved_world, j, popup, active_east_walls, active_north_walls, row, col;
         active_east_walls = [];
         active_north_walls = [];
-        for(row = 0; row < this.rows; row++) {
-            for(col=0; col < this.columns; col++){
+        for(row = 1; row <= this.rows; row++) {
+            for(col=1; col <= this.columns; col++){
                 if(this.north_walls[row][col].active){
                     active_north_walls.push([col, row]);
                 }
@@ -400,7 +400,7 @@ function VisibleWorld() {
 
 $(window).load(function () {
     var visible_world = new VisibleWorld();
-    visible_world.init(8, 12);
+    visible_world.init(2, 2);
     visible_world.paper = Raphael("World", visible_world.world_width, visible_world.world_height);
     visible_world.render();
 
