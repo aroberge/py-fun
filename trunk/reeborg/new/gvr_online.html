@@ -1,0 +1,661 @@
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+
+
+    <title>GvR on JavaScript</title>
+    <link href="http://yui.yahooapis.com/combo?2.6.0/build/reset-fonts/reset-fonts.css" type="text/css" rel="stylesheet">
+    <link href="reset-fonts.css" type="text/css" rel="stylesheet">
+    <link href="gvr_style.css" rel="stylesheet">
+    <link type="image/x-icon" href="favicon.ico" rel="shortcut icon">
+    <link type="image/x-icon" href="favicon.ico" rel="icon">
+
+
+	<script language="Javascript" type="text/javascript" src="edit_area/edit_area_full.js"></script>
+	<script language="Javascript" type="text/javascript">
+		// initialisation
+		editAreaLoader.init({
+			id: "program-editor"
+			,font_size: "10"
+			,start_highlight: true
+			,allow_resize: "both"
+			,allow_toggle: false
+			,language: "en"
+			,syntax: "python"
+			,toolbar: "select_font, fullscreen, help"
+			,replace_tab_by_spaces: 4
+			,min_height: 350
+                        ,min_width: 150
+		});
+
+	</script>
+
+  </head><body>
+
+    <div id="doc">
+      <div id="logon">
+        <span i18n:id="welcome" class="_">Welcome</span> <span id="logon-nickname"></span>
+        <a i18n:id="logout" class="_" style="display: none;" href="javascript: void(0)" id="logout-link">Logout</a>
+        <a i18n:id="login" class="_" href="javascript: void(0)" id="login-link">Login</a>
+        <select id="language-selector">
+          <option>Language</option>
+        <option value="en-US">English</option><option value="latin-pig">Pig Latin</option></select>
+      </div>
+      <div id="header">
+        <div id="logo"><a i18n:id="gvr-online" class="_" href="/">GvR-Online!</a></div>
+      </div>
+      <div style="display: none;" id="alert">Some Alert</div>
+      <div id="navigation">
+        <a i18n:id="home" class="_" rel="history" href="#home" id="navigation-home">Home</a>
+        <a i18n:id="browse" class="_" rel="history" href="#browse" id="navigation-browse">Browse</a>
+        <a i18n:id="program" class="_ selected" rel="history" href="#program" id="navigation-program">Program</a>
+        <a i18n:id="help" class="_" rel="history" href="#help" id="navigation-help">Help</a>
+        <a i18n:id="dev" class="_" rel="history" href="#dev" id="navigation-dev">Dev</a>
+      </div>
+      <div id="main">
+
+
+        <!-- ======= Program View ======== -->
+        <div style="display: block;" class="view" id="program-view">
+          <div class="panel" id="display">
+            <div class="header">
+              <button i18n:id="execute" class="_" id="execute-button">Execute</button>
+              <button i18n:id="stop" class="_" id="stop-button" disabled="">Stop</button>
+              <button i18n:id="step" class="_" id="step-button">Step</button>
+              <button i18n:id="reload" class="_" id="reload-button">Reload</button>
+              <span i18n:id="speed" class="_">Speed:</span>
+              <select id="speed">
+                <option i18n:id="slow" class="_" value="200">Slow</option>
+                <option i18n:id="medium" class="_" value="50">Medium</option>
+                <option i18n:id="fast" class="_" value="5">Fast</option>
+                <option i18n:id="instant" class="_" value="-1">Instant</option>
+              </select>
+            </div>
+            <div class="body">
+              <canvas width="500" height="500" id="canvas"></canvas>
+            </div>
+            <div class="footer">
+            </div>
+          </div>
+          <div class="panel" id="editor">
+            <div class="header">
+              <span i18n:id="code-editor" id="program-editor-pane-tab" class="tab selected _">Code Editor</span>
+              <span i18n:id="world-editor" id="world-editor-pane-tab" class="tab _">World Editor</span>
+              <span class="auxillary">
+                <input type="button" value="Share" id="share-button" style="display: none;">
+              </span>
+            </div>
+
+            <div id="program-editor-pane" class="tab-content">
+              <div class="body">
+                <input type="text" id="program-editor-title" class="file-title-editor" style="">
+                <textarea id="program-editor-description" class="file-description-editor" style=""></textarea>
+                <textarea id="program-editor" class="code-editor" style=""></textarea>
+                <div id="unopened-program-message"></div>
+              </div>
+              <div class="toolbar-bottom">
+                <button i18n:id="save" class="_" disabled="" id="save-program">Save</button><span class="login-to-save-message">
+        <a i18n:id="log-in-to-save" class="_" href="javascript: void(0)">Log in to save</a>
+      </span>
+              </div>
+            </div>
+
+            <div style="display: none;" id="world-editor-pane" class="tab-content">
+              <div class="body">
+                <input type="text" id="world-editor-title" class="file-title-editor" style="">
+                <textarea id="world-editor-description" class="file-description-editor" style=""></textarea>
+                <textarea id="world-editor" class="code-editor" style=""></textarea>
+                <div id="unopened-world-message"></div>
+              </div>
+              <div class="toolbar-bottom">
+                <button i18n:id="save" class="_" disabled="" id="save-world">Save</button><span class="login-to-save-message">
+        <a i18n:id="log-in-to-save" class="_" href="javascript: void(0)">Log in to save</a>
+      </span>
+              </div>
+            </div>
+            <div class="footer">
+            </div>
+          </div>
+        </div>
+
+
+        <!-- ========== Browse View ========= -->
+        <div style="display: none; clear: both;" class="view" id="browse-view">
+          <div class="panel" id="browse-pane">
+            <div class="header">
+              <button id="show-my-files">Show my files</button>
+              <button style="display: none;" id="show-all-files">Show all files</button>
+              <div id="search-files">
+                Search: <input type="text">
+              </div>
+            </div>
+            <div class="body odd">
+              <div class="file-browser">
+                <div class="files"><div class="file Program  even" id="agpndnItb25saW5lcg0LEgdQcm9ncmFtGAIM">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>Escape Program </h1>
+            <p>This program is meant to work with the "Escape World" world.  It tells the robot how to find the exit from inside any enclosure.</p>
+          </div><div class="file Program " id="agpndnItb25saW5lcg4LEgdQcm9ncmFtGNEPDA">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>Infinite World Test. </h1>
+            <p>A test program to show that the world is truly infinite.</p>
+          </div><div class="file Program  even" id="agpndnItb25saW5lcg4LEgdQcm9ncmFtGIknDA">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>Binary Adder </h1>
+            <p>A program for adding binary numbers.  Two numbers are defined by their binary representation on rows 1 and 2.  The robot will add these two numbers together and put the resulting binary number on row 3.</p>
+          </div><div class="file Program " id="agpndnItb25saW5lcg4LEgdQcm9ncmFtGOFdDA">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>turn </h1>
+            <p></p>
+          </div><div class="file Program  even" id="agpndnItb25saW5lcg4LEgdQcm9ncmFtGIF9DA">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>MelLesson6 </h1>
+            <p></p>
+          </div><div class="file Program " id="agpndnItb25saW5lcg8LEgdQcm9ncmFtGLmUAQw">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>mellesson8 </h1>
+            <p></p>
+          </div><div class="file Program  even" id="agpndnItb25saW5lcg8LEgdQcm9ncmFtGKKcAQw">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>mellesson11 </h1>
+            <p>code for lesson 11</p>
+          </div><div class="file Program " id="agpndnItb25saW5lcg8LEgdQcm9ncmFtGImkAQw">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>mellesson10 </h1>
+            <p></p>
+          </div><div class="file Program  even" id="agpndnItb25saW5lcg8LEgdQcm9ncmFtGMG7AQw">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>Untitled Program </h1>
+            <p></p>
+          </div><div class="file Program " id="agpndnItb25saW5lcg8LEgdQcm9ncmFtGKnDAQw">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>mellesson12 </h1>
+            <p>program for lesson 12</p>
+          </div><div class="file Program  even" id="agpndnItb25saW5lcg8LEgdQcm9ncmFtGJHLAQw">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>mellesson13 </h1>
+            <p>code for lesson 13</p>
+          </div><div class="file Program " id="agpndnItb25saW5lcg8LEgdQcm9ncmFtGMniAQw">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>MelLesson14 </h1>
+            <p>program for lesson 14</p>
+          </div><div class="file Program  even" id="agpndnItb25saW5lcg8LEgdQcm9ncmFtGJnyAQw">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>MelLesson15 </h1>
+            <p>code for lesson 15</p>
+          </div><div class="file Program " id="agpndnItb25saW5lcg8LEgdQcm9ncmFtGOmBAgw">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>melLesson16 </h1>
+            <p>code for lesson 16, the maze</p>
+          </div><div class="file Program  even" id="agpndnItb25saW5lcg8LEgdQcm9ncmFtGLmRAgw">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>MelLesson17 </h1>
+            <p>code for lesson 17 using a sentinel, we know robot has some trash</p>
+          </div><div class="file Program " id="agpndnItb25saW5lcg8LEgdQcm9ncmFtGKGZAgw">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>Untitled Program </h1>
+            <p></p>
+          </div><div class="file Program  even" id="agpndnItb25saW5lcg8LEgdQcm9ncmFtGPGoAgw">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>MyProg (COPY FROM HOME) </h1>
+            <p></p>
+          </div><div class="file World " id="agpndnItb25saW5lcgsLEgVXb3JsZBgBDA">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>Escape World </h1>
+            <p>A simple world to test out the "Escape Program."  There are just some walls and an exit.
+
+This is the description...</p>
+          </div><div class="file World  even" id="agpndnItb25saW5lcgwLEgVXb3JsZBjpBww">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>Empty World </h1>
+            <p>This is an empty world.</p>
+          </div><div class="file World " id="agpndnItb25saW5lcgwLEgVXb3JsZBihHww">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>Binary Addition World </h1>
+            <p>A world that shows how you can add two numbers without the addition operator.</p>
+          </div><div class="file World  even" id="agpndnItb25saW5lcgwLEgVXb3JsZBjxLgw">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>Binary Adder World 2 </h1>
+            <p></p>
+          </div><div class="file World " id="agpndnItb25saW5lcgwLEgVXb3JsZBixbQw">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>Untitled World </h1>
+            <p></p>
+          </div><div class="file World  even" id="agpndnItb25saW5lcg0LEgVXb3JsZBjphAEM">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>MelLesson6 </h1>
+            <p></p>
+          </div><div class="file World " id="agpndnItb25saW5lcg0LEgVXb3JsZBjRjAEM">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>mellesson8 </h1>
+            <p></p>
+          </div><div class="file World  even" id="agpndnItb25saW5lcg0LEgVXb3JsZBihnAEM">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>Untitled World </h1>
+            <p></p>
+          </div><div class="file World " id="agpndnItb25saW5lcg0LEgVXb3JsZBjxqwEM">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>mellesson11 </h1>
+            <p>The world for lesson 11</p>
+          </div><div class="file World  even" id="agpndnItb25saW5lcg0LEgVXb3JsZBjZswEM">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>mellesson12 </h1>
+            <p>world for lesson 12</p>
+          </div><div class="file World " id="agpndnItb25saW5lcg0LEgVXb3JsZBj50gEM">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>mellesson13 </h1>
+            <p>world for lesson 13</p>
+          </div><div class="file World  even" id="agpndnItb25saW5lcg0LEgVXb3JsZBjh2gEM">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>MelLesson14 </h1>
+            <p>world for lesson 14</p>
+          </div><div class="file World " id="agpndnItb25saW5lcg0LEgVXb3JsZBix6gEM">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>Untitled World </h1>
+            <p></p>
+          </div><div class="file World  even" id="agpndnItb25saW5lcg0LEgVXb3JsZBiB-gEM">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>melLesson16 </h1>
+            <p>world for lesson 16</p>
+          </div><div class="file World " id="agpndnItb25saW5lcg0LEgVXb3JsZBjRiQIM">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>MelLesson17 </h1>
+            <p>world for lesson 17</p>
+          </div><div class="file World  even" id="agpndnItb25saW5lcg0LEgVXb3JsZBiJoQIM">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>Untitled World </h1>
+            <p></p>
+          </div></div>
+              </div>
+            </div>
+            <div class="toolbar-bottom">
+              <input type="button" value="New World" id="new-world" disabled="">
+              <input type="button" value="New Program" id="new-program" disabled=""><span class="login-to-create-new-stuff-message">
+        <a i18n:id="log-in-to-create" class="_" href="javascript: void(0)">Log in to create new stuff</a>
+      </span>
+            </div>
+            <div class="footer">
+            </div>
+          </div>
+        </div>
+
+        <!-- Home View -->
+        <div style="display: none; clear: both;" class="view" id="home-view">
+          <div class="panel" id="home-pane">
+            <div class="header">
+              <h1 i18n:id="welcome-message" class="_">Welcome to GvR-Online!</h1>
+            </div>
+            <div class="body">
+              <div class="content">
+                <h4 i18n:id="gvr-description" class="_">GvR is an online tool to help teach beginning programming concepts.</h4>
+                <p>
+                  <strong i18n:id="learn-about" class="_">Learn about:</strong>
+                </p>
+                <ul>
+                  <li i18n:id="looping" class="_">Looping</li>
+                  <li i18n:id="conditional-branching" class="_">Conditional Branching</li>
+                  <li i18n:id="procedural-abstraction" class="_">Procedural Abstraction</li>
+                </ul>
+                <br>
+                <div id="home-view-example">
+                  <h5 i18n:id="checkout-example" class="_" id="home-view-example-header">Check out a simple example:</h5>
+                  <div id="home-view-example-body">
+                    <canvas id="home-view-example-canvas" width="500" height="500"></canvas>
+                    <pre id="home-view-example-canvas-code">define turnright:
+    do 3:
+        turnleft
+
+define follow_right_wall:
+    if right_is_clear:
+        turnright
+        move
+    elif front_is_clear:
+        move
+    else:
+        turnleft
+
+while not_next_to_a_beeper:
+    follow_right_wall
+
+turnoff
+                    </pre>
+                    <button i18n:id="run" class="_" id="home-view-example-run-button">Run</button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          <div class="footer"></div>
+          </div>
+        </div>
+
+        <div gvr:url="help.html" style="display: none;" class="view" id="help-view"></div>
+
+        <div gvr:url="dev.html" style="display: none;" class="view" id="dev-view" gvr:loaded="loaded"><div class="panel" id="dev-pane">
+  <div class="header">
+    <h1>Hack on GvR!</h1>
+  </div>
+  <div class="body">
+    <div class="content">
+      <p>
+        Got the know how and want to improve GvR-Online?  Here is a quick guide to getting started.
+      </p>
+      <br>
+
+      <h4>Quick Intro</h4>
+      <p>
+        GvR Online currently runs on
+        <a href="http://code.google.com/appengine/docs/">Google App Engine</a>.
+        A simple <a href="http://python.org">Python</a> and
+        <a href="http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface">WSGI</a> powered
+        backend handles basic data storage and uses JSON for data serialization.
+        Most of the fun however
+        lies on the frontend.  There is a core library written in pure Javascript
+        for simulating the virtual world in GvR.  The user interface currently uses
+        <a href="http://jquery.com">jQuery</a> for pain free development.
+      </p>
+      <br>
+
+      <h4>Get the source code</h4>
+      <p>
+        GvR Online is currently using Mercurial for version control and
+        Bitbucket for hosting.  Run this command to get a copy of the source.
+      </p>
+      <pre class="code">$ hg clone http://bitbucket.org/pcardune/gvr-online/</pre>
+      <br>
+
+      <h4>Run the Development Environment</h4>
+      <p>
+        GvR Online uses Google App Engine.  Running the development version of app engine is easy.
+      </p>
+      <pre class="code">$ python bootstrap.py
+$ paver run</pre>
+      <br>
+
+      <h4>Read the Documentation</h4>
+      <p>
+        GvR Online uses jsdoc-toolkit to generate documentation from the source.
+        <a href="docs/index.html">Read the API docs here</a>.
+      </p>
+      <br>
+
+      <h4>Follow Development Progress</h4>
+      <p>
+        Follow the development progress of GvR Online via twitter:
+        <a href="http://twitter.com/gvronline">http://twitter.com/gvronline</a>
+      </p>
+      <br>
+
+      <h4>Get in Touch</h4>
+      <p>
+        This project is too new to warrant a mailing list, irc channel,
+        or secret handshake.  If you would like to get involved, send an
+        email to <span style="white-space: nowrap;">paulcarduner (at) gmail (dot) com</span>
+        or find me on irc.freenode.net (my nick is pcardune).
+      </p>
+    </div>
+  </div>
+  <div class="footer"></div>
+</div>
+</div>
+
+      </div>
+
+
+    </div>
+
+
+
+
+
+    <!-- ================ templates =============== -->
+    <div style="display: none;" id="templates">
+      <div class="file-editor-pane">
+        <div class="file-metadata">
+          <input type="text" value="Title">
+          <textarea rows="10" cols="10">Description</textarea>
+        </div>
+        <div class="file-actions">
+          <input type="button" value="Save" class="file-save-button">
+        </div>
+        <div class="file-editor">
+          <textarea rows="10" cols="10"></textarea>
+        </div>
+      </div>
+
+      <span class="login-to-save-message">
+        <a i18n:id="log-in-to-save" class="_" href="javascript: void(0)">Log in to save</a>
+      </span>
+
+      <span class="login-to-create-new-stuff-message">
+        <a i18n:id="log-in-to-create" class="_" href="javascript: void(0)">Log in to create new stuff</a>
+      </span>
+
+      <div class="loading-message">
+        <span class="message"></span>
+      </div>
+
+
+      <div class="file-browser">
+        <div class="files">
+          <div class="file">
+            <div class="actions">
+              <input type="button" value="Open" class="open">
+              <input type="button" value="Delete" class="delete">
+            </div>
+            <div class="icon"></div>
+            <h1>Title</h1>
+            <p>Description</p>
+          </div>
+        </div>
+        <div class="actions">
+          <input type="button" value="Add">
+        </div>
+      </div>
+
+
+      <div class="dialog">
+        <div class="modal-shade"></div>
+        <div class="window">
+        </div>
+        <div class="window-shadow"></div>
+      </div>
+
+
+      <form action="." class="share-form">
+        <h1 i18n:id="share" class="_">Share</h1>
+        <div class="body step-1">
+          <p i18n:id="share-instructions" class="_">Share this program and world with others.  Separate emails by a comma.</p>
+          <fieldset>
+            <legend></legend>
+            <div class="row">
+              <label i18n:id="share-to" class="share-to-label _" for="share-to">To:</label>
+              <input type="text" name="share-to">
+            </div>
+            <div class="row">
+              <label i18n:id="share-message-label" class="share-message-label _" for="share-message">Message:</label>
+              <textarea rows="5" cols="40" name="share-message"></textarea>
+            </div>
+          </fieldset>
+          <fieldset class="buttons">
+            <legend></legend>
+            <input type="button" value="Cancel" name="cancel">
+            <input type="button" value="Share" name="share">
+          </fieldset>
+        </div>
+        <div style="display: none;" class="body step-2">
+          <p>
+            <a i18n:id="see-your-example" target="_blank" class="example-link _" href="">Click here to see your example.</a>
+          </p>
+          <fieldset class="buttons">
+            <legend></legend>
+            <input type="button" value="Close" name="cancel">
+          </fieldset>
+        </div>
+      </form>
+
+
+    </div>
+
+
+    <script language="Javascript" type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.0/jquery.min.js"></script>
+    <script type="text/javascript" src="jquery.min.js"></script>
+    <script type="text/javascript" src="lib/jquery.history.js"></script>
+    <script type="text/javascript" src="gvr_launcher.js"></script>
+    <script type="text/javascript">
+      function script(path){
+        document.write(unescape("%3Cscript type='text/javascript' src='"+path+"'%3E%3C/script%3E"));
+      }
+      if (window.location.search.slice(1,11) === "debug=true"){
+        var CLOSURE_NO_DEPS = true;
+        var CLOSURE_BASE_PATH = "/ui/";
+        script("closure/goog/base.js");
+        script("deps.js");
+        script("launcher.js");
+      } else {
+        script("compiled.js");
+      }
+    </script><script src="compiled.js" type="text/javascript"></script>
+
+    <script type="text/javascript">
+      var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+      document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script><script type="text/javascript" src="http://www.google-analytics.com/ga.js"></script>
+    <script type="text/javascript">
+      try {
+        var pageTracker = _gat._getTracker("UA-1695778-8");
+        pageTracker._trackPageview();
+      } catch(err) {}
+    </script>
+
+  </body></html>
