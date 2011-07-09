@@ -160,13 +160,13 @@ function VisibleRobot(world) {
         x1 = this.path_history[length_-2][0];
         y1 = this.path_history[length_-2][1];
         x2 = this.path_history[length_-1][0];
-        y2 = this.path_history[length_-1][1]
+        y2 = this.path_history[length_-1][1];
         begin_path = "M" + x1 + " " + y1 + "L" + x1 + " " + y1;
         end_path = {path: "M" + x1 + " " + y1 + "L" + x2 + " " + y2};
 
         this.end_trace = world.paper.path(begin_path);
         this.end_trace.animate(end_path, delay);
-    }
+    };
 
     this.turn_left = function () {
         this.angle -= 90;
@@ -382,7 +382,7 @@ function VisibleWorld() {
     };
 
     this.restore = function (saved_world) {
-        var row, col, point;
+        var row, column, point;
         if(saved_world.east_walls !== undefined){
             for(point=0; point< saved_world.east_walls.length; point++){
                 column = saved_world.east_walls[point][0];
@@ -490,7 +490,7 @@ $(window).load(function () {
                 case arrow.up:
                     visible_world.robot_move();
                 break;
-            };
+            }
     }
 
     $("#World").hover(

@@ -1,0 +1,43 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link href="embedded_tabs.css" rel="stylesheet">
+    <script type="text/javascript" src="jquery.js"></script>
+    <script language="Javascript" type="text/javascript">
+$(document).ready(function() {
+    $(".tab_content").hide();
+    $("ul.tabs li:first").addClass("active").show();
+    $(".tab_content:first").show();
+    $("ul.tabs li").click(function() {
+        $("ul.tabs li").removeClass("active");
+        $(this).addClass("active");
+        $(".tab_content").hide();
+        var activeTab = $(this).find("a").attr("href");
+        $(activeTab).show(); //Fade in the active ID content
+        return false;
+    });
+});
+    </script>
+
+
+</head>
+
+<body>
+
+<ul class="tabs">
+    <li><a href="#tab1">Gallery</a></li>
+    <li><a href="#tab2">Submit</a></li>
+</ul>
+
+<div class="tab_container">
+    <div id="tab1" class="tab_content">
+        <!--Content-->
+        Content of first tab.
+    </div>
+    <div id="tab2" class="tab_content">
+       <!--Content-->
+        Content of second tab.
+    </div>
+</div>
+
+</body>
+</html>

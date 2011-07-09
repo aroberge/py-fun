@@ -1,14 +1,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml"><head>
 
 
-    <title>GvR on JavaScript</title>
+    <title>Reeborg's World</title>
     <link href="http://yui.yahooapis.com/combo?2.6.0/build/reset-fonts/reset-fonts.css" type="text/css" rel="stylesheet">
     <link href="reset-fonts.css" type="text/css" rel="stylesheet">
     <link href="gvr_style.css" rel="stylesheet">
     <link type="image/x-icon" href="favicon.ico" rel="shortcut icon">
     <link type="image/x-icon" href="favicon.ico" rel="icon">
 
-
+    <script type="text/javascript" src="jquery.js"></script>
 	<script language="Javascript" type="text/javascript" src="edit_area/edit_area_full.js"></script>
 	<script language="Javascript" type="text/javascript">
 		// initialisation
@@ -28,27 +28,27 @@
 
 	</script>
 
+	<script language="Javascript" type="text/javascript">
+function load_div (file_, id_) {
+
+}
+
+	</script>
+
   </head><body>
 
+
     <div id="doc">
-      <div id="logon">
-        <span i18n:id="welcome" class="_">Welcome</span> <span id="logon-nickname"></span>
-        <a i18n:id="logout" class="_" style="display: none;" href="javascript: void(0)" id="logout-link">Logout</a>
-        <a i18n:id="login" class="_" href="javascript: void(0)" id="login-link">Login</a>
-        <select id="language-selector">
-          <option>Language</option>
-        <option value="en-US">English</option><option value="latin-pig">Pig Latin</option></select>
-      </div>
       <div id="header">
         <div id="logo"><a i18n:id="gvr-online" class="_" href="/">GvR-Online!</a></div>
       </div>
       <div style="display: none;" id="alert">Some Alert</div>
       <div id="navigation">
-        <a i18n:id="home" class="_" rel="history" href="#home" id="navigation-home">Home</a>
-        <a i18n:id="browse" class="_" rel="history" href="#browse" id="navigation-browse">Browse</a>
-        <a i18n:id="program" class="_ selected" rel="history" href="#program" id="navigation-program">Program</a>
-        <a i18n:id="help" class="_" rel="history" href="#help" id="navigation-help">Help</a>
-        <a i18n:id="dev" class="_" rel="history" href="#dev" id="navigation-dev">Dev</a>
+        <a i18n:id="home" class="upper_tab _" rel="history" href="#home" id="home-view-tab">Home</a>
+        <a i18n:id="browse" class="upper_tab _" rel="history" href="#browse" id="browse-view-tab">Browse</a>
+        <a i18n:id="program" class="upper_tab _ selected" rel="history" href="#program" id="program-view-tab">Program</a>
+        <a i18n:id="help" class="upper_tab _" rel="history" href="#help" id="help-view-tab">Help</a>
+        <a i18n:id="dev" class="upper_tab _" rel="history" href="#dev" id="dev-view-tab">Dev</a>
       </div>
       <div id="main">
 
@@ -459,7 +459,19 @@ turnoff
           </div>
         </div>
 
-        <div gvr:url="help.html" style="display: none;" class="view" id="help-view"></div>
+        <div gvr:url="help.html" style="display: none;" class="view" id="help-view">
+
+            <div id="test"></div>
+	<script language="Javascript" type="text/javascript">
+$('#test').load('test2.html');
+        </script>
+
+
+
+        </div>
+
+
+
 
         <div gvr:url="dev.html" style="display: none;" class="view" id="dev-view" gvr:loaded="loaded"><div class="panel" id="dev-pane">
   <div class="header">
@@ -627,10 +639,6 @@ $ paver run</pre>
 
     </div>
 
-
-    <script language="Javascript" type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.0/jquery.min.js"></script>
-    <script type="text/javascript" src="jquery.min.js"></script>
-    <script type="text/javascript" src="lib/jquery.history.js"></script>
     <script type="text/javascript" src="gvr_launcher.js"></script>
     <script type="text/javascript">
       function script(path){
