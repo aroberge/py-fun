@@ -16,6 +16,7 @@ languages = [python]
 lineMessages = {}
 queue = {}
 
+
 def run(linter, view):
     '''run a linter on a given view'''
     vid = view.id()
@@ -63,7 +64,7 @@ def queue_linter(view):
     '''Put the current view in a queue to be examined by a linter
        if it exists'''
     if select_linter(view) is None:
-        erase_all_lint(view)# may have changed file type and left marks behind
+        erase_all_lint(view, True)# may have changed file type and left marks behind
         return
     queue[view.id()] = view
 
@@ -86,12 +87,15 @@ def background_linter():
             except: 
                 pass
 
-thread.start_new_thread(background_linter, ())
 
-class pyflakes(sublime_plugin.EventListener):
-    def __init__(self, *args, **kwargs):
-        sublime_plugin.EventListener.__init__(self, *args, **kwargs)
-        self.lastCount = {}
+# only start the thread once - otherwise the plugin will get laggy 
+# when saving it often
+if not 'active_linter_thread' in globals():
+    active_linter_thread = True
+    thread.start_new_thread(background_linter, ())
+
+
+class Linter(sublime_plugin.EventListener):
     
     def on_modified(self, view):
         queue_linter(view)
