@@ -1,0 +1,69 @@
+<bounce>
+<title>Bounce!</title>
+
+<explain_before>
+Our ball can fly, but it runs away too quickly; let's
+  contain it in our box by rebounding off the walls.
+</explain_before>
+<js_code>
+function draw() {
+  clear();
+  circle(x, y, ball_r);
+ 
+  if (x + dx + ball_r &gt; WIDTH || x + dx -ball_r &lt; 0)
+    dx = -dx;
+  if (y + dy + ball_r &gt; HEIGHT || y + dy -ball_r &lt; 0)
+    dy = -dy;
+ 
+  x += dx;
+  y += dy;
+}
+
+init();
+</js_code>
+<explain_after>
+The way we have written the code, the ball will usually reverse course
+just before hitting a wall.  However, because it moves so little at each
+frame, this should not be easily noticeable while playing.
+</explain_after>
+
+<experiment>
+By increasing the <code>dx</code> and <code>dy</code> values in the library, and
+perhaps increasing the time between frames, you might be able to see much
+more easily the fact that the ball does not bounce off the walls.  Think
+of how you might modify the code to correct this ... and implement it 
+<b>only</b> if you think it is worth it.
+<p>
+Also, try to change the <code>draw()</code> function so that 
+the ball accelerates or 
+decelerates every time it hits a wall; this should be much easier to do.</p>
+</experiment>
+<library>
+var x = 150;
+var y = 150;
+var dx = 2;
+var dy = 4;
+var ball_r = 10;
+var ctx;
+var WIDTH; 
+var HEIGHT;
+
+function circle(x, y, r) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI*2, true);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function clear() {
+  ctx.clearRect(0, 0, WIDTH, HEIGHT);
+}
+
+function init() {
+  ctx = $('#canvas')[0].getContext("2d");
+  WIDTH = $("#canvas").width()
+  HEIGHT = $("#canvas").height()
+  return setInterval(draw, 10);
+}
+</library>
+</bounce>

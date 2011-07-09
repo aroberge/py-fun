@@ -1,0 +1,30 @@
+<resources>
+  <title>Resources</title>
+  <explain_before>
+    There are quite a few free resources we've made use of in creating this
+    tutorial.  
+    <ul>
+      <li>
+    First, and foremost, this tutorial was based on 
+    <a href="http://billmill.org/static/canvastutorial/index.html">
+      Bill Mill's tutorial</a>.</li>
+      <li>The editor we use is 
+        <a href="http://www.cdolivet.com/editarea/">Editarea</a></li>
+    <li>Sound files were obtained from
+      <a href="http://bigsamples.free.fr/">Bigfoot of Samples</a></li>
+    <li>Icons for buttons are from
+      <a href="http://icons.mysitemyway.com/">ICONS etc.</a></li>
+    <li>As mentioned before, we use <a href="http://jquery.com">jQuery</a>;
+      we also use <a href="http://jqueryui.com">jQuery UI</a>.</li>
+    <li>The image of the Earth that we used for the background was obtained
+      from <a href="http://www.widescreenwallpapers.org/">
+            Widescreen Wallpapers</a></li>
+    <li>And, of course, this tutorial would not have been possible without
+      countless blog posts, references pages, and other tutorials freely
+      accessible on the web and generously made by other people.</li>
+    </ul>
+    <p>If you have any comments or questions, feel free to leave a comment on the 
+      "comments" tab or email me: my full name (no accent) at gmail.com.</p>
+  </explain_before>
+
+</resources>

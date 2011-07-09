@@ -1,0 +1,40 @@
+body, html {margin:0;
+            padding:0;
+            background:#f0f0ff;
+            color:#000;
+}
+body { min-width: 750px; }
+canvas {background:white;}
+pre, code {font-size: 12pt; color: green; font-weight: bold;}
+
+/*#wrap { margin:0 auto; width:100%; } */
+#canvascontainer { margin-left: 15px;
+                   margin-top: 5px;
+                   width: 310px;
+                   float: left;
+                   position: fixed;
+                   padding: 0;
+}
+#explain { }
+
+#title{}
+
+#experiment h2 {color: sienna;}
+
+#textcontainer {
+  font-size: 80%;
+  max-width: 800px;
+  margin-left: 330px;
+  margin-right: 10px;
+  margin-top:   10px;
+  background: #f0f0ff;
+}
+
+#canvas { border: 1px solid DarkGray; }
+
+#nextLink { float: right; }
+.nextLink {float: right;}
+
+#pause {position: relative; left:-20px;}
+#stop {position: relative; left:-40px;}
+.prevLink, #play, #pause, #stop, #sound {text-decoration: none;}

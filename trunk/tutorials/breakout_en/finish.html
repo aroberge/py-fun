@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<!--
+TODO implement pausing game
+TODO implement stopping/quitting game
+TODO add sound
+TODO explore css sprites to reduce loading time
+TODO translate in French
+TODO upload to website (Tony's or Sainte-Anne?)
+todo add background image at the end
+todo add "you win" or "you lose!"
+todo ask confirm to quit
+todo add score
+todo add second level
+todo save high score with html storage
+-->
+<html>
+
+<head> 
+
+  <meta charset=utf-8>
+  <title>Canvas Tutorial - Finishing Touches</title>
+
+  <script src="../js/edit_area/edit_area_full.js"></script>
+  <script src="../js/jquery-1.5.1.min.js"></script>
+  <script src="../js/jquery-ui-1.8.13.custom.min.js"></script>
+  <link rel="stylesheet" href="../css/jquery-ui.css" media="screen">
+  <link rel="stylesheet" href="../css/custom.css">
+
+  <script>
+    // This code is meant to be automatically included in our template.
+
+var editor = undefined;
+var libEditor = undefined;
+var intervalID = undefined;
+var running = false;
+var paused = false;
+var speaker_on = false;
+var user_response;
+
+// hover states on the static widgets
+$(function(){
+  $('#dialog_link, ul#icons li').hover(
+    function() { $(this).addClass('ui-state-hover'); }, 
+    function() { $(this).removeClass('ui-state-hover'); }
+  );
+});
+
+// play button controls
+$(function(){
+  $("#play").hover(
+    function () {
+      if ($(this).find("img").attr("src") == "../images/black_play.png") {
+        $(this).find("img").attr({src:"../images/orange_play.png"});
+      }
+    }, 
+    function () {
+      if ($(this).find("img").attr("src") == "../images/orange_play.png") {
+        $(this).find("img").attr({src:"../images/black_play.png"});
+      }
+    }
+  );
+});
+
+$(function(){
+  $("#play").click(
+    function () {
+      if ($(this).find("img").attr("src") == "../images/orange_play.png") {
+        $(this).find("img").attr({src:"../images/green_play.png"});
+        $("#stop").find("img").attr({src:"../images/black_stop.png"});
+        running = true;
+        runCode();
+        return false;
+      }
+      if (paused){
+        paused = false;
+        $("#pause").find("img").attr({src:"../images/black_pause.png"});
+      }
+    }
+  );
+});
+
+// pause button controls
+$(function(){
+  $("#pause").hover(
+    function () {
+      if (running) {
+        if ($(this).find("img").attr("src") == "../images/black_pause.png") {
+          $(this).find("img").attr({src:"../images/orange_pause.png"});
+        }
+      }
+    }, 
+    function () {
+      if ($(this).find("img").attr("src") == "../images/orange_pause.png") {
+        $(this).find("img").attr({src:"../images/black_pause.png"});
+      }
+    }
+  );
+});
+
+$(function(){
+  $("#pause").click(
+    function () {
+      if ($(this).find("img").attr("src") == "../images/orange_pause.png") {
+        $(this).find("img").attr({src:"../images/green_pause.png"});
+        paused = true;
+      }
+      else{
+        paused = false;
+        $(this).find("img").attr({src:"../images/black_pause.png"});
+      }
+      return false;
+    }
+  );
+});
+
+// stop button controls
+$(function(){
+  $("#stop").hover(
+    function () {
+      if (running) {
+        if ($(this).find("img").attr("src") == "../images/black_stop.png") {
+          $(this).find("img").attr({src:"../images/orange_stop.png"});
+        }
+      }
+    }, 
+    function () {
+      if ($(this).find("img").attr("src") == "../images/orange_stop.png") {
+        $(this).find("img").attr({src:"../images/black_stop.png"});
+      }
+    }
+  );
+});
+
+function update_buttons_after_stop(){
+  // to be called by user in their own code as well as here.
+  $("#play").find("img").attr({src:"../images/black_play.png"});
+  $("#pause").find("img").attr({src:"../images/black_pause.png"});
+  $("#stop").find("img").attr({src:"../images/red_stop.png"});
+}
+
+$(function(){
+  $("#stop").click(
+    function () {
+      if (running) {
+        if ($(this).find("img").attr("src") == "../images/orange_stop.png") {
+          update_buttons_after_stop();
+          clearInterval(intervalID);
+          running = false;
+          paused = false;
+        }
+        return false;
+      }
+    }
+  );
+});
+
+
+// sound button controls
+$(function(){
+  $("#sound").hover(
+    function () {
+      if (speaker_on){
+        $(this).find("img").attr({src:"../images/orange_speaker_on.png"});
+      }
+      else {
+        $(this).find("img").attr({src:"../images/orange_speaker.png"});
+      }
+    }, 
+    function () {
+      if (speaker_on) {
+        $(this).find("img").attr({src:"../images/green_speaker_on.png"});
+      }
+      else {
+        $(this).find("img").attr({src:"../images/black_speaker.png"});
+      }
+    }
+  );
+});
+
+$(function(){
+  $("#sound").click(
+    function () {
+      if (speaker_on) {
+        $(this).find("img").attr({src:"../images/black_speaker.png"});
+        speaker_on = false;
+      }
+      else {
+        $(this).find("img").attr({src:"../images/green_speaker_on.png"});
+        speaker_on = true;
+      }
+    }
+  );
+});
+
+// next link controls
+$(function(){
+  $(".nextLink").hover(
+    function () {
+      if ($(this).find("img").attr("src") == "../images/black_forward.png") {
+        $(this).find("img").attr({src:"../images/orange_forward.png"});
+      }
+    }, 
+    function () {
+      if ($(this).find("img").attr("src") == "../images/orange_forward.png") {
+        $(this).find("img").attr({src:"../images/black_forward.png"});
+      }
+    }
+  );
+});
+
+// previous link controls
+$(function(){
+  $(".prevLink").hover(
+    function () {
+      if ($(this).find("img").attr("src") == "../images/black_back.png") {
+        $(this).find("img").attr({src:"../images/orange_back.png"});
+      }
+    }, 
+    function () {
+      if ($(this).find("img").attr("src") == "../images/orange_back.png") {
+        $(this).find("img").attr({src:"../images/black_back.png"});
+      }
+    }
+  );
+});
+
+
+
+function runCode() {
+    if (intervalID != undefined)
+        clearInterval(intervalID);
+    $("#canvas")[0].getContext("2d").clearRect(0,0,
+      $("#canvas")[0].width,
+      $("#canvas")[0].height);
+
+    //if there's a library defined, eval it
+    if (libEditor != undefined) {
+        eval(editAreaLoader.getValue("library"));
+    }
+        intervalID = eval(editAreaLoader.getValue("code"));
+};
+
+$(document).ready(function(){
+    
+      editAreaLoader.init({
+                    id : "library"
+                    ,syntax: "js"      
+                    ,start_highlight: true
+                    ,replace_tab_by_spaces: true
+                    ,display: "later"
+                    ,font_size: "11"
+                  });
+      libEditor = true;
+
+    var $tabs = $('#textcontainer').tabs();
+    $tabs.tabs("select", 1);  // tab 0 is the table of contents
+});
+  </script>
+
+ </head>
+
+  <body>
+
+
+
+    <div id="header">
+     <h1>Canvas Tutorial: Breakout!</h1>
+    </div>
+
+
+    <audio id="paddle_sound" preload>
+      <source src="../sounds/kick11.wav" type="audio/x-wav">
+      <source src="../sounds/kick11.ogg" type="application/ogg">
+      <source src="../sounds/kick11.mp3" type="audio/mpeg">
+    </audio> 
+
+    <audio id="brick_sound" preload>
+      <source src="../sounds/snare01.wav" type="audio/x-wav">
+      <source src="../sounds/snare01.ogg" type="application/ogg">
+      <source src="../sounds/snare01.mp3" type="audio/mpeg">
+    </audio> 
+
+    <audio id="wall_sound" preload>
+      <source src="../sounds/kick6.wav" type="audio/x-wav">
+      <source src="../sounds/kick6.ogg" type="application/ogg">
+      <source src="../sounds/kick6.mp3" type="audio/mpeg">
+    </audio> 
+
+    <div id="canvascontainer">
+         <canvas id="canvas" width="300" height="300"></canvas>
+         <div id="controlIcons" style="text-align:center">
+          <a id="play" href="#">
+            <img src="../images/black_play.png" 
+                 alt="run code" style="height:64px; border:none;"/>
+          </a>
+            <a id="pause" href="#">
+            <img src="../images/black_pause.png" 
+                 alt="pause" style="height:64px; border:none;"/>
+          </a>
+            <a id="stop" href="#">
+            <img src="../images/black_stop.png" 
+                 alt="stop" style="height:64px; border:none;"/>
+          </a>
+            <a id="sound" href="#">
+            <img src="../images/black_speaker.png" 
+                 alt="sound" style="height:64px; border:none;"/>
+          </a>
+             <!--<img class="runCode" src="../images/black_play.png" height="64px" onClick="runCode();"/> -->
+         </div>
+    </div>
+
+    <div id="textcontainer">
+      <h1 id="title">
+            <a href="bricks.html" class="prevLink">
+              <img src="../images/black_back.png" 
+               alt="previous page" style="width:64px; border:none;"/>
+            </a>
+        Finishing Touches
+            <a href="resources.html" class="nextLink">
+              <img src="../images/black_forward.png" 
+               alt="next page" style="width:64px; border:none;"/>
+            </a>
+      </h1>
+      
+      <ul>
+          <li class="ui-tabs-nav-item"><a href="#toc"><span>Contents</span></a></li>
+          <li class="ui-tabs-nav-item"><a href="#explain"><span>Code</span></a></li>
+          <li class="ui-tabs-nav-item"><a href="#libraryContainer"><span>Library</span></a></li>
+          <li class="ui-tabs-nav-item"><a href="#comments"><span>Comments</span></a></li>
+      </ul>
+
+      <div id="toc">
+        <ol>
+               <li><a href="index.html"> Introduction</a></li>
+               <li><a href="ball.html">Draw a Circle</a></li>
+               <li><a href="colour.html">Add Some Colour</a></li>
+               <li><a href="move.html">Action</a></li>
+               <li><a href="library_.html">Library: an Interlude</a></li>
+               <li><a href="bounce.html">Bounce!</a></li>
+               <li><a href="sound.html">Sound</a></li>
+               <li><a href="mute.html">Mute</a></li>
+               <li><a href="paddle.html">Add a Paddle</a></li>
+               <li><a href="keyboard.html">The Keyboard</a></li>
+               <li><a href="mouse.html">The Mouse</a></li>
+               <li><a href="bricks.html">The Bricks</a></li>
+               <li><a href="finish.html">Finishing Touches</a></li>
+               <li><a href="resources.html">Resources</a></li>
+               <li><a href="test.html"> Introduction</a></li>
+         </ol>
+      </div>
+
+      <div id="explain">
+Now we'll add a few finishing touches to our game,
+like colors, and a more fun paddle collision equation. There's an
+infinite amount of improvements you could make, so go ahead and try them
+out.
+
+
+          
+              <a href="bricks.html" class="prevLink">
+                <img src="../images/black_back.png" 
+                 alt="previous page" style="height:64px; border:none;"/>
+              </a>
+          
+              <a href="resources.html" class="nextLink">
+                <img src="../images/black_forward.png" 
+                 alt="next page" style="height:64px; border:none;"/>
+              </a>
+          </br> <!-- leave room for next link image on first page -->
+          <p style="font-size: 6px; color: gray;">Tutorial by Andr&eacute; Roberge</p>
+      </div>
+     
+      <div id="libraryContainer">
+              <div id="libraryBox">
+                  <textarea id="library" rows=20
+                            cols=80>
+var x = 25;
+var y = 250;
+var dx = 1.5;
+var dy = -4;
+var ctx;
+var WIDTH;
+var HEIGHT;
+var paddlex;
+var paddleh = 10;
+var paddlew = 75;
+var rightDown = false;
+var leftDown = false;
+var canvasMinX = 0;
+var canvasMaxX = 0;
+var intervalId = 0;
+var bricks;
+var NROWS = 5;
+var NCOLS = 5;
+var BRICKWIDTH;
+var BRICKHEIGHT = 15;
+var PADDING = 1;
+
+function init() {
+  ctx = $('#canvas')[0].getContext("2d");
+  WIDTH = $("#canvas").width();
+  HEIGHT = $("#canvas").height();
+  paddlex = WIDTH / 2;
+  BRICKWIDTH = (WIDTH/NCOLS) - 1;
+  canvasMinX = $("#canvas").offset().left;
+  canvasMaxX = canvasMinX + WIDTH;
+  intervalId = setInterval(draw, 10);
+  return intervalId;
+}
+
+function circle(x,y,r) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI*2, true);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function rect(x,y,w,h) {
+  ctx.beginPath();
+  ctx.rect(x,y,w,h);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function clear() {
+  ctx.clearRect(0, 0, WIDTH, HEIGHT);
+  rect(0,0,WIDTH,HEIGHT);
+}
+
+function onKeyDown(evt) {
+  if (evt.keyCode == 39) rightDown = true;
+  else if (evt.keyCode == 37) leftDown = true;
+}
+
+function onKeyUp(evt) {
+  if (evt.keyCode == 39) rightDown = false;
+  else if (evt.keyCode == 37) leftDown = false;
+}
+
+$(document).keydown(onKeyDown);
+$(document).keyup(onKeyUp);
+
+function onMouseMove(evt) {
+  if (evt.pageX &gt; canvasMinX &amp;&amp; evt.pageX &lt; canvasMaxX) {
+    paddlex = Math.max(evt.pageX - canvasMinX - (paddlew/2), 0);
+    paddlex = Math.min(WIDTH - paddlew, paddlex);
+  }
+}
+
+$(document).mousemove(onMouseMove);
+
+function initbricks() {
+    bricks = new Array(NROWS);
+    for (i=0; i &lt; NROWS; i++) {
+        bricks[i] = new Array(NCOLS);
+        for (j=0; j &lt; NCOLS; j++) {
+            bricks[i][j] = 1;
+        }
+    }
+}
+
+function drawbricks() {
+  for (i=0; i &lt; NROWS; i++) {
+    ctx.fillStyle = rowcolors[i];
+    for (j=0; j &lt; NCOLS; j++) {
+      if (bricks[i][j] == 1) {
+        rect((j * (BRICKWIDTH + PADDING)) + PADDING, 
+             (i * (BRICKHEIGHT + PADDING)) + PADDING,
+             BRICKWIDTH, BRICKHEIGHT);
+      }
+    }
+  }
+}
+</textarea>
+              </div>
+      </div>
+
+      <div id="comments">
+      Nothing here yet
+      </div>
+    </div>
+
+  </body>
+</html>
