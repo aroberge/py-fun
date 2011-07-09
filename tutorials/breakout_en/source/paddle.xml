@@ -1,0 +1,113 @@
+<paddle>
+
+<title>Add a Paddle</title>
+
+<explain_before>
+Now we can start to think about making our game
+  a bit like an actual game. Let's add a paddle, and only allow the
+  ball to bounce off the bottom when it hits it.
+</explain_before>
+<js_code>
+var paddle_x;
+var paddle_h;
+var paddle_w;
+
+function init_paddle() {
+  paddle_x = WIDTH / 2;
+  paddle_h = 5;
+  paddle_w = 75;
+}
+
+function rect(x, y, w, h) {
+  ctx.beginPath();
+  ctx.rect(x, y, w, h);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function draw() {
+  clear();
+  circle(x, y, ball_r);
+  rect(paddle_x, HEIGHT-paddle_h, paddle_w, paddle_h);
+
+ 
+  if (x + dx + ball_r &gt; WIDTH || x + dx -ball_r &lt; 0){
+    dx = -dx;
+    play_sound("#wall_sound");
+  }
+  if (y + dy -ball_r &lt; 0){
+    dy = -dy;
+    play_sound("#wall_sound");
+  }
+  else if (y + dy + ball_r &gt; HEIGHT) {
+    if (x &gt; paddle_x &amp;&amp; x &lt; paddle_x + paddle_w){
+      dy = -dy;
+      play_sound("#paddle_sound");
+    }
+    else
+      //game over, so stop the animation
+      clearInterval(intervalId);
+  }
+
+  x += dx;
+  y += dy;
+}
+
+
+
+init();
+init_paddle();
+</js_code>
+<explain_after>
+  <p>
+You probably want to be able to move the paddle - we'll cover that soon.</p>
+    <p>
+    The constants <code>paddle_x</code>, <code>paddle_h</code>, and 
+    <code>paddle_w</code> will be moved to the regular <code>init()</code>
+    function from now on.</p>
+  </explain_after>
+
+<experiment>
+  Make sure to turn the sound on!
+</experiment>
+
+<library>
+var x = 140;
+var y = 150;
+var dx = 2;
+var dy = 4;
+var ball_r = 10;
+var ctx;
+var current_sound;
+var WIDTH;
+var HEIGHT;
+var intervalId = 0;
+
+function play_sound(sound_id) {
+  if (speaker_on) {
+    current_sound = $(sound_id)[0];
+    current_sound.play();
+  }
+}
+
+function circle(x,y,r) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI*2, true);
+  ctx.closePath();
+  ctx.fill();
+}
+
+
+function clear() {
+  ctx.clearRect(0, 0, WIDTH, HEIGHT);
+}
+
+function init() {
+  ctx = $('#canvas')[0].getContext("2d");
+  WIDTH = $("#canvas").width()
+  HEIGHT = $("#canvas").height()
+  intervalId = setInterval(draw, 10);
+  return intervalId;
+}
+</library>
+</paddle>

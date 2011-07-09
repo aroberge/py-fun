@@ -1,0 +1,76 @@
+<mute>
+<title>Mute</title>
+
+<explain_before>
+  Adding sound is fine ... but sometimes you may want to have the option
+  to turn it off without changing the code.   I have used the variable
+  <code>speaker_on</code> to link the state of the "speaker on/off" button; 
+  we can use this variable in our code as follows:
+</explain_before>
+<js_code>
+var current_sound;
+
+function play_sound(sound_id) {
+  if (speaker_on) {
+    current_sound = $(sound_id)[0];
+    current_sound.play();
+  }
+}
+
+function draw() {
+  clear();
+  circle(x, y, ball_r);
+ 
+  if (x + dx + ball_r &gt; WIDTH || x + dx -ball_r &lt; 0){
+    dx = -dx;
+    play_sound("#wall_sound");
+  }
+  if (y + dy + ball_r &gt; HEIGHT || y + dy -ball_r &lt; 0){
+    dy = -dy;
+    play_sound("#wall_sound");
+  }
+
+  x += dx;
+  y += dy;
+}
+
+init();
+</js_code>
+<explain_after>
+  In future pages, we will move the variable declaration for 
+  <code>current_sound</code> and the function definition for
+  <code>play_sound</code> in the library.
+</explain_after>
+<experiment>
+Note that the game starts with the sound muted by default. Turn it on
+and off as the ball bounces.
+</experiment>
+<library>
+var x = 150;
+var y = 150;
+var dx = 2;
+var dy = 4;
+var ball_r = 10;
+var ctx;
+var WIDTH; 
+var HEIGHT;
+
+function circle(x, y, r) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI*2, true);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function clear() {
+  ctx.clearRect(0, 0, WIDTH, HEIGHT);
+}
+
+function init() {
+  ctx = $('#canvas')[0].getContext("2d");
+  WIDTH = $("#canvas").width()
+  HEIGHT = $("#canvas").height()
+  return setInterval(draw, 10);
+}
+</library>
+</mute>

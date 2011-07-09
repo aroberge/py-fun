@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<!--
+TODO implement pausing game
+TODO implement stopping/quitting game
+TODO add sound
+TODO explore css sprites to reduce loading time
+TODO translate in French
+TODO upload to website (Tony's or Sainte-Anne?)
+todo add background image at the end
+todo add "you win" or "you lose!"
+todo ask confirm to quit
+todo add score
+todo add second level
+todo save high score with html storage
+-->
+<html>
+
+<head> 
+
+  <meta charset=utf-8>
+  <title>Canvas Tutorial -  Introduction</title>
+
+  <script src="../js/edit_area/edit_area_full.js"></script>
+  <script src="../js/jquery-1.5.1.min.js"></script>
+  <script src="../js/jquery-ui-1.8.13.custom.min.js"></script>
+  <link rel="stylesheet" href="../css/jquery-ui.css" media="screen">
+  <link rel="stylesheet" href="../css/custom.css">
+
+  <script>
+    // This code is meant to be automatically included in our template.
+
+var editor = undefined;
+var libEditor = undefined;
+var intervalID = undefined;
+var running = false;
+var paused = false;
+var speaker_on = false;
+var user_response;
+
+// hover states on the static widgets
+$(function(){
+  $('#dialog_link, ul#icons li').hover(
+    function() { $(this).addClass('ui-state-hover'); }, 
+    function() { $(this).removeClass('ui-state-hover'); }
+  );
+});
+
+// play button controls
+$(function(){
+  $("#play").hover(
+    function () {
+      if ($(this).find("img").attr("src") == "../images/black_play.png") {
+        $(this).find("img").attr({src:"../images/orange_play.png"});
+      }
+    }, 
+    function () {
+      if ($(this).find("img").attr("src") == "../images/orange_play.png") {
+        $(this).find("img").attr({src:"../images/black_play.png"});
+      }
+    }
+  );
+});
+
+$(function(){
+  $("#play").click(
+    function () {
+      if ($(this).find("img").attr("src") == "../images/orange_play.png") {
+        $(this).find("img").attr({src:"../images/green_play.png"});
+        $("#stop").find("img").attr({src:"../images/black_stop.png"});
+        running = true;
+        runCode();
+        return false;
+      }
+      if (paused){
+        paused = false;
+        $("#pause").find("img").attr({src:"../images/black_pause.png"});
+      }
+    }
+  );
+});
+
+// pause button controls
+$(function(){
+  $("#pause").hover(
+    function () {
+      if (running) {
+        if ($(this).find("img").attr("src") == "../images/black_pause.png") {
+          $(this).find("img").attr({src:"../images/orange_pause.png"});
+        }
+      }
+    }, 
+    function () {
+      if ($(this).find("img").attr("src") == "../images/orange_pause.png") {
+        $(this).find("img").attr({src:"../images/black_pause.png"});
+      }
+    }
+  );
+});
+
+$(function(){
+  $("#pause").click(
+    function () {
+      if ($(this).find("img").attr("src") == "../images/orange_pause.png") {
+        $(this).find("img").attr({src:"../images/green_pause.png"});
+        paused = true;
+      }
+      else{
+        paused = false;
+        $(this).find("img").attr({src:"../images/black_pause.png"});
+      }
+      return false;
+    }
+  );
+});
+
+// stop button controls
+$(function(){
+  $("#stop").hover(
+    function () {
+      if (running) {
+        if ($(this).find("img").attr("src") == "../images/black_stop.png") {
+          $(this).find("img").attr({src:"../images/orange_stop.png"});
+        }
+      }
+    }, 
+    function () {
+      if ($(this).find("img").attr("src") == "../images/orange_stop.png") {
+        $(this).find("img").attr({src:"../images/black_stop.png"});
+      }
+    }
+  );
+});
+
+function update_buttons_after_stop(){
+  // to be called by user in their own code as well as here.
+  $("#play").find("img").attr({src:"../images/black_play.png"});
+  $("#pause").find("img").attr({src:"../images/black_pause.png"});
+  $("#stop").find("img").attr({src:"../images/red_stop.png"});
+}
+
+$(function(){
+  $("#stop").click(
+    function () {
+      if (running) {
+        if ($(this).find("img").attr("src") == "../images/orange_stop.png") {
+          update_buttons_after_stop();
+          clearInterval(intervalID);
+          running = false;
+          paused = false;
+        }
+        return false;
+      }
+    }
+  );
+});
+
+
+// sound button controls
+$(function(){
+  $("#sound").hover(
+    function () {
+      if (speaker_on){
+        $(this).find("img").attr({src:"../images/orange_speaker_on.png"});
+      }
+      else {
+        $(this).find("img").attr({src:"../images/orange_speaker.png"});
+      }
+    }, 
+    function () {
+      if (speaker_on) {
+        $(this).find("img").attr({src:"../images/green_speaker_on.png"});
+      }
+      else {
+        $(this).find("img").attr({src:"../images/black_speaker.png"});
+      }
+    }
+  );
+});
+
+$(function(){
+  $("#sound").click(
+    function () {
+      if (speaker_on) {
+        $(this).find("img").attr({src:"../images/black_speaker.png"});
+        speaker_on = false;
+      }
+      else {
+        $(this).find("img").attr({src:"../images/green_speaker_on.png"});
+        speaker_on = true;
+      }
+    }
+  );
+});
+
+// next link controls
+$(function(){
+  $(".nextLink").hover(
+    function () {
+      if ($(this).find("img").attr("src") == "../images/black_forward.png") {
+        $(this).find("img").attr({src:"../images/orange_forward.png"});
+      }
+    }, 
+    function () {
+      if ($(this).find("img").attr("src") == "../images/orange_forward.png") {
+        $(this).find("img").attr({src:"../images/black_forward.png"});
+      }
+    }
+  );
+});
+
+// previous link controls
+$(function(){
+  $(".prevLink").hover(
+    function () {
+      if ($(this).find("img").attr("src") == "../images/black_back.png") {
+        $(this).find("img").attr({src:"../images/orange_back.png"});
+      }
+    }, 
+    function () {
+      if ($(this).find("img").attr("src") == "../images/orange_back.png") {
+        $(this).find("img").attr({src:"../images/black_back.png"});
+      }
+    }
+  );
+});
+
+
+
+function runCode() {
+    if (intervalID != undefined)
+        clearInterval(intervalID);
+    $("#canvas")[0].getContext("2d").clearRect(0,0,
+      $("#canvas")[0].width,
+      $("#canvas")[0].height);
+
+    //if there's a library defined, eval it
+    if (libEditor != undefined) {
+        eval(editAreaLoader.getValue("library"));
+    }
+        intervalID = eval($("#hidden_code").val());
+};
+
+$(document).ready(function(){
+    
+
+    var $tabs = $('#textcontainer').tabs();
+        $tabs.tabs("remove", 2);
+    $tabs.tabs("select", 1);  // tab 0 is the table of contents
+});
+  </script>
+
+ </head>
+
+  <body>
+
+       <textarea id="hidden_code" style="display:none">var dx = 2;
+var dy = -3;
+var ctx;
+var WIDTH;
+var HEIGHT;
+
+var rightDown = false;
+var leftDown = false;
+var canvasMinX = 0;
+var canvasMaxX = 0;
+var intervalId = 0;
+var bricks;
+var NROWS = 5;
+var NCOLS = 5;
+var BRICKWIDTH;
+var BRICKHEIGHT = 15;
+var PADDING = 1;
+var paddle;
+var ball;
+
+var score;
+
+var collision = false;
+
+var rowcolors = ["#FF1C0A", "#FFFD0A", "#00A308", "#0008DB", "#EB0093"];
+var background_colour = "#000000";
+
+function Ball(x, y) {
+  this.x = x;
+  this.y = y;
+  this.r = 10;
+  this.colour = "#ffffff";
+  this.draw = function() {
+    ctx.fillStyle = this.colour;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI*2, true);
+    ctx.closePath();
+    ctx.fill();
+  };
+}
+
+function Paddle(x) {
+  this.h = 8;
+  this.w = 50;
+  this.x = x;
+  this.colour = "#ffffff";
+
+  this.draw = function() {
+    ctx.fillStyle = this.colour;
+  // see http://www.williammalone.com/briefs/how-to-draw-ellipse-html5-canvas/
+    ctx.beginPath();
+    ctx.moveTo(this.x, HEIGHT, this.w);
+    ctx.bezierCurveTo(
+      this.x, HEIGHT-this.h,
+      this.x + this.w, HEIGHT-this.h,
+      this.x + this.w, HEIGHT);
+    ctx.closePath();
+    ctx.fill();
+  };
+
+  this.keyboard_move = function(left, right) {
+    if (right) {
+      this.x += 5;
+      if (this.x &gt; WIDTH - this.w) {
+        this.x = WIDTH - this.w;
+      }
+    }
+    else if (left) {
+      this.x -= 5;
+      if (this.x &lt; 0){
+        this.x = 0;
+      }
+    }
+  };
+}
+
+var isPlaying = true;
+var background_image = new Image();
+background_image.src = '../images/earth.jpg';
+
+function playBeat(sound_id) {
+  if (speaker_on) {
+    var tmpAudio;
+    tmpAudio = document.getElementById(sound_id);
+    if (!tmpAudio.paused) {
+      // Pause and reset it
+      tmpAudio.pause();
+      tmpAudio.currentTime = 0.0;
+    }
+    tmpAudio.play();
+  };
+}
+
+function init() {
+  ctx = $('#canvas')[0].getContext("2d");
+  WIDTH = $("#canvas").width();
+  HEIGHT = $("#canvas").height();
+  BRICKWIDTH = (WIDTH/NCOLS) - 1;
+  ball = new Ball(25, 250);
+  paddle = new Paddle(WIDTH / 2);
+  canvasMinX = $("#canvas").offset().left;
+  canvasMaxX = canvasMinX + WIDTH;
+  intervalId = setInterval(update, 10);
+  score = 0;
+  return intervalId;
+}
+
+function rect(x, y, w, h) {
+  ctx.beginPath();
+  ctx.rect(x,y,w,h);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function clear() {
+  ctx.fillStyle = background_colour;
+  ctx.clearRect(0, 0, WIDTH, HEIGHT);
+  rect(0, 0, WIDTH, HEIGHT);
+}
+
+function onKeyDown(evt) {
+  if (evt.keyCode == 39) rightDown = true;
+  else if (evt.keyCode == 37) leftDown = true;
+}
+
+function onKeyUp(evt) {
+  if (evt.keyCode == 39) rightDown = false;
+  else if (evt.keyCode == 37) leftDown = false;
+}
+
+function onMouseMove(evt) {
+  paddle.x = Math.max(evt.pageX - canvasMinX - (paddle.w/2), 0);
+  paddle.x = Math.min(WIDTH - paddle.w, paddle.x);
+}
+
+$(document).keydown(onKeyDown);
+$(document).keyup(onKeyUp);
+$(document).mousemove(onMouseMove);
+
+function initbricks() {
+    bricks = new Array(NROWS);
+    for (i=0; i &lt; NROWS; i++) {
+        bricks[i] = new Array(NCOLS);
+        for (j=0; j &lt; NCOLS; j++) {
+            bricks[i][j] = 1;
+        }
+    }
+}
+
+function drawbricks() {
+  for (i=0; i &lt; NROWS; i++) {
+    ctx.fillStyle = rowcolors[i];
+    for (j=0; j &lt; NCOLS; j++) {
+      if (bricks[i][j] == 1) {
+        rect((j * (BRICKWIDTH + PADDING)) + PADDING, 
+             (i * (BRICKHEIGHT + PADDING)) + PADDING,
+             BRICKWIDTH, BRICKHEIGHT);
+      }
+    }
+  }
+}
+
+function game_over(){
+    ctx.fillStyle = 'rgba(0, 1, 1, 0.5)';
+    rect(0, 0, WIDTH, HEIGHT);
+    ctx.font = "40pt Helvetica";
+    ctx.fillStyle = "#ff0000";
+    ctx.fillText("Game Over!", 10, 100);
+    ctx.font = " 15pt Helvetica";
+    ctx.fillStyle = "#00ff00";
+    ctx.fillText("Score: " + score, 10, 150);
+    if (localStorage.highScore == null) localStorage.highScore = 0;
+    ctx.fillText("Previous high score: " + localStorage.highScore, 10, 200);
+    if (parseInt(localStorage.highScore) &lt; score) localStorage.highScore = score;
+  clearInterval(intervalId);
+}
+
+
+
+function update() {
+  if (paused){
+    return;
+  }
+  clear();
+  ctx.drawImage(background_image,0,0);
+  paddle.keyboard_move(leftDown, rightDown);
+  paddle.draw()
+  drawbricks();
+  ball.draw();
+
+  //want to learn about real collision detection? go read
+  // http://www.harveycartel.org/metanet/tutorials/tutorialA.html
+  rowheight = BRICKHEIGHT + PADDING;
+  colwidth = BRICKWIDTH + PADDING;
+  row = Math.floor(ball.y/rowheight);
+  col = Math.floor(ball.x/colwidth);
+  //reverse the ball and mark the brick as broken
+  if (ball.y &lt; NROWS * rowheight 
+      &amp;&amp; row &gt;= 0 
+      &amp;&amp; col &gt;= 0 
+      &amp;&amp; bricks[row][col] == 1) {
+    dy = -dy;
+    bricks[row][col] = 0;
+    playBeat("brick_sound");
+    score += row;
+  }
+ 
+
+  if (ball.x + dx + ball.r &gt; WIDTH || ball.x + dx - ball.r &lt; 0) {
+    collision = true;
+    playBeat("wall_sound");
+    dx = -dx;
+    if (ball.x + dx + ball.r &gt; WIDTH){
+      ball.x = WIDTH - ball.r
+    }
+    else if(ball.x + dx - ball.r &lt; 0) {
+      ball.x = ball.r;
+    }
+  }
+
+  
+  if (ball.y + dy - ball.r &lt; 0){
+    collision = true;
+    playBeat("wall_sound");
+    dy = -dy;
+    ball.y = ball.r;
+  }
+  else if (ball.y + dy + ball.r &gt; HEIGHT - paddle.h) {
+    if (ball.x + (ball.r/2) &gt; paddle.x 
+        &amp;&amp; ball.x - (ball.r/2) &lt; paddle.x + paddle.w) {
+      //move the ball differently based on where it hit the paddle
+      collision = true;
+      playBeat("paddle_sound");
+      dx = 4 * ((ball.x-(paddle.x+paddle.w/2))/paddle.w);
+      dy = -dy;
+      ball.y = HEIGHT - paddle.h - ball.r;
+    }
+    else if (ball.y + dy + ball.r &gt; HEIGHT)
+      game_over();
+  }
+ 
+ if (collision)  collision = false;  // show the collision before reversing course
+ else {
+    ball.x += dx;
+    ball.y += dy;
+  }
+}
+
+initbricks();
+init();
+</textarea>
+
+
+    <div id="header">
+     <h1>Canvas Tutorial: Breakout!</h1>
+    </div>
+
+
+    <audio id="paddle_sound" preload>
+      <source src="../sounds/kick11.wav" type="audio/x-wav">
+      <source src="../sounds/kick11.ogg" type="application/ogg">
+      <source src="../sounds/kick11.mp3" type="audio/mpeg">
+    </audio> 
+
+    <audio id="brick_sound" preload>
+      <source src="../sounds/snare01.wav" type="audio/x-wav">
+      <source src="../sounds/snare01.ogg" type="application/ogg">
+      <source src="../sounds/snare01.mp3" type="audio/mpeg">
+    </audio> 
+
+    <audio id="wall_sound" preload>
+      <source src="../sounds/kick6.wav" type="audio/x-wav">
+      <source src="../sounds/kick6.ogg" type="application/ogg">
+      <source src="../sounds/kick6.mp3" type="audio/mpeg">
+    </audio> 
+
+    <div id="canvascontainer">
+         <canvas id="canvas" width="300" height="300"></canvas>
+         <div id="controlIcons" style="text-align:center">
+          <a id="play" href="#">
+            <img src="../images/black_play.png" 
+                 alt="run code" style="height:64px; border:none;"/>
+          </a>
+            <a id="pause" href="#">
+            <img src="../images/black_pause.png" 
+                 alt="pause" style="height:64px; border:none;"/>
+          </a>
+            <a id="stop" href="#">
+            <img src="../images/black_stop.png" 
+                 alt="stop" style="height:64px; border:none;"/>
+          </a>
+            <a id="sound" href="#">
+            <img src="../images/black_speaker.png" 
+                 alt="sound" style="height:64px; border:none;"/>
+          </a>
+             <!--<img class="runCode" src="../images/black_play.png" height="64px" onClick="runCode();"/> -->
+         </div>
+    </div>
+
+    <div id="textcontainer">
+      <h1 id="title">
+         Introduction
+            <a href="<built-in function next>.html" class="nextLink">
+              <img src="../images/black_forward.png" 
+               alt="next page" style="width:64px; border:none;"/>
+            </a>
+      </h1>
+      
+      <ul>
+          <li class="ui-tabs-nav-item"><a href="#toc"><span>Contents</span></a></li>
+          <li class="ui-tabs-nav-item"><a href="#explain"><span>Code</span></a></li>
+          <li class="ui-tabs-nav-item"><a href="#libraryContainer"><span>Library</span></a></li>
+          <li class="ui-tabs-nav-item"><a href="#comments"><span>Comments</span></a></li>
+      </ul>
+
+      <div id="toc">
+      </div>
+
+      <div id="explain">
+    Test of the full game.
+  
+
+          
+          
+              <a href="<built-in function next>.html" class="nextLink">
+                <img src="../images/black_forward.png" 
+                 alt="next page" style="height:64px; border:none;"/>
+              </a>
+          </br> <!-- leave room for next link image on first page -->
+          <p style="font-size: 6px; color: gray;">Tutorial by Andr&eacute; Roberge</p>
+      </div>
+     
+      <div id="libraryContainer">
+      </div>
+
+      <div id="comments">
+      Nothing here yet
+      </div>
+    </div>
+
+  </body>
+</html>

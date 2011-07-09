@@ -1,0 +1,47 @@
+<ball>
+  <title>Draw a Circle</title>
+
+  <explain_before> 
+    The first thing we need to do is create an instance of the &lt;canvas&gt; element so that
+     we can start to draw on it. If you look in the source for this page, you'll see a 
+     declaration that looks like this:<br />
+     <pre>&lt;canvas id="canvas" width="300" height="300"&gt;&lt;/canvas&gt;</pre>
+     This declaration creates the canvas on which we'll draw in the rest of the tutorial.
+     <p>Now that we've got a canvas to draw on, let's do so:</p>
+  </explain_before>
+
+  <js_code>
+//get a reference to the canvas using jQuery's $()
+var ctx = $('#canvas')[0].getContext("2d");
+
+//draw a circle
+ctx.beginPath();
+ctx.arc(75, 75, 10, 0, Math.PI*2, true); 
+ctx.closePath();
+ctx.fill();
+  </js_code>
+  <explain_after>
+    <p>The variable declaration</p>
+    <pre>
+    var ctx = $('#canvas')[0].getContext("2d");
+    </pre>
+     using jQuery's <code>$(...)</code> is a shortcut, 
+     equivalent to the following pure javascript code
+    <pre>
+    var cv = document.getElementById("canvas");
+    var ctx = cv.getContext("2d");
+    </pre>
+    <p>If you are not familiar with jQuery, I suggest you have a look at it
+      as we will be making further use of it ... and it will likely greatly
+      simplify your life if you use javascript elsewhere.
+    </p>
+  </explain_after> 
+  <experiment>
+    You may want to comment out the <code>ctx.arc(...)</code> call and try
+      <code>ctx.rect(x, y, width, height)</code>.
+      <p>Make sure you keep the arc and rect calls in between calls to
+      <code>beginPath()</code> and <code>closePath()</code> just like the
+      sample call above. You may also try substituting <code>stroke()</code>
+      for <code>fill()</code>.</p>
+  </experiment>
+</ball>

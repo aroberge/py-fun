@@ -1,0 +1,85 @@
+<sound>
+<title>Sound</title>
+
+<explain_before>
+Our ball can bounce ... but it is so quiet in here.  Real balls make a sound
+when they bounce; so should ours!
+<p>I have embedded some <code>&lt;audio&gt;</code> tags in the html
+source code, and made the sound files available as indicated.  
+They look something like the following:</p>
+<pre>
+&lt;audio id="wall_sound" preload&gt;
+  &lt;source src="../sounds/kick6.wav" type="audio/x-wav"&gt;
+  &lt;source src="../sounds/kick6.ogg" type="application/ogg"&gt;
+  &lt;source src="../sounds/kick6.mp3" type="audio/mpeg"&gt;
+&lt;/audio&gt; 
+</pre>
+<p>The reason for including three copies, in different formats, of the
+  same sound file, is that various browsers (with the exception of Chrome)
+  only support one or two of the above formats without additional plugins,
+  and no format is supported by all the browsers.  By including all three
+  formats, individual browsers can find one they support. </p>
+  <p>I should add that I used 
+    <a href="http://audacity.sourceforge.net/">Audacity</a> 
+    to convert the original
+  file into the other two formats.</p>
+</explain_before>
+<js_code>
+var current_sound;
+
+function play_sound(sound_id) {
+    current_sound = $(sound_id)[0];
+    current_sound.play();
+}
+
+function draw() {
+  clear();
+  circle(x, y, ball_r);
+ 
+  if (x + dx + ball_r &gt; WIDTH || x + dx -ball_r &lt; 0){
+    dx = -dx;
+    play_sound("#wall_sound");
+  }
+  if (y + dy + ball_r &gt; HEIGHT || y + dy -ball_r &lt; 0){
+    dy = -dy;
+    play_sound("#wall_sound");
+  }
+
+  x += dx;
+  y += dy;
+}
+
+init();
+</js_code>
+<experiment>
+Try it out!
+</experiment>
+<library>
+var x = 150;
+var y = 150;
+var dx = 2;
+var dy = 4;
+var ball_r = 10;
+var ctx;
+var WIDTH; 
+var HEIGHT;
+
+function circle(x, y, r) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI*2, true);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function clear() {
+  ctx.clearRect(0, 0, WIDTH, HEIGHT);
+}
+
+function init() {
+  ctx = $('#canvas')[0].getContext("2d");
+  WIDTH = $("#canvas").width()
+  HEIGHT = $("#canvas").height()
+  return setInterval(draw, 10);
+}
+</library>
+</sound>

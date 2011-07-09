@@ -1,0 +1,64 @@
+<library_>
+<title>Library: an Interlude</title>
+
+<explain_before>
+  <p>Let's refactor our code a bit, introducing some utility functions and
+  variables.  In doing so, the code is getting a bit too long and will soon
+  not fit entirely in one screen.  In order to focus on the important
+  <b>new stuff</b>, we will put most of the code previously seen inside
+  a "library" which, for us, will mean into a separate tab.</p>
+</explain_before>
+
+<js_code>
+//BEGIN LIBRARY CODE
+var x = 150;
+var y = 150;
+var dx = 2;
+var dy = 4;
+var ball_r = 10;
+var WIDTH;
+var HEIGHT;
+var ctx;
+
+function init() {
+  ctx = $('#canvas')[0].getContext("2d");
+  WIDTH = $("#canvas").width();
+  HEIGHT = $("#canvas").height();
+  return setInterval(draw, 10);
+}
+
+function circle(x, y, r) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI*2, true);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function clear() {
+  ctx.clearRect(0, 0, WIDTH, HEIGHT);
+}
+
+//END LIBRARY CODE
+
+function draw() {
+  clear();
+  circle(x, y, ball_r);
+ 
+  x += dx;
+  y += dy;
+}
+
+init();
+</js_code>
+<explain_after>
+See how much simpler the <code>draw()</code> function is now?
+</explain_after>
+<experiment>
+  Try cutting and pasting the LIBRARY CODE from the code tab
+  into the library tab, and press the "run code" button afterwards.
+</experiment>
+<library>
+// Nothing here just yet! Check back on the next page.
+// Or, you can put some code in here and try to run your program.
+</library>
+</library_>

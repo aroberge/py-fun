@@ -1,0 +1,9 @@
+<test>
+  <title> Introduction</title>
+  <explain_before>
+    Test of the full game.
+  </explain_before>
+  <fullgame> 
+  </fullgame>
+
+</test>

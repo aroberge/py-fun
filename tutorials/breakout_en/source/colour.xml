@@ -1,0 +1,37 @@
+<colour>
+<title>Add Some Colour</title>
+<explain_before>
+  We can also turn our ball different colours. Changing the value of
+  ctx.fillStyle will change the canvas' current colour; we can set its value to a hex
+  string of the format <code>"#rrggbb"</code> or to a string 
+  <code>"rgba(r, g, b, a)"</code> where a, also known as alpha, is a value
+  between 0 and 1, and representing the transparency of the colour.
+</explain_before>
+<js_code>
+var ctx = $('#canvas')[0].getContext("2d");
+
+ctx.fillStyle = "#00A308";
+ctx.beginPath();
+ctx.arc(220, 220, 50, 0, Math.PI*2, true);
+ctx.closePath();
+ctx.fill();
+
+ctx.fillStyle = "#FF1C0A";
+ctx.beginPath();
+ctx.arc(100, 100, 100, 0, Math.PI*2, true);
+ctx.closePath();
+ctx.fill();
+
+//the square is half transparent
+ctx.fillStyle = "rgba(255, 255, 0, .5)"
+ctx.beginPath();
+ctx.rect(15, 150, 120, 120);
+ctx.closePath();
+ctx.fill();
+</js_code>
+<experiment>
+    Try various values for the arguments to <code>arc</code> and 
+    <code>rect</code>, and see how the shapes drawn are modified.  You can
+    also add more shapes to the canvas.
+</experiment>
+</colour>

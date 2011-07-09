@@ -1,0 +1,62 @@
+<move>
+<title>Action</title>
+
+<explain_before>
+  <p>Computer animations are all fake: there is no movement.  All that is
+    done is to draw a static image, display it for a short while, erase it,
+    draw a slightly modified one, etc.
+  </p>
+  <p>
+  We've already made a <a href="ball.html">ball</a>,
+  now let's make it move.
+  In order to do so, we'll create a <code>draw()</code> function
+  which wipes the screen, draws the ball at its initial (current) position, 
+  then updates its position, preparing it for the next drawing cycle. 
+  We'll use a call to 
+  <code>setInterval(function, timeout)</code> in the <code>init()</code>
+  function to tell the browser to run our draw function every 10
+  milliseconds, creating the illusion of movement.</p>
+
+  </explain_before>
+<js_code>
+var x = 150;
+var y = 150;
+var dx = 2;
+var dy = 4;
+var ball_r = 10;
+var ctx;
+
+function init() {
+  ctx = $('#canvas')[0].getContext("2d");
+  return setInterval(draw, 10);
+}
+
+function draw() {
+  ctx.clearRect(0, 0, 300, 300);  // clears the entire canvas
+  ctx.beginPath();
+  ctx.arc(x, y, ball_r, 0, Math.PI*2, true); 
+  ctx.closePath();
+  ctx.fill();
+  x += dx;
+  y += dy;
+}
+
+init();
+</js_code>
+<explain_after>
+  <p>Note that only the "run code"  and "stop" buttons work properly.  
+  I have not told you how to "connect" the other ones yet, something that 
+  we will see later.</p>
+</explain_after>
+<experiment>
+  Try changing the <code>dx</code> and <code>dy</code> values to 
+  change the direction of the ball,
+  or change the <code>x</code> and <code>y</code> variables to 
+  change where the ball will start.
+  Make sure to try negative values for <code>dx</code> and <code>dy</code>.
+  You can also try to draw different shapes, or more than one shape, and
+  animate them.
+  <p>You might also want to see what happens if you do not clear the
+    canvas before you draw.</p>
+</experiment>
+</move>
